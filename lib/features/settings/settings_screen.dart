@@ -1,35 +1,47 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../onboarding/groq_api_key_controller.dart';
 import '../../shared/widgets/app_scaffold.dart';
 
-class SettingsScreen extends StatelessWidget {
+class SettingsScreen extends ConsumerWidget {
   const SettingsScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final apiKeyState = ref.watch(groqApiKeyControllerProvider);
+    final apiKeySubtitle = apiKeyState.when(
+      data: (state) => state.maskedKey ?? 'Belum terhubung',
+      error: (_, _) => 'Gagal membaca key',
+      loading: () => 'Memuat...',
+    );
+
     return AppScaffold(
       title: 'Settings',
       currentIndex: 2,
       child: ListView(
         padding: const EdgeInsets.all(16),
-        children: const [
+        children: [
           _SettingsGroup(
             title: 'Akun & API',
             children: [
-              _SettingsRow(title: 'Groq API Key', subtitle: 'Belum terhubung'),
-              _SettingsRow(title: 'Google Drive', subtitle: 'Tidak terhubung'),
+              _SettingsRow(title: 'Groq API Key', subtitle: apiKeySubtitle),
+              const _SettingsRow(
+                title: 'Google Drive',
+                subtitle: 'Tidak terhubung',
+              ),
             ],
           ),
-          SizedBox(height: 16),
-          _SettingsGroup(
+          const SizedBox(height: 16),
+          const _SettingsGroup(
             title: 'Tampilan',
             children: [
               _SettingsRow(title: 'Tema', subtitle: 'System'),
               _SettingsRow(title: 'Bahasa', subtitle: 'Indonesia'),
             ],
           ),
-          SizedBox(height: 16),
-          _SettingsGroup(
+          const SizedBox(height: 16),
+          const _SettingsGroup(
             title: 'Tentang',
             children: [
               _SettingsRow(title: 'Privacy Policy'),
