@@ -49,10 +49,19 @@ class ExportDetailScreen extends ConsumerWidget {
                             ),
                             if (item.resolution != null)
                               Text('Resolusi: ${item.resolution}'),
+                            if (item.targetWidth != null &&
+                                item.targetHeight != null)
+                              Text(
+                                'Target: ${item.targetWidth}x${item.targetHeight}',
+                              ),
                             if (item.frameRate != null)
                               Text('FPS: ${item.frameRate}'),
                             if (item.codec != null)
                               Text('Codec: ${item.codec}'),
+                            if (item.cropToPortrait == true)
+                              const Text('Crop: 9:16 portrait target'),
+                            if (item.requiresReencode == true)
+                              const Text('Render mode: re-encode required'),
                           ],
                         ),
                       ),

@@ -30,6 +30,10 @@ void main() {
             'resolution': '1080p',
             'frameRate': '30',
             'codec': 'H.264',
+            'targetWidth': 1080,
+            'targetHeight': 1920,
+            'cropToPortrait': true,
+            'requiresReencode': true,
           });
 
           return {
@@ -38,6 +42,10 @@ void main() {
             'resolution': '1080p',
             'frameRate': '30',
             'codec': 'H.264',
+            'targetWidth': 1080,
+            'targetHeight': 1920,
+            'cropToPortrait': true,
+            'requiresReencode': true,
           };
         });
 
@@ -53,6 +61,10 @@ void main() {
     expect(result.resolution, '1080p');
     expect(result.frameRate, '30');
     expect(result.codec, 'H.264');
+    expect(result.targetWidth, 1080);
+    expect(result.targetHeight, 1920);
+    expect(result.cropToPortrait, isTrue);
+    expect(result.requiresReencode, isTrue);
     expect(result.isSavedToGallery, isTrue);
   });
 

@@ -16,6 +16,10 @@ class RenderRequest {
     required this.resolution,
     required this.frameRate,
     required this.codec,
+    required this.targetWidth,
+    required this.targetHeight,
+    required this.cropToPortrait,
+    required this.requiresReencode,
   });
 
   final String sourcePath;
@@ -24,6 +28,10 @@ class RenderRequest {
   final String resolution;
   final String frameRate;
   final String codec;
+  final int targetWidth;
+  final int targetHeight;
+  final bool cropToPortrait;
+  final bool requiresReencode;
 }
 
 class RenderResult {
@@ -33,6 +41,10 @@ class RenderResult {
     this.resolution,
     this.frameRate,
     this.codec,
+    this.targetWidth,
+    this.targetHeight,
+    this.cropToPortrait,
+    this.requiresReencode,
   });
 
   final String cachePath;
@@ -40,6 +52,10 @@ class RenderResult {
   final String? resolution;
   final String? frameRate;
   final String? codec;
+  final int? targetWidth;
+  final int? targetHeight;
+  final bool? cropToPortrait;
+  final bool? requiresReencode;
 }
 
 @HostApi()

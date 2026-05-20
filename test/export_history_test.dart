@@ -29,6 +29,10 @@ void main() {
         resolution: '1080p',
         frameRate: '30',
         codec: 'H.264',
+        targetWidth: 1080,
+        targetHeight: 1920,
+        cropToPortrait: true,
+        requiresReencode: true,
       ),
     );
     await repository.add(
@@ -50,6 +54,10 @@ void main() {
     expect(items.last.resolution, '1080p');
     expect(items.last.frameRate, '30');
     expect(items.last.codec, 'H.264');
+    expect(items.last.targetWidth, 1080);
+    expect(items.last.targetHeight, 1920);
+    expect(items.last.cropToPortrait, isTrue);
+    expect(items.last.requiresReencode, isTrue);
   });
 
   test('rename updates title', () async {

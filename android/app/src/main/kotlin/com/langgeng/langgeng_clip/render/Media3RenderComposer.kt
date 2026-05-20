@@ -20,6 +20,8 @@ data class Media3RenderRequest(
     val resolution: String,
     val frameRate: String,
     val codec: String,
+    val targetWidth: Int,
+    val targetHeight: Int,
     val cropToPortrait: Boolean,
 ) {
     val requiresReencode: Boolean

@@ -58,6 +58,10 @@ class TrimExporter {
         'resolution': options.resolution,
         'frameRate': options.frameRate,
         'codec': options.codec,
+        'targetWidth': options.targetWidth,
+        'targetHeight': options.targetHeight,
+        'cropToPortrait': options.cropToPortrait,
+        'requiresReencode': options.requiresReencode,
       });
     } on PlatformException catch (error) {
       throw TrimExportException.fromPlatformException(error);
@@ -78,6 +82,10 @@ class TrimExportResult {
     this.resolution,
     this.frameRate,
     this.codec,
+    this.targetWidth,
+    this.targetHeight,
+    this.cropToPortrait,
+    this.requiresReencode,
   });
 
   factory TrimExportResult.fromMap(Map<Object?, Object?> map) {
@@ -92,6 +100,10 @@ class TrimExportResult {
       resolution: map['resolution'] as String?,
       frameRate: map['frameRate'] as String?,
       codec: map['codec'] as String?,
+      targetWidth: (map['targetWidth'] as num?)?.toInt(),
+      targetHeight: (map['targetHeight'] as num?)?.toInt(),
+      cropToPortrait: map['cropToPortrait'] as bool?,
+      requiresReencode: map['requiresReencode'] as bool?,
     );
   }
 
@@ -100,6 +112,10 @@ class TrimExportResult {
   final String? resolution;
   final String? frameRate;
   final String? codec;
+  final int? targetWidth;
+  final int? targetHeight;
+  final bool? cropToPortrait;
+  final bool? requiresReencode;
 
   bool get isSavedToGallery => galleryUri != null && galleryUri!.isNotEmpty;
 }

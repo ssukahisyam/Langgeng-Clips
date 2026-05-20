@@ -70,6 +70,10 @@ class ExportViewerScreen extends ConsumerWidget {
                               Text(
                                 [
                                   item.resolution,
+                                  item.targetWidth == null ||
+                                          item.targetHeight == null
+                                      ? null
+                                      : '${item.targetWidth}x${item.targetHeight}',
                                   item.frameRate == null
                                       ? null
                                       : '${item.frameRate}fps',

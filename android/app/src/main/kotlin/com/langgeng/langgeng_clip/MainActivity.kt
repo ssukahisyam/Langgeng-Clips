@@ -56,6 +56,10 @@ class MainActivity : FlutterActivity() {
                     resolution = call.argument<String>("resolution") ?: "1080p",
                     frameRate = call.argument<String>("frameRate") ?: "30",
                     codec = call.argument<String>("codec") ?: "H.264",
+                    targetWidth = call.argument<Int>("targetWidth") ?: 1080,
+                    targetHeight = call.argument<Int>("targetHeight") ?: 1920,
+                    cropToPortrait = call.argument<Boolean>("cropToPortrait") ?: true,
+                    requiresReencode = call.argument<Boolean>("requiresReencode") ?: true,
                     result = result,
                 )
                 "cancelExport" -> {
@@ -159,6 +163,10 @@ class MainActivity : FlutterActivity() {
         resolution: String,
         frameRate: String,
         codec: String,
+        targetWidth: Int,
+        targetHeight: Int,
+        cropToPortrait: Boolean,
+        requiresReencode: Boolean,
         result: MethodChannel.Result,
     ) {
         if (sourcePath.isNullOrBlank()) {
@@ -167,6 +175,10 @@ class MainActivity : FlutterActivity() {
         }
         if (endMillis <= startMillis) {
             result.error("invalid_range", "Range export tidak valid.", null)
+            return
+        }
+        if (targetWidth <= 0 || targetHeight <= 0) {
+            result.error("invalid_target", "Resolusi target export tidak valid.", null)
             return
         }
 
@@ -189,6 +201,10 @@ class MainActivity : FlutterActivity() {
                             "resolution" to resolution,
                             "frameRate" to frameRate,
                             "codec" to codec,
+                            "targetWidth" to targetWidth,
+                            "targetHeight" to targetHeight,
+                            "cropToPortrait" to cropToPortrait,
+                            "requiresReencode" to requiresReencode,
                         ),
                     )
                 }

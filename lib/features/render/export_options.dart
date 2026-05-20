@@ -11,6 +11,26 @@ class ExportOptions {
   final String frameRate;
   final String codec;
 
+  int get targetWidth {
+    return switch (resolution) {
+      '720p' => 720,
+      '4K' => 2160,
+      _ => 1080,
+    };
+  }
+
+  int get targetHeight {
+    return switch (resolution) {
+      '720p' => 1280,
+      '4K' => 3840,
+      _ => 1920,
+    };
+  }
+
+  bool get cropToPortrait => true;
+
+  bool get requiresReencode => cropToPortrait || codec != 'copy';
+
   int estimateSizeBytes(EditorClip clip) {
     final bitrateMbps = switch (resolution) {
       '720p' => 5,
