@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 
 import '../import/selected_video_controller.dart';
 import '../library/export_history.dart';
+import '../render/export_options.dart';
 import '../render/export_sheet.dart';
 import '../render/trim_exporter.dart';
 import 'editor_project.dart';
@@ -144,9 +145,10 @@ class _EditorScreenState extends ConsumerState<EditorScreen> {
                         : () => showExportSheet(
                             context: context,
                             clip: project.activeClip,
-                            onExport: (_) => _exportActiveClip(
+                            onExport: (options) => _exportActiveClipWithOptions(
                               video.path,
                               project.activeClip,
+                              options,
                             ),
                           ),
                     child: _isExporting
@@ -194,7 +196,11 @@ class _EditorScreenState extends ConsumerState<EditorScreen> {
     ref.read(editorProjectProvider.notifier).state = project.setActiveClip(id);
   }
 
-  Future<void> _exportActiveClip(String sourcePath, EditorClip clip) async {
+  Future<void> _exportActiveClipWithOptions(
+    String sourcePath,
+    EditorClip clip,
+    ExportOptions options,
+  ) async {
     setState(() {
       _isExporting = true;
       _exportProgress = 0;
@@ -208,6 +214,7 @@ class _EditorScreenState extends ConsumerState<EditorScreen> {
             sourcePath: sourcePath,
             startMillis: clip.startMillis,
             endMillis: clip.endMillis,
+            options: options,
           );
       final project = ref.read(editorProjectProvider);
       if (project != null) {
