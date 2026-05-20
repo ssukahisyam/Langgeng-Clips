@@ -53,6 +53,38 @@ class ExportHistoryRepository {
 
   Future<void> add(ExportHistoryItem item) async {
     final items = [item, ...readAll()];
+    await _writeAll(items);
+  }
+
+  Future<void> delete(String id) async {
+    final items = readAll().where((item) => item.id != id).toList();
+    await _writeAll(items);
+  }
+
+  Future<void> rename({required String id, required String title}) async {
+    final items = [
+      for (final item in readAll())
+        if (item.id == id) item.copyWith(title: title) else item,
+    ];
+    await _writeAll(items);
+  }
+
+  Future<void> duplicate(String id) async {
+    final source = readAll().where((item) => item.id == id).firstOrNull;
+    if (source == null) {
+      return;
+    }
+
+    await add(
+      source.copyWith(
+        id: DateTime.now().microsecondsSinceEpoch.toString(),
+        title: '${source.title} (copy)',
+        createdAtMillis: DateTime.now().millisecondsSinceEpoch,
+      ),
+    );
+  }
+
+  Future<void> _writeAll(List<ExportHistoryItem> items) async {
     final encoded = jsonEncode(items.map((item) => item.toJson()).toList());
     await _preferences.setString(_itemsKey, encoded);
   }
@@ -87,6 +119,24 @@ class ExportHistoryItem {
   final int durationMillis;
 
   bool get isSavedToGallery => galleryUri != null && galleryUri!.isNotEmpty;
+
+  ExportHistoryItem copyWith({
+    String? id,
+    String? title,
+    String? cachePath,
+    String? galleryUri,
+    int? createdAtMillis,
+    int? durationMillis,
+  }) {
+    return ExportHistoryItem(
+      id: id ?? this.id,
+      title: title ?? this.title,
+      cachePath: cachePath ?? this.cachePath,
+      galleryUri: galleryUri ?? this.galleryUri,
+      createdAtMillis: createdAtMillis ?? this.createdAtMillis,
+      durationMillis: durationMillis ?? this.durationMillis,
+    );
+  }
 
   Map<String, dynamic> toJson() {
     return {
