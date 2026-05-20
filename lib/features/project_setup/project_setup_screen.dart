@@ -123,11 +123,13 @@ class _ProjectSetupScreenState extends ConsumerState<ProjectSetupScreen> {
                     onPressed: () {
                       ref
                           .read(editorProjectProvider.notifier)
-                          .state = EditorProject(
+                          .state = EditorProject.initial(
                         title: video.name,
                         template: _template,
                         clipCount: _clipCount,
                         targetDuration: _duration,
+                        durationMillis:
+                            metadata?.valueOrNull?.durationMillis ?? 60000,
                       );
                       context.go('/editor');
                     },

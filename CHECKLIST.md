@@ -122,11 +122,11 @@ Master task list end-to-end. Centang sambil jalan. Update minimal mingguan.
 - [x] Editor scaffold: top bar, preview, transport, timeline, tab bar
 - [ ] ExoPlayer integrate via Pigeon (preview)
 - [ ] Timeline: waveform render
-- [ ] Timeline: scrubber + playhead
-- [ ] Timeline: clip range handles (drag start/end)
+- [x] Timeline: scrubber + playhead
+- [x] Timeline: clip range handles (drag start/end)
 - [ ] Timeline: pinch zoom
-- [ ] Manual: split clip
-- [ ] Manual: multi-clip support
+- [x] Manual: split clip
+- [x] Manual: multi-clip support
 - [ ] Auto-save state project tiap 30s
 - [x] Project rename via top bar tap
 
