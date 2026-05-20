@@ -144,7 +144,7 @@ Master task list end-to-end. Centang sambil jalan. Update minimal mingguan.
 - [x] Estimasi size + duration
 - [x] Save ke MediaStore + register library
 - [ ] Cancel render flow
-- [ ] Error handling render fail
+- [x] Error handling render fail
 - [ ] ProGuard rules untuk Media3 + Pigeon + Sentry
 
 ### 1.5 Library

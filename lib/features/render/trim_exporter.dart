@@ -15,14 +15,27 @@ class TrimExporter {
     required int startMillis,
     required int endMillis,
   }) async {
-    final result = await _channel.invokeMapMethod<Object?, Object?>(
-      'exportTrim',
-      {
+    if (sourcePath.trim().isEmpty) {
+      throw const TrimExportException(
+        'File sumber tidak tersedia. Pilih ulang video.',
+      );
+    }
+    if (endMillis <= startMillis) {
+      throw const TrimExportException(
+        'Range clip tidak valid. Geser start/end clip.',
+      );
+    }
+
+    Map<Object?, Object?>? result;
+    try {
+      result = await _channel.invokeMapMethod<Object?, Object?>('exportTrim', {
         'sourcePath': sourcePath,
         'startMillis': startMillis,
         'endMillis': endMillis,
-      },
-    );
+      });
+    } on PlatformException catch (error) {
+      throw TrimExportException.fromPlatformException(error);
+    }
 
     if (result == null) {
       throw const TrimExportException('Output export tidak tersedia.');
@@ -55,6 +68,23 @@ class TrimExportResult {
 
 class TrimExportException implements Exception {
   const TrimExportException(this.message);
+
+  factory TrimExportException.fromPlatformException(PlatformException error) {
+    final message = error.message;
+    if (message != null && message.trim().isNotEmpty) {
+      return TrimExportException(message);
+    }
+
+    return switch (error.code) {
+      'invalid_source' => const TrimExportException(
+        'File sumber tidak tersedia. Pilih ulang video.',
+      ),
+      'invalid_range' => const TrimExportException(
+        'Range clip tidak valid. Geser start/end clip.',
+      ),
+      _ => const TrimExportException('Export gagal. Coba ulangi.'),
+    };
+  }
 
   final String message;
 

@@ -52,4 +52,60 @@ void main() {
       throwsA(isA<TrimExportException>()),
     );
   });
+
+  test('export validates empty source before native call', () async {
+    await expectLater(
+      const TrimExporter().export(
+        sourcePath: '',
+        startMillis: 1000,
+        endMillis: 5000,
+      ),
+      throwsA(
+        isA<TrimExportException>().having(
+          (error) => error.message,
+          'message',
+          'File sumber tidak tersedia. Pilih ulang video.',
+        ),
+      ),
+    );
+  });
+
+  test('export validates invalid range before native call', () async {
+    await expectLater(
+      const TrimExporter().export(
+        sourcePath: '/video/input.mp4',
+        startMillis: 5000,
+        endMillis: 1000,
+      ),
+      throwsA(
+        isA<TrimExportException>().having(
+          (error) => error.message,
+          'message',
+          'Range clip tidak valid. Geser start/end clip.',
+        ),
+      ),
+    );
+  });
+
+  test('export maps platform exceptions to readable errors', () async {
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+        .setMockMethodCallHandler(channel, (call) async {
+          throw PlatformException(code: 'invalid_range');
+        });
+
+    await expectLater(
+      const TrimExporter().export(
+        sourcePath: '/video/input.mp4',
+        startMillis: 1000,
+        endMillis: 5000,
+      ),
+      throwsA(
+        isA<TrimExportException>().having(
+          (error) => error.message,
+          'message',
+          'Range clip tidak valid. Geser start/end clip.',
+        ),
+      ),
+    );
+  });
 }

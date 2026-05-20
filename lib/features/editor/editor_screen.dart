@@ -195,8 +195,12 @@ class _EditorScreenState extends ConsumerState<EditorScreen> {
           ),
         ),
       );
-    } catch (error) {
-      messenger.showSnackBar(SnackBar(content: Text('Export gagal: $error')));
+    } on TrimExportException catch (error) {
+      messenger.showSnackBar(SnackBar(content: Text(error.message)));
+    } catch (_) {
+      messenger.showSnackBar(
+        const SnackBar(content: Text('Export gagal. Coba ulangi.')),
+      );
     } finally {
       if (mounted) {
         setState(() => _isExporting = false);
