@@ -80,7 +80,7 @@ class _ApiKeySetupScreenState extends ConsumerState<ApiKeySetupScreen> {
               ),
               const SizedBox(height: 16),
               TextButton(
-                onPressed: () {},
+                onPressed: () => _showApiKeyGuide(context),
                 child: const Text('Cara dapat API key'),
               ),
               const Spacer(),
@@ -107,6 +107,80 @@ class _ApiKeySetupScreenState extends ConsumerState<ApiKeySetupScreen> {
             ],
           ),
         ),
+      ),
+    );
+  }
+
+  void _showApiKeyGuide(BuildContext context) {
+    showModalBottomSheet<void>(
+      context: context,
+      showDragHandle: true,
+      builder: (context) {
+        return SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(24, 8, 24, 24),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Cara dapat Groq API key',
+                  style: Theme.of(
+                    context,
+                  ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w700),
+                ),
+                const SizedBox(height: 16),
+                const _GuideStep(
+                  number: '1',
+                  text: 'Buka console.groq.com dan login atau daftar akun.',
+                ),
+                const _GuideStep(
+                  number: '2',
+                  text: 'Masuk ke menu API Keys, lalu buat key baru.',
+                ),
+                const _GuideStep(
+                  number: '3',
+                  text: 'Copy key yang diawali gsk_ dan paste di halaman ini.',
+                ),
+                const _GuideStep(
+                  number: '4',
+                  text:
+                      'Key hanya disimpan di device kamu dan dipakai langsung ke Groq.',
+                ),
+                const SizedBox(height: 16),
+                FilledButton(
+                  onPressed: () => Navigator.of(context).pop(),
+                  child: const Text('Mengerti'),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _GuideStep extends StatelessWidget {
+  const _GuideStep({required this.number, required this.text});
+
+  final String number;
+  final String text;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          CircleAvatar(
+            radius: 13,
+            child: Text(number, style: Theme.of(context).textTheme.labelSmall),
+          ),
+          const SizedBox(width: 12),
+          Expanded(child: Text(text)),
+        ],
       ),
     );
   }

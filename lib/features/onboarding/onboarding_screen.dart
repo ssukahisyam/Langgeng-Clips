@@ -4,11 +4,25 @@ import 'package:go_router/go_router.dart';
 
 import '../../core/preferences/preferences_providers.dart';
 
-class OnboardingScreen extends ConsumerWidget {
+class OnboardingScreen extends ConsumerStatefulWidget {
   const OnboardingScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<OnboardingScreen> createState() => _OnboardingScreenState();
+}
+
+class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
+  final _pageController = PageController();
+  int _pageIndex = 0;
+
+  @override
+  void dispose() {
+    _pageController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final pages = [
       _OnboardingPage(
         icon: Icons.folder_open_rounded,
@@ -42,10 +56,31 @@ class OnboardingScreen extends ConsumerWidget {
                   child: const Text('Skip'),
                 ),
               ),
-              Expanded(child: PageView(children: pages)),
+              Expanded(
+                child: PageView(
+                  controller: _pageController,
+                  onPageChanged: (index) => setState(() => _pageIndex = index),
+                  children: pages,
+                ),
+              ),
+              const SizedBox(height: 16),
+              _DotIndicator(length: pages.length, selectedIndex: _pageIndex),
+              const SizedBox(height: 24),
               FilledButton(
-                onPressed: () => _completeOnboarding(context, ref),
-                child: const Text('Get Started'),
+                onPressed: () {
+                  if (_pageIndex < pages.length - 1) {
+                    _pageController.nextPage(
+                      duration: const Duration(milliseconds: 250),
+                      curve: Curves.easeOutCubic,
+                    );
+                    return;
+                  }
+
+                  _completeOnboarding(context, ref);
+                },
+                child: Text(
+                  _pageIndex == pages.length - 1 ? 'Get Started' : 'Next',
+                ),
               ),
             ],
           ),
@@ -61,6 +96,35 @@ class OnboardingScreen extends ConsumerWidget {
     if (context.mounted) {
       context.go('/setup/api-key');
     }
+  }
+}
+
+class _DotIndicator extends StatelessWidget {
+  const _DotIndicator({required this.length, required this.selectedIndex});
+
+  final int length;
+  final int selectedIndex;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: List.generate(length, (index) {
+        final isSelected = index == selectedIndex;
+        return AnimatedContainer(
+          duration: const Duration(milliseconds: 150),
+          width: isSelected ? 20 : 8,
+          height: 8,
+          margin: const EdgeInsets.symmetric(horizontal: 4),
+          decoration: BoxDecoration(
+            color: isSelected
+                ? Theme.of(context).colorScheme.primary
+                : Theme.of(context).colorScheme.outlineVariant,
+            borderRadius: BorderRadius.circular(999),
+          ),
+        );
+      }),
+    );
   }
 }
 
