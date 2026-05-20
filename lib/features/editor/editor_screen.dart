@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../import/selected_video_controller.dart';
+import 'editor_project.dart';
 import 'editor_project_controller.dart';
 
 class EditorScreen extends ConsumerStatefulWidget {
@@ -57,9 +58,14 @@ class _EditorScreenState extends ConsumerState<EditorScreen> {
                   _TransportBar(
                     isPlaying: _isPlaying,
                     onPlayPause: () => setState(() => _isPlaying = !_isPlaying),
+                    onCut: _addClipFromActiveRange,
                   ),
                   const SizedBox(height: 16),
-                  const _TimelinePlaceholder(),
+                  _TimelineEditor(
+                    project: project,
+                    onRangeChanged: _updateActiveClipRange,
+                    onSelectClip: _selectClip,
+                  ),
                   const SizedBox(height: 16),
                   SingleChildScrollView(
                     scrollDirection: Axis.horizontal,
@@ -101,6 +107,38 @@ class _EditorScreenState extends ConsumerState<EditorScreen> {
         ),
       ),
     );
+  }
+
+  void _updateActiveClipRange(RangeValues values) {
+    final project = ref.read(editorProjectProvider);
+    if (project == null) {
+      return;
+    }
+
+    ref.read(editorProjectProvider.notifier).state = project
+        .updateActiveClipRange(
+          startMillis: values.start.round(),
+          endMillis: values.end.round(),
+        );
+  }
+
+  void _addClipFromActiveRange() {
+    final project = ref.read(editorProjectProvider);
+    if (project == null) {
+      return;
+    }
+
+    ref.read(editorProjectProvider.notifier).state = project
+        .addClipFromActiveRange();
+  }
+
+  void _selectClip(String id) {
+    final project = ref.read(editorProjectProvider);
+    if (project == null) {
+      return;
+    }
+
+    ref.read(editorProjectProvider.notifier).state = project.setActiveClip(id);
   }
 
   Future<void> _renameProject(BuildContext context, String currentTitle) async {
@@ -188,10 +226,15 @@ class _PreviewPanel extends StatelessWidget {
 }
 
 class _TransportBar extends StatelessWidget {
-  const _TransportBar({required this.isPlaying, required this.onPlayPause});
+  const _TransportBar({
+    required this.isPlaying,
+    required this.onPlayPause,
+    required this.onCut,
+  });
 
   final bool isPlaying;
   final VoidCallback onPlayPause;
+  final VoidCallback onCut;
 
   @override
   Widget build(BuildContext context) {
@@ -213,9 +256,9 @@ class _TransportBar extends StatelessWidget {
               label: const Text('Fit'),
             ),
             TextButton.icon(
-              onPressed: () {},
+              onPressed: onCut,
               icon: const Icon(Icons.content_cut_rounded),
-              label: const Text('Cut'),
+              label: const Text('Add'),
             ),
           ],
         ),
@@ -224,11 +267,20 @@ class _TransportBar extends StatelessWidget {
   }
 }
 
-class _TimelinePlaceholder extends StatelessWidget {
-  const _TimelinePlaceholder();
+class _TimelineEditor extends StatelessWidget {
+  const _TimelineEditor({
+    required this.project,
+    required this.onRangeChanged,
+    required this.onSelectClip,
+  });
+
+  final EditorProject project;
+  final ValueChanged<RangeValues> onRangeChanged;
+  final ValueChanged<String> onSelectClip;
 
   @override
   Widget build(BuildContext context) {
+    final activeClip = project.activeClip;
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(16),
@@ -242,23 +294,38 @@ class _TimelinePlaceholder extends StatelessWidget {
               ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700),
             ),
             const SizedBox(height: 16),
-            ClipRRect(
-              borderRadius: BorderRadius.circular(999),
-              child: LinearProgressIndicator(
-                minHeight: 10,
-                value: 0.35,
-                backgroundColor: Theme.of(context).colorScheme.surface,
+            Text(
+              '${formatMillis(activeClip.startMillis)} - '
+              '${formatMillis(activeClip.endMillis)} '
+              '(${formatMillis(activeClip.durationMillis)})',
+            ),
+            RangeSlider(
+              min: 0,
+              max: project.durationMillis.toDouble(),
+              values: RangeValues(
+                activeClip.startMillis.toDouble(),
+                activeClip.endMillis.toDouble(),
               ),
+              labels: RangeLabels(
+                formatMillis(activeClip.startMillis),
+                formatMillis(activeClip.endMillis),
+              ),
+              onChanged: onRangeChanged,
             ),
             const SizedBox(height: 12),
-            Container(
-              height: 36,
-              decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.primaryContainer,
-                borderRadius: BorderRadius.circular(12),
-              ),
-              alignment: Alignment.center,
-              child: const Text('Clip 1 · drag handles coming next'),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: [
+                for (final clip in project.clips)
+                  ChoiceChip(
+                    label: Text(
+                      '${clip.name} · ${formatMillis(clip.durationMillis)}',
+                    ),
+                    selected: clip.id == project.activeClipId,
+                    onSelected: (_) => onSelectClip(clip.id),
+                  ),
+              ],
             ),
           ],
         ),
