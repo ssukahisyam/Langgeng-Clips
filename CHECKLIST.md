@@ -80,7 +80,7 @@ Master task list end-to-end. Centang sambil jalan. Update minimal mingguan.
 ### 0.7 Splash & Onboarding (UI Stub)
 - [x] Splash screen UI
 - [x] Onboarding 3 slide UI
-- [ ] PageView + dot indicator
+- [x] PageView + dot indicator
 - [x] Skip + Next/Get Started button
 - [x] First-run detection logic
 - [ ] Localization ID + EN
@@ -98,7 +98,7 @@ Master task list end-to-end. Centang sambil jalan. Update minimal mingguan.
 - [ ] Language toggle (ID/EN) persist
 - [ ] About section (Privacy, Terms, OSS License, Version)
 - [ ] OSS License auto-generate (`flutter_oss_licenses`)
-- [ ] In-app guide "Cara dapat Groq API key"
+- [x] In-app guide "Cara dapat Groq API key"
 
 ### 1.2 Import & Probe
 - [ ] Home screen layout (greeting, hero CTA, quick template chips)
