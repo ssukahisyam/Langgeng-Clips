@@ -148,7 +148,7 @@ Master task list end-to-end. Centang sambil jalan. Update minimal mingguan.
 - [ ] ProGuard rules untuk Media3 + Pigeon + Sentry
 
 ### 1.5 Library
-- [ ] Library screen list project
+- [x] Library screen list project
 - [ ] Filter chips (All / Drafts / Done)
 - [ ] Search field
 - [ ] Project Detail screen

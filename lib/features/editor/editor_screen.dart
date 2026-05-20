@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../import/selected_video_controller.dart';
+import '../library/export_history.dart';
 import '../render/trim_exporter.dart';
 import 'editor_project.dart';
 import 'editor_project_controller.dart';
@@ -162,6 +163,23 @@ class _EditorScreenState extends ConsumerState<EditorScreen> {
             startMillis: clip.startMillis,
             endMillis: clip.endMillis,
           );
+      final project = ref.read(editorProjectProvider);
+      if (project != null) {
+        final repository = await ref.read(
+          exportHistoryRepositoryProvider.future,
+        );
+        await repository.add(
+          ExportHistoryItem(
+            id: DateTime.now().microsecondsSinceEpoch.toString(),
+            title: '${project.title} · ${clip.name}',
+            cachePath: exportResult.cachePath,
+            galleryUri: exportResult.galleryUri,
+            createdAtMillis: DateTime.now().millisecondsSinceEpoch,
+            durationMillis: clip.durationMillis,
+          ),
+        );
+        ref.invalidate(exportHistoryItemsProvider);
+      }
       messenger.showSnackBar(
         SnackBar(
           content: Text(
