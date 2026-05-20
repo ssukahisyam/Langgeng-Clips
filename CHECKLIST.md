@@ -119,7 +119,7 @@ Master task list end-to-end. Centang sambil jalan. Update minimal mingguan.
 - [x] Template dropdown (4 preset placeholder)
 - [x] Stepper jumlah clip
 - [x] Segmented durasi target
-- [ ] Editor scaffold: top bar, preview, transport, timeline, tab bar
+- [x] Editor scaffold: top bar, preview, transport, timeline, tab bar
 - [ ] ExoPlayer integrate via Pigeon (preview)
 - [ ] Timeline: waveform render
 - [ ] Timeline: scrubber + playhead
@@ -128,7 +128,7 @@ Master task list end-to-end. Centang sambil jalan. Update minimal mingguan.
 - [ ] Manual: split clip
 - [ ] Manual: multi-clip support
 - [ ] Auto-save state project tiap 30s
-- [ ] Project rename via top bar tap
+- [x] Project rename via top bar tap
 
 ### 1.4 Render Pipeline
 - [ ] Pigeon API spec untuk render
