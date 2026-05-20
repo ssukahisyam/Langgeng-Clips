@@ -1,18 +1,39 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-class ApiKeySetupScreen extends StatefulWidget {
+import 'groq_api_key_controller.dart';
+
+class ApiKeySetupScreen extends ConsumerStatefulWidget {
   const ApiKeySetupScreen({super.key});
 
   @override
-  State<ApiKeySetupScreen> createState() => _ApiKeySetupScreenState();
+  ConsumerState<ApiKeySetupScreen> createState() => _ApiKeySetupScreenState();
 }
 
-class _ApiKeySetupScreenState extends State<ApiKeySetupScreen> {
+class _ApiKeySetupScreenState extends ConsumerState<ApiKeySetupScreen> {
+  final _controller = TextEditingController();
   bool _obscure = true;
 
   @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final apiKeyState = ref.watch(groqApiKeyControllerProvider);
+    final isLoading = apiKeyState.isLoading;
+    final errorMessage = apiKeyState.valueOrNull?.errorMessage;
+
+    ref.listen(groqApiKeyControllerProvider, (previous, next) {
+      final value = next.valueOrNull;
+      if (value != null && value.hasKey && value.errorMessage == null) {
+        context.go('/home');
+      }
+    });
+
     return Scaffold(
       appBar: AppBar(),
       body: SafeArea(
@@ -34,10 +55,13 @@ class _ApiKeySetupScreenState extends State<ApiKeySetupScreen> {
               ),
               const SizedBox(height: 24),
               TextField(
+                controller: _controller,
+                enabled: !isLoading,
                 obscureText: _obscure,
                 decoration: InputDecoration(
                   labelText: 'Groq API Key',
                   hintText: 'gsk_...',
+                  errorText: errorMessage,
                   suffixIcon: IconButton(
                     onPressed: () => setState(() => _obscure = !_obscure),
                     icon: Icon(
@@ -61,8 +85,17 @@ class _ApiKeySetupScreenState extends State<ApiKeySetupScreen> {
               ),
               const Spacer(),
               FilledButton(
-                onPressed: () => context.go('/home'),
-                child: const Text('Validasi & Lanjut'),
+                onPressed: isLoading
+                    ? null
+                    : () => ref
+                          .read(groqApiKeyControllerProvider.notifier)
+                          .validateAndSave(_controller.text),
+                child: isLoading
+                    ? const SizedBox.square(
+                        dimension: 20,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : const Text('Validasi & Lanjut'),
               ),
               const SizedBox(height: 8),
               Center(

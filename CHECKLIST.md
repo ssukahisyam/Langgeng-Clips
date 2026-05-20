@@ -90,9 +90,9 @@ Master task list end-to-end. Centang sambil jalan. Update minimal mingguan.
 ## Phase 1 — MVP (4-6 minggu)
 
 ### 1.1 API Key & Settings
-- [ ] API Key Setup screen UI
-- [ ] Validate Groq key endpoint integration
-- [ ] `flutter_secure_storage` integrate
+- [x] API Key Setup screen UI
+- [x] Validate Groq key endpoint integration
+- [x] `flutter_secure_storage` integrate
 - [ ] Settings screen full layout
 - [ ] Theme toggle (System/Light/Dark) persist
 - [ ] Language toggle (ID/EN) persist
