@@ -81,8 +81,8 @@ Master task list end-to-end. Centang sambil jalan. Update minimal mingguan.
 - [x] Splash screen UI
 - [x] Onboarding 3 slide UI
 - [ ] PageView + dot indicator
-- [ ] Skip + Next/Get Started button
-- [ ] First-run detection logic
+- [x] Skip + Next/Get Started button
+- [x] First-run detection logic
 - [ ] Localization ID + EN
 
 ---
@@ -94,7 +94,7 @@ Master task list end-to-end. Centang sambil jalan. Update minimal mingguan.
 - [x] Validate Groq key endpoint integration
 - [x] `flutter_secure_storage` integrate
 - [ ] Settings screen full layout
-- [ ] Theme toggle (System/Light/Dark) persist
+- [x] Theme toggle (System/Light/Dark) persist
 - [ ] Language toggle (ID/EN) persist
 - [ ] About section (Privacy, Terms, OSS License, Version)
 - [ ] OSS License auto-generate (`flutter_oss_licenses`)

@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../onboarding/groq_api_key_controller.dart';
+import '../../core/preferences/preferences_providers.dart';
 import '../../shared/widgets/app_scaffold.dart';
+import '../onboarding/groq_api_key_controller.dart';
 
 class SettingsScreen extends ConsumerWidget {
   const SettingsScreen({super.key});
@@ -15,6 +16,12 @@ class SettingsScreen extends ConsumerWidget {
       error: (_, _) => 'Gagal membaca key',
       loading: () => 'Memuat...',
     );
+    final themeMode = ref.watch(themeModeControllerProvider).valueOrNull;
+    final themeLabel = switch (themeMode ?? ThemeMode.system) {
+      ThemeMode.system => 'System',
+      ThemeMode.light => 'Light',
+      ThemeMode.dark => 'Dark',
+    };
 
     return AppScaffold(
       title: 'Settings',
@@ -33,11 +40,15 @@ class SettingsScreen extends ConsumerWidget {
             ],
           ),
           const SizedBox(height: 16),
-          const _SettingsGroup(
+          _SettingsGroup(
             title: 'Tampilan',
             children: [
-              _SettingsRow(title: 'Tema', subtitle: 'System'),
-              _SettingsRow(title: 'Bahasa', subtitle: 'Indonesia'),
+              _SettingsRow(
+                title: 'Tema',
+                subtitle: themeLabel,
+                onTap: () => _showThemeModeSheet(context, ref),
+              ),
+              const _SettingsRow(title: 'Bahasa', subtitle: 'Indonesia'),
             ],
           ),
           const SizedBox(height: 16),
@@ -51,6 +62,26 @@ class SettingsScreen extends ConsumerWidget {
           ),
         ],
       ),
+    );
+  }
+
+  void _showThemeModeSheet(BuildContext context, WidgetRef ref) {
+    showModalBottomSheet<void>(
+      context: context,
+      showDragHandle: true,
+      builder: (context) {
+        return SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              _ThemeModeTile(title: 'System', value: ThemeMode.system),
+              _ThemeModeTile(title: 'Light', value: ThemeMode.light),
+              _ThemeModeTile(title: 'Dark', value: ThemeMode.dark),
+              const SizedBox(height: 8),
+            ],
+          ),
+        );
+      },
     );
   }
 }
@@ -82,17 +113,45 @@ class _SettingsGroup extends StatelessWidget {
 }
 
 class _SettingsRow extends StatelessWidget {
-  const _SettingsRow({required this.title, this.subtitle});
+  const _SettingsRow({required this.title, this.subtitle, this.onTap});
 
   final String title;
   final String? subtitle;
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
     return ListTile(
+      onTap: onTap,
       title: Text(title),
       subtitle: subtitle == null ? null : Text(subtitle!),
       trailing: const Icon(Icons.chevron_right_rounded),
+    );
+  }
+}
+
+class _ThemeModeTile extends ConsumerWidget {
+  const _ThemeModeTile({required this.title, required this.value});
+
+  final String title;
+  final ThemeMode value;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final current = ref.watch(themeModeControllerProvider).valueOrNull;
+    final isSelected = (current ?? ThemeMode.system) == value;
+
+    return ListTile(
+      title: Text(title),
+      trailing: isSelected ? const Icon(Icons.check_rounded) : null,
+      onTap: () async {
+        await ref
+            .read(themeModeControllerProvider.notifier)
+            .setThemeMode(value);
+        if (context.mounted) {
+          Navigator.of(context).pop();
+        }
+      },
     );
   }
 }

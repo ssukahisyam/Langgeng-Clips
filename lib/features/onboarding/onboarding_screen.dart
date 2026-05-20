@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-class OnboardingScreen extends StatelessWidget {
+import '../../core/preferences/preferences_providers.dart';
+
+class OnboardingScreen extends ConsumerWidget {
   const OnboardingScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final pages = [
       _OnboardingPage(
         icon: Icons.folder_open_rounded,
@@ -35,13 +38,13 @@ class OnboardingScreen extends StatelessWidget {
               Align(
                 alignment: Alignment.centerRight,
                 child: TextButton(
-                  onPressed: () => context.go('/setup/api-key'),
+                  onPressed: () => _completeOnboarding(context, ref),
                   child: const Text('Skip'),
                 ),
               ),
               Expanded(child: PageView(children: pages)),
               FilledButton(
-                onPressed: () => context.go('/setup/api-key'),
+                onPressed: () => _completeOnboarding(context, ref),
                 child: const Text('Get Started'),
               ),
             ],
@@ -49,6 +52,15 @@ class OnboardingScreen extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  Future<void> _completeOnboarding(BuildContext context, WidgetRef ref) async {
+    final preferences = await ref.read(appPreferencesProvider.future);
+    await preferences.setHasCompletedOnboarding(true);
+
+    if (context.mounted) {
+      context.go('/setup/api-key');
+    }
   }
 }
 
