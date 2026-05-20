@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../editor/editor_project.dart';
+import 'export_actions.dart';
 import 'export_history.dart';
 
 class ExportDetailScreen extends ConsumerWidget {
@@ -50,6 +52,37 @@ class ExportDetailScreen extends ConsumerWidget {
                       ),
                     ),
                     const SizedBox(height: 16),
+                    FilledButton.icon(
+                      onPressed: () =>
+                          context.go('/library/export/${item.id}/viewer'),
+                      icon: const Icon(Icons.fullscreen_rounded),
+                      label: const Text('Open viewer'),
+                    ),
+                    const SizedBox(height: 8),
+                    FilledButton.tonalIcon(
+                      onPressed: () => _share(item),
+                      icon: const Icon(Icons.share_rounded),
+                      label: const Text('Share clip'),
+                    ),
+                    const SizedBox(height: 8),
+                    OutlinedButton.icon(
+                      onPressed: () => _rename(context, ref, item),
+                      icon: const Icon(Icons.edit_outlined),
+                      label: const Text('Rename'),
+                    ),
+                    const SizedBox(height: 8),
+                    OutlinedButton.icon(
+                      onPressed: () => _duplicate(context, ref, item),
+                      icon: const Icon(Icons.copy_rounded),
+                      label: const Text('Duplicate'),
+                    ),
+                    const SizedBox(height: 8),
+                    OutlinedButton.icon(
+                      onPressed: () => _delete(context, ref, item),
+                      icon: const Icon(Icons.delete_outline_rounded),
+                      label: const Text('Delete'),
+                    ),
+                    const SizedBox(height: 16),
                     _PathTile(title: 'Cache path', value: item.cachePath),
                     if (item.galleryUri != null) ...[
                       const SizedBox(height: 8),
@@ -70,6 +103,106 @@ class ExportDetailScreen extends ConsumerWidget {
         '${value.day.toString().padLeft(2, '0')} '
         '${value.hour.toString().padLeft(2, '0')}:'
         '${value.minute.toString().padLeft(2, '0')}';
+  }
+
+  Future<void> _share(ExportHistoryItem item) async {
+    final uri = item.galleryUri;
+    if (uri == null || uri.isEmpty) {
+      throw const ExportActionException('Export belum tersimpan di Gallery.');
+    }
+
+    await const ExportActions().share(uri: uri, title: item.title);
+  }
+
+  Future<void> _rename(
+    BuildContext context,
+    WidgetRef ref,
+    ExportHistoryItem item,
+  ) async {
+    final controller = TextEditingController(text: item.title);
+    final newTitle = await showDialog<String>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Rename export'),
+        content: TextField(
+          controller: controller,
+          autofocus: true,
+          decoration: const InputDecoration(labelText: 'Title'),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(context).pop(controller.text),
+            child: const Text('Save'),
+          ),
+        ],
+      ),
+    );
+    controller.dispose();
+
+    final title = newTitle?.trim();
+    if (title == null || title.isEmpty) {
+      return;
+    }
+
+    final repository = await ref.read(exportHistoryRepositoryProvider.future);
+    await repository.rename(id: item.id, title: title);
+    ref
+      ..invalidate(exportHistoryItemsProvider)
+      ..invalidate(exportHistoryItemProvider(item.id));
+  }
+
+  Future<void> _duplicate(
+    BuildContext context,
+    WidgetRef ref,
+    ExportHistoryItem item,
+  ) async {
+    final repository = await ref.read(exportHistoryRepositoryProvider.future);
+    await repository.duplicate(item.id);
+    ref.invalidate(exportHistoryItemsProvider);
+    if (context.mounted) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Export duplicated.')));
+    }
+  }
+
+  Future<void> _delete(
+    BuildContext context,
+    WidgetRef ref,
+    ExportHistoryItem item,
+  ) async {
+    final shouldDelete = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Delete export?'),
+        content: const Text('History export akan dihapus dari Library.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: const Text('Delete'),
+          ),
+        ],
+      ),
+    );
+
+    if (shouldDelete != true) {
+      return;
+    }
+
+    final repository = await ref.read(exportHistoryRepositoryProvider.future);
+    await repository.delete(item.id);
+    ref.invalidate(exportHistoryItemsProvider);
+    if (context.mounted) {
+      context.go('/library');
+    }
   }
 }
 

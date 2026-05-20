@@ -1,6 +1,7 @@
 package com.langgeng.langgeng_clip
 
 import android.content.ContentValues
+import android.content.Intent
 import android.media.MediaExtractor
 import android.media.MediaFormat
 import android.media.MediaMetadataRetriever
@@ -9,6 +10,7 @@ import android.os.Build
 import android.os.Handler
 import android.os.Looper
 import android.provider.MediaStore
+import android.net.Uri
 import io.flutter.embedding.android.FlutterActivity
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.EventChannel
@@ -69,6 +71,36 @@ class MainActivity : FlutterActivity() {
                 }
             },
         )
+
+        MethodChannel(
+            flutterEngine.dartExecutor.binaryMessenger,
+            "com.langgeng.clip/export_actions",
+        ).setMethodCallHandler { call, result ->
+            when (call.method) {
+                "share" -> shareExport(
+                    uri = call.argument<String>("uri"),
+                    title = call.argument<String>("title") ?: "Langgeng Clip export",
+                    result = result,
+                )
+                else -> result.notImplemented()
+            }
+        }
+    }
+
+    private fun shareExport(uri: String?, title: String, result: MethodChannel.Result) {
+        if (uri.isNullOrBlank()) {
+            result.error("invalid_uri", "URI export tidak tersedia.", null)
+            return
+        }
+
+        val shareIntent = Intent(Intent.ACTION_SEND).apply {
+            type = "video/mp4"
+            putExtra(Intent.EXTRA_STREAM, Uri.parse(uri))
+            putExtra(Intent.EXTRA_TITLE, title)
+            addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+        }
+        startActivity(Intent.createChooser(shareIntent, title))
+        result.success(null)
     }
 
     private fun probeVideo(path: String?, result: MethodChannel.Result) {

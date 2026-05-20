@@ -152,11 +152,11 @@ Master task list end-to-end. Centang sambil jalan. Update minimal mingguan.
 - [x] Filter chips (All / Drafts / Done)
 - [x] Search field
 - [x] Project Detail screen
-- [ ] Clip viewer fullscreen
-- [ ] Share clip (Android share intent)
-- [ ] Delete project (dengan konfirmasi)
-- [ ] Rename project
-- [ ] Duplicate project
+- [x] Clip viewer fullscreen
+- [x] Share clip (Android share intent)
+- [x] Delete project (dengan konfirmasi)
+- [x] Rename project
+- [x] Duplicate project
 
 ### 1.6 MVP QA & Release
 - [ ] Manual QA matrix 5 device (low/mid/high)
