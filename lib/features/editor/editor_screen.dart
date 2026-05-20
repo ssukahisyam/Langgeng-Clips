@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../import/selected_video_controller.dart';
 import '../library/export_history.dart';
+import '../render/export_sheet.dart';
 import '../render/trim_exporter.dart';
 import 'editor_project.dart';
 import 'editor_project_controller.dart';
@@ -104,7 +105,12 @@ class _EditorScreenState extends ConsumerState<EditorScreen> {
               child: FilledButton(
                 onPressed: _isExporting
                     ? null
-                    : () => _exportActiveClip(video.path, project.activeClip),
+                    : () => showExportSheet(
+                        context: context,
+                        clip: project.activeClip,
+                        onExport: (_) =>
+                            _exportActiveClip(video.path, project.activeClip),
+                      ),
                 child: _isExporting
                     ? const SizedBox.square(
                         dimension: 20,
