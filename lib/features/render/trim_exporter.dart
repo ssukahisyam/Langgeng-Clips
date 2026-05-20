@@ -9,6 +9,22 @@ class TrimExporter {
   const TrimExporter();
 
   static const _channel = MethodChannel('com.langgeng.clip/trim_export');
+  static const _progressChannel = EventChannel(
+    'com.langgeng.clip/trim_export_progress',
+  );
+
+  Stream<double> get progressStream {
+    return _progressChannel.receiveBroadcastStream().map((event) {
+      if (event is Map) {
+        final progress = event['progress'];
+        if (progress is num) {
+          return progress.toDouble().clamp(0, 1);
+        }
+      }
+
+      return 0.0;
+    });
+  }
 
   Future<TrimExportResult> export({
     required String sourcePath,

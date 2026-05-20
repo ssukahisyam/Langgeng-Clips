@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -20,6 +22,26 @@ class _EditorScreenState extends ConsumerState<EditorScreen> {
   String _activePanel = 'Clips';
   bool _isPlaying = false;
   bool _isExporting = false;
+  double _exportProgress = 0;
+  StreamSubscription<double>? _exportProgressSubscription;
+
+  @override
+  void initState() {
+    super.initState();
+    _exportProgressSubscription = const TrimExporter().progressStream.listen((
+      progress,
+    ) {
+      if (mounted) {
+        setState(() => _exportProgress = progress);
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _exportProgressSubscription?.cancel();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -102,21 +124,31 @@ class _EditorScreenState extends ConsumerState<EditorScreen> {
             ),
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
-              child: FilledButton(
-                onPressed: _isExporting
-                    ? null
-                    : () => showExportSheet(
-                        context: context,
-                        clip: project.activeClip,
-                        onExport: (_) =>
-                            _exportActiveClip(video.path, project.activeClip),
-                      ),
-                child: _isExporting
-                    ? const SizedBox.square(
-                        dimension: 20,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      )
-                    : const Text('Export active clip'),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  if (_isExporting) ...[
+                    LinearProgressIndicator(value: _exportProgress),
+                    const SizedBox(height: 8),
+                    Text('${(_exportProgress * 100).round()}%'),
+                    const SizedBox(height: 8),
+                  ],
+                  FilledButton(
+                    onPressed: _isExporting
+                        ? null
+                        : () => showExportSheet(
+                            context: context,
+                            clip: project.activeClip,
+                            onExport: (_) => _exportActiveClip(
+                              video.path,
+                              project.activeClip,
+                            ),
+                          ),
+                    child: _isExporting
+                        ? const Text('Exporting...')
+                        : const Text('Export active clip'),
+                  ),
+                ],
               ),
             ),
           ],
@@ -158,7 +190,10 @@ class _EditorScreenState extends ConsumerState<EditorScreen> {
   }
 
   Future<void> _exportActiveClip(String sourcePath, EditorClip clip) async {
-    setState(() => _isExporting = true);
+    setState(() {
+      _isExporting = true;
+      _exportProgress = 0;
+    });
     final messenger = ScaffoldMessenger.of(context);
 
     try {
@@ -195,6 +230,7 @@ class _EditorScreenState extends ConsumerState<EditorScreen> {
           ),
         ),
       );
+      setState(() => _exportProgress = 1);
     } on TrimExportException catch (error) {
       messenger.showSnackBar(SnackBar(content: Text(error.message)));
     } catch (_) {
