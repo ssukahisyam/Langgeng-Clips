@@ -1,20 +1,39 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-class SplashScreen extends StatefulWidget {
+import '../../core/preferences/preferences_providers.dart';
+import '../onboarding/groq_api_key_controller.dart';
+
+class SplashScreen extends ConsumerStatefulWidget {
   const SplashScreen({super.key});
 
   @override
-  State<SplashScreen> createState() => _SplashScreenState();
+  ConsumerState<SplashScreen> createState() => _SplashScreenState();
 }
 
-class _SplashScreenState extends State<SplashScreen> {
+class _SplashScreenState extends ConsumerState<SplashScreen> {
   @override
   void initState() {
     super.initState();
-    Future<void>.delayed(const Duration(milliseconds: 600), () {
+    Future<void>.delayed(const Duration(milliseconds: 600), () async {
       if (mounted) {
-        context.go('/onboarding');
+        final preferences = await ref.read(appPreferencesProvider.future);
+        if (!mounted) {
+          return;
+        }
+
+        if (!preferences.hasCompletedOnboarding) {
+          context.go('/onboarding');
+          return;
+        }
+
+        final keyState = await ref.read(groqApiKeyControllerProvider.future);
+        if (!mounted) {
+          return;
+        }
+
+        context.go(keyState.hasKey ? '/home' : '/setup/api-key');
       }
     });
   }
