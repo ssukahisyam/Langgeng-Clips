@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../import/selected_video_controller.dart';
+import 'video_metadata.dart';
+import 'video_metadata_probe.dart';
 
 class ProjectSetupScreen extends ConsumerStatefulWidget {
   const ProjectSetupScreen({super.key});
@@ -20,6 +22,9 @@ class _ProjectSetupScreenState extends ConsumerState<ProjectSetupScreen> {
   @override
   Widget build(BuildContext context) {
     final video = ref.watch(selectedVideoProvider);
+    final metadata = video == null || video.path.isEmpty
+        ? null
+        : ref.watch(videoMetadataProvider(video.path));
 
     return Scaffold(
       appBar: AppBar(title: const Text('Atur Project')),
@@ -29,7 +34,11 @@ class _ProjectSetupScreenState extends ConsumerState<ProjectSetupScreen> {
             : ListView(
                 padding: const EdgeInsets.all(16),
                 children: [
-                  _SourceVideoCard(videoName: video.name, meta: _sourceMeta()),
+                  _SourceVideoCard(
+                    videoName: video.name,
+                    fileMeta: _sourceMeta(),
+                    metadata: metadata,
+                  ),
                   const SizedBox(height: 24),
                   _SectionTitle(title: 'Mode Clipping'),
                   const SizedBox(height: 8),
@@ -134,10 +143,15 @@ class _ProjectSetupScreenState extends ConsumerState<ProjectSetupScreen> {
 }
 
 class _SourceVideoCard extends StatelessWidget {
-  const _SourceVideoCard({required this.videoName, required this.meta});
+  const _SourceVideoCard({
+    required this.videoName,
+    required this.fileMeta,
+    required this.metadata,
+  });
 
   final String videoName;
-  final String meta;
+  final String fileMeta;
+  final AsyncValue<VideoMetadata>? metadata;
 
   @override
   Widget build(BuildContext context) {
@@ -169,12 +183,46 @@ class _SourceVideoCard extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(height: 6),
-                  Text(meta),
+                  Text(fileMeta),
+                  const SizedBox(height: 6),
+                  _MetadataText(metadata: metadata),
                 ],
               ),
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+class _MetadataText extends StatelessWidget {
+  const _MetadataText({required this.metadata});
+
+  final AsyncValue<VideoMetadata>? metadata;
+
+  @override
+  Widget build(BuildContext context) {
+    final value = metadata;
+    if (value == null) {
+      return const Text('Metadata: path file belum tersedia');
+    }
+
+    return value.when(
+      data: (metadata) => Text(
+        '${metadata.formattedDuration} · ${metadata.resolution} · '
+        'rotasi ${metadata.rotationDegrees}° · ${metadata.mimeType}',
+      ),
+      error: (_, _) => const Text('Metadata: gagal dibaca'),
+      loading: () => const Row(
+        children: [
+          SizedBox.square(
+            dimension: 14,
+            child: CircularProgressIndicator(strokeWidth: 2),
+          ),
+          SizedBox(width: 8),
+          Text('Membaca metadata...'),
+        ],
       ),
     );
   }
