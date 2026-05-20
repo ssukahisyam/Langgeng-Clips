@@ -26,6 +26,10 @@ class TrimExporter {
     });
   }
 
+  Future<void> cancel() {
+    return _channel.invokeMethod<void>('cancelExport');
+  }
+
   Future<TrimExportResult> export({
     required String sourcePath,
     required int startMillis,
@@ -98,6 +102,7 @@ class TrimExportException implements Exception {
       'invalid_range' => const TrimExportException(
         'Range clip tidak valid. Geser start/end clip.',
       ),
+      'export_cancelled' => const TrimExportException('Export dibatalkan.'),
       _ => const TrimExportException('Export gagal. Coba ulangi.'),
     };
   }

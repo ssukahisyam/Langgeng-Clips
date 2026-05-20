@@ -19,6 +19,8 @@ import java.nio.ByteBuffer
 
 class MainActivity : FlutterActivity() {
     private var exportProgressSink: EventChannel.EventSink? = null
+    @Volatile
+    private var isExportCancelled = false
     private val mainHandler = Handler(Looper.getMainLooper())
 
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
@@ -45,6 +47,10 @@ class MainActivity : FlutterActivity() {
                     endMillis = call.argument<Int>("endMillis") ?: 0,
                     result = result,
                 )
+                "cancelExport" -> {
+                    isExportCancelled = true
+                    result.success(null)
+                }
                 else -> result.notImplemented()
             }
         }
@@ -120,21 +126,40 @@ class MainActivity : FlutterActivity() {
             return
         }
 
-        try {
-            sendExportProgress(0.0)
-            val outputFile = File(cacheDir, "langgeng_clip_${System.currentTimeMillis()}.mp4")
-            trimWithMuxer(sourcePath, outputFile.absolutePath, startMillis, endMillis)
-            sendExportProgress(0.95)
-            val galleryUri = saveToGallery(outputFile)
-            sendExportProgress(1.0)
-            result.success(
-                mapOf(
-                    "cachePath" to outputFile.absolutePath,
-                    "galleryUri" to galleryUri,
-                ),
-            )
-        } catch (error: Exception) {
-            result.error("export_failed", error.message ?: "Export trim gagal.", null)
+        isExportCancelled = false
+        Thread {
+            try {
+                sendExportProgress(0.0)
+                val outputFile = File(cacheDir, "langgeng_clip_${System.currentTimeMillis()}.mp4")
+                trimWithMuxer(sourcePath, outputFile.absolutePath, startMillis, endMillis)
+                ensureExportNotCancelled()
+                sendExportProgress(0.95)
+                val galleryUri = saveToGallery(outputFile)
+                ensureExportNotCancelled()
+                sendExportProgress(1.0)
+                mainHandler.post {
+                    result.success(
+                        mapOf(
+                            "cachePath" to outputFile.absolutePath,
+                            "galleryUri" to galleryUri,
+                        ),
+                    )
+                }
+            } catch (error: ExportCancelledException) {
+                mainHandler.post {
+                    result.error("export_cancelled", "Export dibatalkan.", null)
+                }
+            } catch (error: Exception) {
+                mainHandler.post {
+                    result.error("export_failed", error.message ?: "Export trim gagal.", null)
+                }
+            }
+        }.start()
+    }
+
+    private fun ensureExportNotCancelled() {
+        if (isExportCancelled) {
+            throw ExportCancelledException()
         }
     }
 
@@ -224,6 +249,7 @@ class MainActivity : FlutterActivity() {
             extractor.seekTo(startUs, MediaExtractor.SEEK_TO_PREVIOUS_SYNC)
 
             while (true) {
+                ensureExportNotCancelled()
                 val sampleTrackIndex = extractor.sampleTrackIndex
                 if (sampleTrackIndex < 0) {
                     break
@@ -268,4 +294,6 @@ class MainActivity : FlutterActivity() {
             muxer?.release()
         }
     }
+
+    private class ExportCancelledException : Exception("Export dibatalkan.")
 }

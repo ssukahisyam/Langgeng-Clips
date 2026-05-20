@@ -108,4 +108,18 @@ void main() {
       ),
     );
   });
+
+  test('cancel calls native cancel method', () async {
+    var called = false;
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+        .setMockMethodCallHandler(channel, (call) async {
+          expect(call.method, 'cancelExport');
+          called = true;
+          return null;
+        });
+
+    await const TrimExporter().cancel();
+
+    expect(called, isTrue);
+  });
 }

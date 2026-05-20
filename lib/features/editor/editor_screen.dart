@@ -132,6 +132,11 @@ class _EditorScreenState extends ConsumerState<EditorScreen> {
                     const SizedBox(height: 8),
                     Text('${(_exportProgress * 100).round()}%'),
                     const SizedBox(height: 8),
+                    TextButton(
+                      onPressed: _cancelExport,
+                      child: const Text('Cancel export'),
+                    ),
+                    const SizedBox(height: 8),
                   ],
                   FilledButton(
                     onPressed: _isExporting
@@ -242,6 +247,18 @@ class _EditorScreenState extends ConsumerState<EditorScreen> {
         setState(() => _isExporting = false);
       }
     }
+  }
+
+  Future<void> _cancelExport() async {
+    await ref.read(trimExporterProvider).cancel();
+    if (!mounted) {
+      return;
+    }
+
+    setState(() => _isExporting = false);
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(const SnackBar(content: Text('Export dibatalkan.')));
   }
 
   Future<void> _renameProject(BuildContext context, String currentTitle) async {
