@@ -19,6 +19,18 @@ final exportHistoryItemsProvider = FutureProvider<List<ExportHistoryItem>>((
   return repository.readAll();
 });
 
+final exportHistoryItemProvider =
+    FutureProvider.family<ExportHistoryItem?, String>((ref, id) async {
+      final items = await ref.watch(exportHistoryItemsProvider.future);
+      for (final item in items) {
+        if (item.id == id) {
+          return item;
+        }
+      }
+
+      return null;
+    });
+
 class ExportHistoryRepository {
   ExportHistoryRepository(this._preferences);
 
@@ -73,6 +85,8 @@ class ExportHistoryItem {
   final String? galleryUri;
   final int createdAtMillis;
   final int durationMillis;
+
+  bool get isSavedToGallery => galleryUri != null && galleryUri!.isNotEmpty;
 
   Map<String, dynamic> toJson() {
     return {
