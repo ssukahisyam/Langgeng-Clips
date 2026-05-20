@@ -1,6 +1,8 @@
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'export_options.dart';
+
 final trimExporterProvider = Provider<TrimExporter>(
   (ref) => const TrimExporter(),
 );
@@ -34,6 +36,7 @@ class TrimExporter {
     required String sourcePath,
     required int startMillis,
     required int endMillis,
+    required ExportOptions options,
   }) async {
     if (sourcePath.trim().isEmpty) {
       throw const TrimExportException(
@@ -52,6 +55,9 @@ class TrimExporter {
         'sourcePath': sourcePath,
         'startMillis': startMillis,
         'endMillis': endMillis,
+        'resolution': options.resolution,
+        'frameRate': options.frameRate,
+        'codec': options.codec,
       });
     } on PlatformException catch (error) {
       throw TrimExportException.fromPlatformException(error);
@@ -66,7 +72,13 @@ class TrimExporter {
 }
 
 class TrimExportResult {
-  const TrimExportResult({required this.cachePath, this.galleryUri});
+  const TrimExportResult({
+    required this.cachePath,
+    this.galleryUri,
+    this.resolution,
+    this.frameRate,
+    this.codec,
+  });
 
   factory TrimExportResult.fromMap(Map<Object?, Object?> map) {
     final cachePath = map['cachePath'] as String?;
@@ -77,11 +89,17 @@ class TrimExportResult {
     return TrimExportResult(
       cachePath: cachePath,
       galleryUri: map['galleryUri'] as String?,
+      resolution: map['resolution'] as String?,
+      frameRate: map['frameRate'] as String?,
+      codec: map['codec'] as String?,
     );
   }
 
   final String cachePath;
   final String? galleryUri;
+  final String? resolution;
+  final String? frameRate;
+  final String? codec;
 
   bool get isSavedToGallery => galleryUri != null && galleryUri!.isNotEmpty;
 }

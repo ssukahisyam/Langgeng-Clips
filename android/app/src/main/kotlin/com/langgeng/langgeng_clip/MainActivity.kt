@@ -47,6 +47,9 @@ class MainActivity : FlutterActivity() {
                     sourcePath = call.argument<String>("sourcePath"),
                     startMillis = call.argument<Int>("startMillis") ?: 0,
                     endMillis = call.argument<Int>("endMillis") ?: 0,
+                    resolution = call.argument<String>("resolution") ?: "1080p",
+                    frameRate = call.argument<String>("frameRate") ?: "30",
+                    codec = call.argument<String>("codec") ?: "H.264",
                     result = result,
                 )
                 "cancelExport" -> {
@@ -147,6 +150,9 @@ class MainActivity : FlutterActivity() {
         sourcePath: String?,
         startMillis: Int,
         endMillis: Int,
+        resolution: String,
+        frameRate: String,
+        codec: String,
         result: MethodChannel.Result,
     ) {
         if (sourcePath.isNullOrBlank()) {
@@ -174,6 +180,9 @@ class MainActivity : FlutterActivity() {
                         mapOf(
                             "cachePath" to outputFile.absolutePath,
                             "galleryUri" to galleryUri,
+                            "resolution" to resolution,
+                            "frameRate" to frameRate,
+                            "codec" to codec,
                         ),
                     )
                 }

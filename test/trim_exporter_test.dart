@@ -1,6 +1,13 @@
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:langgeng_clip/features/render/export_options.dart';
 import 'package:langgeng_clip/features/render/trim_exporter.dart';
+
+const _defaultOptions = ExportOptions(
+  resolution: '1080p',
+  frameRate: '30',
+  codec: 'H.264',
+);
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -20,11 +27,17 @@ void main() {
             'sourcePath': '/video/input.mp4',
             'startMillis': 1000,
             'endMillis': 5000,
+            'resolution': '1080p',
+            'frameRate': '30',
+            'codec': 'H.264',
           });
 
           return {
             'cachePath': '/cache/output.mp4',
             'galleryUri': 'content://media/video/1',
+            'resolution': '1080p',
+            'frameRate': '30',
+            'codec': 'H.264',
           };
         });
 
@@ -32,10 +45,14 @@ void main() {
       sourcePath: '/video/input.mp4',
       startMillis: 1000,
       endMillis: 5000,
+      options: _defaultOptions,
     );
 
     expect(result.cachePath, '/cache/output.mp4');
     expect(result.galleryUri, 'content://media/video/1');
+    expect(result.resolution, '1080p');
+    expect(result.frameRate, '30');
+    expect(result.codec, 'H.264');
     expect(result.isSavedToGallery, isTrue);
   });
 
@@ -48,6 +65,7 @@ void main() {
         sourcePath: '/video/input.mp4',
         startMillis: 1000,
         endMillis: 5000,
+        options: _defaultOptions,
       ),
       throwsA(isA<TrimExportException>()),
     );
@@ -59,6 +77,7 @@ void main() {
         sourcePath: '',
         startMillis: 1000,
         endMillis: 5000,
+        options: _defaultOptions,
       ),
       throwsA(
         isA<TrimExportException>().having(
@@ -76,6 +95,7 @@ void main() {
         sourcePath: '/video/input.mp4',
         startMillis: 5000,
         endMillis: 1000,
+        options: _defaultOptions,
       ),
       throwsA(
         isA<TrimExportException>().having(
@@ -98,6 +118,7 @@ void main() {
         sourcePath: '/video/input.mp4',
         startMillis: 1000,
         endMillis: 5000,
+        options: _defaultOptions,
       ),
       throwsA(
         isA<TrimExportException>().having(
