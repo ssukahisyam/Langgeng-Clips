@@ -2,6 +2,7 @@ import 'package:go_router/go_router.dart';
 
 import '../features/editor/editor_screen.dart';
 import '../features/home/home_screen.dart';
+import '../features/library/export_detail_screen.dart';
 import '../features/library/library_screen.dart';
 import '../features/onboarding/api_key_setup_screen.dart';
 import '../features/onboarding/onboarding_screen.dart';
@@ -30,6 +31,12 @@ final appRouter = GoRouter(
     GoRoute(
       path: '/library',
       builder: (context, state) => const LibraryScreen(),
+    ),
+    GoRoute(
+      path: '/library/export/:id',
+      builder: (context, state) {
+        return ExportDetailScreen(exportId: state.pathParameters['id']!);
+      },
     ),
     GoRoute(
       path: '/settings',

@@ -149,9 +149,9 @@ Master task list end-to-end. Centang sambil jalan. Update minimal mingguan.
 
 ### 1.5 Library
 - [x] Library screen list project
-- [ ] Filter chips (All / Drafts / Done)
+- [x] Filter chips (All / Drafts / Done)
 - [ ] Search field
-- [ ] Project Detail screen
+- [x] Project Detail screen
 - [ ] Clip viewer fullscreen
 - [ ] Share clip (Android share intent)
 - [ ] Delete project (dengan konfirmasi)
