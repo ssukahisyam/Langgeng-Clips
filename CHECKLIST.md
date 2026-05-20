@@ -140,8 +140,8 @@ Master task list end-to-end. Centang sambil jalan. Update minimal mingguan.
 - [ ] Progress event channel
 - [ ] Foreground service untuk render lama
 - [ ] Notification channel + ongoing notification
-- [ ] Export Sheet UI (resolusi, FPS, codec)
-- [ ] Estimasi size + duration
+- [x] Export Sheet UI (resolusi, FPS, codec)
+- [x] Estimasi size + duration
 - [x] Save ke MediaStore + register library
 - [ ] Cancel render flow
 - [ ] Error handling render fail
