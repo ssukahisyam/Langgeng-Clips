@@ -133,7 +133,7 @@ Master task list end-to-end. Centang sambil jalan. Update minimal mingguan.
 ### 1.4 Render Pipeline
 - [ ] Pigeon API spec untuk render
 - [ ] Native Media3 Transformer composer skeleton
-- [ ] Step: trim
+- [x] Step: trim
 - [ ] Step: center crop 9:16
 - [ ] Step: scale ke target resolution
 - [ ] Step: encode H.264
