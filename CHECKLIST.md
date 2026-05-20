@@ -45,24 +45,24 @@ Master task list end-to-end. Centang sambil jalan. Update minimal mingguan.
 - [ ] SECURITY.md (cara report vulnerability)
 
 ### 0.4 Project Init
-- [ ] `flutter create` dengan org `com.langgeng.clip`
+- [x] `flutter create` dengan org `com.langgeng.clip`
 - [ ] Struktur folder sesuai `02-technical-architecture.md`
 - [ ] `pubspec.yaml` dengan dependency utama
-- [ ] `analysis_options.yaml` dengan `very_good_analysis`
+- [x] `analysis_options.yaml` dengan Flutter lint rules
 - [ ] `dart format` config (80 char)
 - [ ] Android: `build.gradle` config (minSdk 26, targetSdk 34)
 - [ ] Android: ktlint + detekt setup
 - [ ] Pre-commit hook: dart format + lint
-- [ ] Theme system (light/dark) + token implementation
-- [ ] Riverpod + go_router skeleton
+- [x] Theme system (light/dark) + token implementation
+- [x] Riverpod + go_router skeleton
 - [ ] DI (get_it) skeleton
 - [ ] Pigeon spec awal (`pigeons/video_pipeline.dart`)
 - [ ] Localization setup (`flutter_localizations` + ARB files)
 
 ### 0.5 CI/CD Foundation
-- [ ] GitHub Actions: lint job
-- [ ] GitHub Actions: test job
-- [ ] GitHub Actions: build APK debug on PR
+- [x] GitHub Actions: lint job
+- [x] GitHub Actions: test job
+- [x] GitHub Actions: build APK debug on PR
 - [ ] Cache pub & gradle di CI
 - [ ] Keystore generated + backed up (3 lokasi)
 - [ ] Keystore password di password manager
@@ -78,8 +78,8 @@ Master task list end-to-end. Centang sambil jalan. Update minimal mingguan.
 - [ ] Sentry PII scrubbing config
 
 ### 0.7 Splash & Onboarding (UI Stub)
-- [ ] Splash screen UI
-- [ ] Onboarding 3 slide UI
+- [x] Splash screen UI
+- [x] Onboarding 3 slide UI
 - [ ] PageView + dot indicator
 - [ ] Skip + Next/Get Started button
 - [ ] First-run detection logic
