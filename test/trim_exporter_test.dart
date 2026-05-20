@@ -22,21 +22,26 @@ void main() {
             'endMillis': 5000,
           });
 
-          return '/cache/output.mp4';
+          return {
+            'cachePath': '/cache/output.mp4',
+            'galleryUri': 'content://media/video/1',
+          };
         });
 
-    final outputPath = await const TrimExporter().export(
+    final result = await const TrimExporter().export(
       sourcePath: '/video/input.mp4',
       startMillis: 1000,
       endMillis: 5000,
     );
 
-    expect(outputPath, '/cache/output.mp4');
+    expect(result.cachePath, '/cache/output.mp4');
+    expect(result.galleryUri, 'content://media/video/1');
+    expect(result.isSavedToGallery, isTrue);
   });
 
   test('export throws when native channel returns empty path', () async {
     TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
-        .setMockMethodCallHandler(channel, (call) async => '');
+        .setMockMethodCallHandler(channel, (call) async => {'cachePath': ''});
 
     await expectLater(
       const TrimExporter().export(

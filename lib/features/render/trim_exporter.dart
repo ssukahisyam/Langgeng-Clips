@@ -10,23 +10,47 @@ class TrimExporter {
 
   static const _channel = MethodChannel('com.langgeng.clip/trim_export');
 
-  Future<String> export({
+  Future<TrimExportResult> export({
     required String sourcePath,
     required int startMillis,
     required int endMillis,
   }) async {
-    final result = await _channel.invokeMethod<String>('exportTrim', {
-      'sourcePath': sourcePath,
-      'startMillis': startMillis,
-      'endMillis': endMillis,
-    });
+    final result = await _channel.invokeMapMethod<Object?, Object?>(
+      'exportTrim',
+      {
+        'sourcePath': sourcePath,
+        'startMillis': startMillis,
+        'endMillis': endMillis,
+      },
+    );
 
-    if (result == null || result.isEmpty) {
+    if (result == null) {
       throw const TrimExportException('Output export tidak tersedia.');
     }
 
-    return result;
+    return TrimExportResult.fromMap(result);
   }
+}
+
+class TrimExportResult {
+  const TrimExportResult({required this.cachePath, this.galleryUri});
+
+  factory TrimExportResult.fromMap(Map<Object?, Object?> map) {
+    final cachePath = map['cachePath'] as String?;
+    if (cachePath == null || cachePath.isEmpty) {
+      throw const TrimExportException('Output cache export tidak tersedia.');
+    }
+
+    return TrimExportResult(
+      cachePath: cachePath,
+      galleryUri: map['galleryUri'] as String?,
+    );
+  }
+
+  final String cachePath;
+  final String? galleryUri;
+
+  bool get isSavedToGallery => galleryUri != null && galleryUri!.isNotEmpty;
 }
 
 class TrimExportException implements Exception {

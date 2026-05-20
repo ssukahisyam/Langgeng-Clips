@@ -155,7 +155,7 @@ class _EditorScreenState extends ConsumerState<EditorScreen> {
     final messenger = ScaffoldMessenger.of(context);
 
     try {
-      final outputPath = await ref
+      final exportResult = await ref
           .read(trimExporterProvider)
           .export(
             sourcePath: sourcePath,
@@ -163,7 +163,13 @@ class _EditorScreenState extends ConsumerState<EditorScreen> {
             endMillis: clip.endMillis,
           );
       messenger.showSnackBar(
-        SnackBar(content: Text('Export selesai: $outputPath')),
+        SnackBar(
+          content: Text(
+            exportResult.isSavedToGallery
+                ? 'Export selesai dan tersimpan di Gallery.'
+                : 'Export selesai: ${exportResult.cachePath}',
+          ),
+        ),
       );
     } catch (error) {
       messenger.showSnackBar(SnackBar(content: Text('Export gagal: $error')));

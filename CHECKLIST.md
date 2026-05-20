@@ -142,7 +142,7 @@ Master task list end-to-end. Centang sambil jalan. Update minimal mingguan.
 - [ ] Notification channel + ongoing notification
 - [ ] Export Sheet UI (resolusi, FPS, codec)
 - [ ] Estimasi size + duration
-- [ ] Save ke MediaStore + register library
+- [x] Save ke MediaStore + register library
 - [ ] Cancel render flow
 - [ ] Error handling render fail
 - [ ] ProGuard rules untuk Media3 + Pigeon + Sentry
