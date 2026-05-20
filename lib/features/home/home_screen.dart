@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../import/import_sheet.dart';
 import '../../shared/widgets/app_scaffold.dart';
 
 class HomeScreen extends StatelessWidget {
@@ -46,7 +47,7 @@ class HomeScreen extends StatelessWidget {
                   const Text('Import video panjang dan mulai potong ke 9:16.'),
                   const SizedBox(height: 16),
                   FilledButton(
-                    onPressed: () {},
+                    onPressed: () => showImportSheet(context),
                     child: const Text('Pilih Video'),
                   ),
                 ],

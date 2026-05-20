@@ -101,9 +101,9 @@ Master task list end-to-end. Centang sambil jalan. Update minimal mingguan.
 - [x] In-app guide "Cara dapat Groq API key"
 
 ### 1.2 Import & Probe
-- [ ] Home screen layout (greeting, hero CTA, quick template chips)
-- [ ] Import Sheet bottom sheet
-- [ ] file_picker integrate (lokal)
+- [x] Home screen layout (greeting, hero CTA, quick template chips)
+- [x] Import Sheet bottom sheet
+- [x] file_picker integrate (lokal)
 - [ ] Native: probe metadata via MediaMetadataRetriever
 - [ ] Probe coverage: durasi, resolusi, codec, rotation, FPS, audio tracks
 - [ ] Probe coverage: VFR detection
