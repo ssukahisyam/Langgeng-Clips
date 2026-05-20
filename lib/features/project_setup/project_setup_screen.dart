@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../editor/editor_project.dart';
+import '../editor/editor_project_controller.dart';
 import '../import/selected_video_controller.dart';
 import 'video_metadata.dart';
 import 'video_metadata_probe.dart';
@@ -119,13 +121,15 @@ class _ProjectSetupScreenState extends ConsumerState<ProjectSetupScreen> {
                   const SizedBox(height: 32),
                   FilledButton(
                     onPressed: () {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text(
-                            'Editor manual akan dibuat di slice berikutnya.',
-                          ),
-                        ),
+                      ref
+                          .read(editorProjectProvider.notifier)
+                          .state = EditorProject(
+                        title: video.name,
+                        template: _template,
+                        clipCount: _clipCount,
+                        targetDuration: _duration,
                       );
+                      context.go('/editor');
                     },
                     child: const Text('Mulai Edit'),
                   ),

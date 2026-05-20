@@ -1,5 +1,6 @@
 import 'package:go_router/go_router.dart';
 
+import '../features/editor/editor_screen.dart';
 import '../features/home/home_screen.dart';
 import '../features/library/library_screen.dart';
 import '../features/onboarding/api_key_setup_screen.dart';
@@ -25,6 +26,7 @@ final appRouter = GoRouter(
       path: '/project/setup',
       builder: (context, state) => const ProjectSetupScreen(),
     ),
+    GoRoute(path: '/editor', builder: (context, state) => const EditorScreen()),
     GoRoute(
       path: '/library',
       builder: (context, state) => const LibraryScreen(),
