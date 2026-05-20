@@ -1,6 +1,9 @@
 package com.langgeng.langgeng_clip
 
 import android.content.ContentValues
+import android.app.Notification
+import android.app.NotificationChannel
+import android.app.NotificationManager
 import android.content.Intent
 import android.media.MediaExtractor
 import android.media.MediaFormat
@@ -20,6 +23,8 @@ import java.io.FileInputStream
 import java.nio.ByteBuffer
 
 class MainActivity : FlutterActivity() {
+    private val exportNotificationId = 3101
+    private val exportChannelId = "langgeng_clip_exports"
     private var exportProgressSink: EventChannel.EventSink? = null
     @Volatile
     private var isExportCancelled = false
@@ -27,6 +32,7 @@ class MainActivity : FlutterActivity() {
 
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
+        ensureExportNotificationChannel()
 
         MethodChannel(
             flutterEngine.dartExecutor.binaryMessenger,
@@ -206,11 +212,53 @@ class MainActivity : FlutterActivity() {
 
     private fun sendExportProgress(value: Double) {
         mainHandler.post {
+            showExportNotification(value)
             exportProgressSink?.success(
                 mapOf(
                     "progress" to value.coerceIn(0.0, 1.0),
                 ),
             )
+        }
+    }
+
+    private fun ensureExportNotificationChannel() {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) {
+            return
+        }
+
+        val notificationManager = getSystemService(NotificationManager::class.java)
+        val channel = NotificationChannel(
+            exportChannelId,
+            "Export progress",
+            NotificationManager.IMPORTANCE_LOW,
+        ).apply {
+            description = "Shows Langgeng Clip export progress."
+        }
+        notificationManager.createNotificationChannel(channel)
+    }
+
+    private fun showExportNotification(value: Double) {
+        val notificationManager = getSystemService(NotificationManager::class.java)
+        val progress = (value.coerceIn(0.0, 1.0) * 100).toInt()
+        val builder = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            Notification.Builder(this, exportChannelId)
+        } else {
+            @Suppress("DEPRECATION")
+            Notification.Builder(this)
+        }
+
+        val notification = builder
+            .setSmallIcon(android.R.drawable.stat_sys_upload)
+            .setContentTitle("Langgeng Clip export")
+            .setContentText(if (progress >= 100) "Export complete" else "Exporting... $progress%")
+            .setProgress(100, progress, false)
+            .setOngoing(progress < 100)
+            .build()
+
+        try {
+            notificationManager.notify(exportNotificationId, notification)
+        } catch (_: SecurityException) {
+            // Android 13+ can require runtime notification permission; export still works.
         }
     }
 

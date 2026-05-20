@@ -26,6 +26,9 @@ void main() {
         galleryUri: 'content://1',
         createdAtMillis: 1000,
         durationMillis: 5000,
+        resolution: '1080p',
+        frameRate: '30',
+        codec: 'H.264',
       ),
     );
     await repository.add(
@@ -44,6 +47,9 @@ void main() {
     expect(items.first.id, '2');
     expect(items.last.id, '1');
     expect(items.last.galleryUri, 'content://1');
+    expect(items.last.resolution, '1080p');
+    expect(items.last.frameRate, '30');
+    expect(items.last.codec, 'H.264');
   });
 
   test('rename updates title', () async {

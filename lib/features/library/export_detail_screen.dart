@@ -47,6 +47,12 @@ class ExportDetailScreen extends ConsumerWidget {
                                   ? 'Status: tersimpan di Gallery'
                                   : 'Status: hanya cache',
                             ),
+                            if (item.resolution != null)
+                              Text('Resolusi: ${item.resolution}'),
+                            if (item.frameRate != null)
+                              Text('FPS: ${item.frameRate}'),
+                            if (item.codec != null)
+                              Text('Codec: ${item.codec}'),
                           ],
                         ),
                       ),

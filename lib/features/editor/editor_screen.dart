@@ -229,6 +229,9 @@ class _EditorScreenState extends ConsumerState<EditorScreen> {
             galleryUri: exportResult.galleryUri,
             createdAtMillis: DateTime.now().millisecondsSinceEpoch,
             durationMillis: clip.durationMillis,
+            resolution: exportResult.resolution,
+            frameRate: exportResult.frameRate,
+            codec: exportResult.codec,
           ),
         );
         ref.invalidate(exportHistoryItemsProvider);

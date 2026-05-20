@@ -131,15 +131,15 @@ Master task list end-to-end. Centang sambil jalan. Update minimal mingguan.
 - [x] Project rename via top bar tap
 
 ### 1.4 Render Pipeline
-- [ ] Pigeon API spec untuk render
-- [ ] Native Media3 Transformer composer skeleton
+- [x] Pigeon API spec untuk render
+- [x] Native Media3 Transformer composer skeleton
 - [x] Step: trim
 - [ ] Step: center crop 9:16
 - [ ] Step: scale ke target resolution
 - [ ] Step: encode H.264
 - [x] Progress event channel
 - [ ] Foreground service untuk render lama
-- [ ] Notification channel + ongoing notification
+- [x] Notification channel + ongoing notification
 - [x] Export Sheet UI (resolusi, FPS, codec)
 - [x] Estimasi size + duration
 - [x] Save ke MediaStore + register library

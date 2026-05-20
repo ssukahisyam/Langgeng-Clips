@@ -64,6 +64,21 @@ class ExportViewerScreen extends ConsumerWidget {
                               formatMillis(item.durationMillis),
                               style: const TextStyle(color: Colors.white70),
                             ),
+                            if (item.resolution != null ||
+                                item.codec != null) ...[
+                              const SizedBox(height: 8),
+                              Text(
+                                [
+                                  item.resolution,
+                                  item.frameRate == null
+                                      ? null
+                                      : '${item.frameRate}fps',
+                                  item.codec,
+                                ].whereType<String>().join(' · '),
+                                style: const TextStyle(color: Colors.white54),
+                                textAlign: TextAlign.center,
+                              ),
+                            ],
                             const SizedBox(height: 16),
                             const Text(
                               'Video playback akan ditambahkan setelah native preview player.',
