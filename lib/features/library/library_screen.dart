@@ -17,6 +17,15 @@ class LibraryScreen extends ConsumerStatefulWidget {
 
 class _LibraryScreenState extends ConsumerState<LibraryScreen> {
   LibraryFilter _filter = LibraryFilter.all;
+  final _searchController = TextEditingController();
+  bool _isSearching = false;
+  String _query = '';
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -26,15 +35,31 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
       title: 'Library',
       currentIndex: 1,
       actions: [
-        IconButton(onPressed: () {}, icon: const Icon(Icons.search_rounded)),
+        IconButton(
+          onPressed: _toggleSearch,
+          icon: Icon(_isSearching ? Icons.close_rounded : Icons.search_rounded),
+        ),
       ],
       child: history.when(
         data: (items) {
           final filtered = _applyFilter(items);
           return Column(
             children: [
+              if (_isSearching)
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
+                  child: TextField(
+                    controller: _searchController,
+                    autofocus: true,
+                    decoration: const InputDecoration(
+                      hintText: 'Cari export...',
+                      prefixIcon: Icon(Icons.search_rounded),
+                    ),
+                    onChanged: (value) => setState(() => _query = value),
+                  ),
+                ),
               Padding(
-                padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
+                padding: EdgeInsets.fromLTRB(16, _isSearching ? 8 : 12, 16, 4),
                 child: SingleChildScrollView(
                   scrollDirection: Axis.horizontal,
                   child: Row(
@@ -65,7 +90,7 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
               ),
               Expanded(
                 child: filtered.isEmpty
-                    ? const _EmptyLibraryState()
+                    ? _EmptyLibraryState(isSearching: _query.trim().isNotEmpty)
                     : ListView.separated(
                         padding: const EdgeInsets.all(16),
                         itemCount: filtered.length,
@@ -86,11 +111,34 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
   }
 
   List<ExportHistoryItem> _applyFilter(List<ExportHistoryItem> items) {
-    return switch (_filter) {
+    final filtered = switch (_filter) {
       LibraryFilter.all => items,
       LibraryFilter.done => items,
-      LibraryFilter.drafts => const [],
+      LibraryFilter.drafts => const <ExportHistoryItem>[],
     };
+
+    final query = _query.trim().toLowerCase();
+    if (query.isEmpty) {
+      return filtered;
+    }
+
+    return filtered
+        .where((item) {
+          return item.title.toLowerCase().contains(query) ||
+              item.cachePath.toLowerCase().contains(query) ||
+              (item.galleryUri?.toLowerCase().contains(query) ?? false);
+        })
+        .toList(growable: false);
+  }
+
+  void _toggleSearch() {
+    setState(() {
+      _isSearching = !_isSearching;
+      if (!_isSearching) {
+        _searchController.clear();
+        _query = '';
+      }
+    });
   }
 }
 
@@ -147,22 +195,31 @@ class _ExportHistoryTile extends StatelessWidget {
 }
 
 class _EmptyLibraryState extends StatelessWidget {
-  const _EmptyLibraryState();
+  const _EmptyLibraryState({this.isSearching = false});
+
+  final bool isSearching;
 
   @override
   Widget build(BuildContext context) {
-    return const Center(
+    return Center(
       child: Padding(
-        padding: EdgeInsets.all(24),
+        padding: const EdgeInsets.all(24),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.video_library_outlined, size: 56),
-            SizedBox(height: 16),
-            Text('Belum ada export'),
-            SizedBox(height: 8),
+            Icon(
+              isSearching
+                  ? Icons.search_off_rounded
+                  : Icons.video_library_outlined,
+              size: 56,
+            ),
+            const SizedBox(height: 16),
+            Text(isSearching ? 'Tidak ada hasil' : 'Belum ada export'),
+            const SizedBox(height: 8),
             Text(
-              'Hasil export dari editor akan muncul di sini.',
+              isSearching
+                  ? 'Coba kata kunci lain atau hapus pencarian.'
+                  : 'Hasil export dari editor akan muncul di sini.',
               textAlign: TextAlign.center,
             ),
           ],
