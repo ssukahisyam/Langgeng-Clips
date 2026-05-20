@@ -1,5 +1,10 @@
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
+
+import 'selected_video.dart';
+import 'selected_video_controller.dart';
 
 Future<void> showImportSheet(BuildContext context) {
   return showModalBottomSheet<void>(
@@ -9,11 +14,11 @@ Future<void> showImportSheet(BuildContext context) {
   );
 }
 
-class ImportSheet extends StatelessWidget {
+class ImportSheet extends ConsumerWidget {
   const ImportSheet({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return SafeArea(
       child: Padding(
         padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
@@ -35,7 +40,7 @@ class ImportSheet extends StatelessWidget {
                     icon: Icons.folder_open_rounded,
                     title: 'File Lokal',
                     subtitle: 'MP4, MOV, atau MKV dari device kamu',
-                    onTap: () => _pickLocalVideo(context),
+                    onTap: () => _pickLocalVideo(context, ref),
                   ),
                   const Divider(height: 1),
                   const _ImportSourceRow(
@@ -64,7 +69,7 @@ class ImportSheet extends StatelessWidget {
     );
   }
 
-  Future<void> _pickLocalVideo(BuildContext context) async {
+  Future<void> _pickLocalVideo(BuildContext context, WidgetRef ref) async {
     final scaffoldMessenger = ScaffoldMessenger.of(context);
     final navigator = Navigator.of(context);
 
@@ -80,12 +85,17 @@ class ImportSheet extends StatelessWidget {
     }
 
     final file = result.files.single;
+    ref.read(selectedVideoProvider.notifier).state =
+        SelectedVideo.fromPlatformFile(file);
+
     navigator.pop();
+    if (!context.mounted) {
+      return;
+    }
+
+    context.go('/project/setup');
     scaffoldMessenger.showSnackBar(
-      SnackBar(
-        content: Text('Dipilih: ${file.name}'),
-        action: SnackBarAction(label: 'OK', onPressed: () {}),
-      ),
+      SnackBar(content: Text('Dipilih: ${file.name}')),
     );
   }
 }

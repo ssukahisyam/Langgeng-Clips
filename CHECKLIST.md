@@ -114,11 +114,11 @@ Master task list end-to-end. Centang sambil jalan. Update minimal mingguan.
 - [ ] Loading state probe video
 
 ### 1.3 Project Setup & Editor (Manual Mode)
-- [ ] Project Setup screen
-- [ ] Mode selector (Manual aktif, Semi-Auto/Auto disabled placeholder)
-- [ ] Template dropdown (4 preset placeholder)
-- [ ] Stepper jumlah clip
-- [ ] Segmented durasi target
+- [x] Project Setup screen
+- [x] Mode selector (Manual aktif, Semi-Auto/Auto disabled placeholder)
+- [x] Template dropdown (4 preset placeholder)
+- [x] Stepper jumlah clip
+- [x] Segmented durasi target
 - [ ] Editor scaffold: top bar, preview, transport, timeline, tab bar
 - [ ] ExoPlayer integrate via Pigeon (preview)
 - [ ] Timeline: waveform render
