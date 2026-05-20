@@ -1,13 +1,17 @@
 package com.langgeng.langgeng_clip
 
+import android.content.ContentValues
 import android.media.MediaExtractor
 import android.media.MediaFormat
 import android.media.MediaMetadataRetriever
 import android.media.MediaMuxer
+import android.os.Build
+import android.provider.MediaStore
 import io.flutter.embedding.android.FlutterActivity
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.MethodChannel
 import java.io.File
+import java.io.FileInputStream
 import java.nio.ByteBuffer
 
 class MainActivity : FlutterActivity() {
@@ -98,10 +102,45 @@ class MainActivity : FlutterActivity() {
         try {
             val outputFile = File(cacheDir, "langgeng_clip_${System.currentTimeMillis()}.mp4")
             trimWithMuxer(sourcePath, outputFile.absolutePath, startMillis, endMillis)
-            result.success(outputFile.absolutePath)
+            val galleryUri = saveToGallery(outputFile)
+            result.success(
+                mapOf(
+                    "cachePath" to outputFile.absolutePath,
+                    "galleryUri" to galleryUri,
+                ),
+            )
         } catch (error: Exception) {
             result.error("export_failed", error.message ?: "Export trim gagal.", null)
         }
+    }
+
+    private fun saveToGallery(outputFile: File): String? {
+        val resolver = applicationContext.contentResolver
+        val values = ContentValues().apply {
+            put(MediaStore.Video.Media.DISPLAY_NAME, outputFile.name)
+            put(MediaStore.Video.Media.MIME_TYPE, "video/mp4")
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                put(MediaStore.Video.Media.RELATIVE_PATH, "Movies/Langgeng Clip")
+                put(MediaStore.Video.Media.IS_PENDING, 1)
+            }
+        }
+
+        val uri = resolver.insert(MediaStore.Video.Media.EXTERNAL_CONTENT_URI, values)
+            ?: return null
+
+        resolver.openOutputStream(uri)?.use { outputStream ->
+            FileInputStream(outputFile).use { inputStream ->
+                inputStream.copyTo(outputStream)
+            }
+        }
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            values.clear()
+            values.put(MediaStore.Video.Media.IS_PENDING, 0)
+            resolver.update(uri, values, null, null)
+        }
+
+        return uri.toString()
     }
 
     private fun trimWithMuxer(
