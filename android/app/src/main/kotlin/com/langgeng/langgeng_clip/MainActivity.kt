@@ -6,15 +6,21 @@ import android.media.MediaFormat
 import android.media.MediaMetadataRetriever
 import android.media.MediaMuxer
 import android.os.Build
+import android.os.Handler
+import android.os.Looper
 import android.provider.MediaStore
 import io.flutter.embedding.android.FlutterActivity
 import io.flutter.embedding.engine.FlutterEngine
+import io.flutter.plugin.common.EventChannel
 import io.flutter.plugin.common.MethodChannel
 import java.io.File
 import java.io.FileInputStream
 import java.nio.ByteBuffer
 
 class MainActivity : FlutterActivity() {
+    private var exportProgressSink: EventChannel.EventSink? = null
+    private val mainHandler = Handler(Looper.getMainLooper())
+
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
 
@@ -42,6 +48,21 @@ class MainActivity : FlutterActivity() {
                 else -> result.notImplemented()
             }
         }
+
+        EventChannel(
+            flutterEngine.dartExecutor.binaryMessenger,
+            "com.langgeng.clip/trim_export_progress",
+        ).setStreamHandler(
+            object : EventChannel.StreamHandler {
+                override fun onListen(arguments: Any?, events: EventChannel.EventSink?) {
+                    exportProgressSink = events
+                }
+
+                override fun onCancel(arguments: Any?) {
+                    exportProgressSink = null
+                }
+            },
+        )
     }
 
     private fun probeVideo(path: String?, result: MethodChannel.Result) {
@@ -100,9 +121,12 @@ class MainActivity : FlutterActivity() {
         }
 
         try {
+            sendExportProgress(0.0)
             val outputFile = File(cacheDir, "langgeng_clip_${System.currentTimeMillis()}.mp4")
             trimWithMuxer(sourcePath, outputFile.absolutePath, startMillis, endMillis)
+            sendExportProgress(0.95)
             val galleryUri = saveToGallery(outputFile)
+            sendExportProgress(1.0)
             result.success(
                 mapOf(
                     "cachePath" to outputFile.absolutePath,
@@ -111,6 +135,16 @@ class MainActivity : FlutterActivity() {
             )
         } catch (error: Exception) {
             result.error("export_failed", error.message ?: "Export trim gagal.", null)
+        }
+    }
+
+    private fun sendExportProgress(value: Double) {
+        mainHandler.post {
+            exportProgressSink?.success(
+                mapOf(
+                    "progress" to value.coerceIn(0.0, 1.0),
+                ),
+            )
         }
     }
 
@@ -199,6 +233,11 @@ class MainActivity : FlutterActivity() {
                 if (sampleTime > endUs) {
                     break
                 }
+
+                val rangeUs = maxOf(1L, endUs - startUs)
+                val progress = ((sampleTime - startUs).toDouble() / rangeUs)
+                    .coerceIn(0.0, 0.9)
+                sendExportProgress(progress)
 
                 val muxerTrackIndex = trackMap[sampleTrackIndex]
                 if (muxerTrackIndex == null) {
