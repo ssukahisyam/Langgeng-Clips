@@ -27,8 +27,6 @@ import java.io.FileInputStream
 import java.nio.ByteBuffer
 
 class MainActivity : FlutterActivity() {
-    private val exportNotificationId = 3101
-    private val exportChannelId = "langgeng_clip_exports"
     private var exportProgressSink: EventChannel.EventSink? = null
     @Volatile
     private var isExportCancelled = false
@@ -180,6 +178,7 @@ class MainActivity : FlutterActivity() {
         isExportCancelled = false
         Thread {
             try {
+                startExportForegroundService()
                 sendExportProgress(0.0)
                 val outputFile = File(cacheDir, "langgeng_clip_${System.currentTimeMillis()}.mp4")
                 trimWithMuxer(
@@ -226,8 +225,23 @@ class MainActivity : FlutterActivity() {
                         ),
                     )
                 }
+            } finally {
+                stopExportForegroundService()
             }
         }.start()
+    }
+
+    private fun startExportForegroundService() {
+        val intent = Intent(this, ExportForegroundService::class.java)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            startForegroundService(intent)
+        } else {
+            startService(intent)
+        }
+    }
+
+    private fun stopExportForegroundService() {
+        stopService(Intent(this, ExportForegroundService::class.java))
     }
 
     private fun ensureExportNotCancelled() {
@@ -252,9 +266,8 @@ class MainActivity : FlutterActivity() {
             return
         }
 
-        val notificationManager = getSystemService(NotificationManager::class.java)
         val channel = NotificationChannel(
-            exportChannelId,
+            ExportForegroundService.EXPORT_CHANNEL_ID,
             "Export progress",
             NotificationManager.IMPORTANCE_LOW,
         ).apply {
@@ -267,7 +280,7 @@ class MainActivity : FlutterActivity() {
         val notificationManager = getSystemService(NotificationManager::class.java)
         val progress = (value.coerceIn(0.0, 1.0) * 100).toInt()
         val builder = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            Notification.Builder(this, exportChannelId)
+            Notification.Builder(this, ExportForegroundService.EXPORT_CHANNEL_ID)
         } else {
             @Suppress("DEPRECATION")
             Notification.Builder(this)
@@ -282,7 +295,7 @@ class MainActivity : FlutterActivity() {
             .build()
 
         try {
-            notificationManager.notify(exportNotificationId, notification)
+            notificationManager.notify(ExportForegroundService.EXPORT_NOTIFICATION_ID, notification)
         } catch (_: SecurityException) {
             // Android 13+ can require runtime notification permission; export still works.
         }

@@ -138,7 +138,7 @@ Master task list end-to-end. Centang sambil jalan. Update minimal mingguan.
 - [ ] Step: scale ke target resolution
 - [ ] Step: encode H.264
 - [x] Progress event channel
-- [ ] Foreground service untuk render lama
+- [x] Foreground service untuk render lama
 - [x] Notification channel + ongoing notification
 - [x] Export Sheet UI (resolusi, FPS, codec)
 - [x] Estimasi size + duration
