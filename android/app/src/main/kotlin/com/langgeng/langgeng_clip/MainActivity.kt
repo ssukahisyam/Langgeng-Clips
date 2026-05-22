@@ -22,6 +22,9 @@ import com.langgeng.langgeng_clip.pigeon.FlutterError
 import com.langgeng.langgeng_clip.pigeon.NativeRenderApi
 import com.langgeng.langgeng_clip.pigeon.RenderRequest
 import com.langgeng.langgeng_clip.pigeon.RenderResult
+import com.langgeng.langgeng_clip.render.Media3RenderCancelledException
+import com.langgeng.langgeng_clip.render.Media3RenderComposer
+import com.langgeng.langgeng_clip.render.Media3RenderRequest
 import java.io.File
 import java.io.FileInputStream
 import java.nio.ByteBuffer
@@ -181,12 +184,16 @@ class MainActivity : FlutterActivity() {
                 startExportForegroundService()
                 sendExportProgress(0.0)
                 val outputFile = File(cacheDir, "langgeng_clip_${System.currentTimeMillis()}.mp4")
-                trimWithMuxer(
-                    request.sourcePath,
-                    outputFile.absolutePath,
-                    request.startMillis.toInt(),
-                    request.endMillis.toInt(),
-                )
+                if (request.requiresReencode) {
+                    renderWithMedia3(request, outputFile)
+                } else {
+                    trimWithMuxer(
+                        request.sourcePath,
+                        outputFile.absolutePath,
+                        request.startMillis.toInt(),
+                        request.endMillis.toInt(),
+                    )
+                }
                 ensureExportNotCancelled()
                 sendExportProgress(0.95)
                 val galleryUri = saveToGallery(outputFile)
@@ -217,6 +224,14 @@ class MainActivity : FlutterActivity() {
                         ),
                     )
                 }
+            } catch (error: Media3RenderCancelledException) {
+                mainHandler.post {
+                    callback(
+                        Result.failure(
+                            FlutterError("export_cancelled", "Export dibatalkan.", null),
+                        ),
+                    )
+                }
             } catch (error: Exception) {
                 mainHandler.post {
                     callback(
@@ -229,6 +244,25 @@ class MainActivity : FlutterActivity() {
                 stopExportForegroundService()
             }
         }.start()
+    }
+
+    private fun renderWithMedia3(request: RenderRequest, outputFile: File) {
+        Media3RenderComposer(applicationContext).render(
+            request = Media3RenderRequest(
+                sourcePath = request.sourcePath,
+                startMillis = request.startMillis.toInt(),
+                endMillis = request.endMillis.toInt(),
+                resolution = request.resolution,
+                frameRate = request.frameRate,
+                codec = request.codec,
+                targetWidth = request.targetWidth.toInt(),
+                targetHeight = request.targetHeight.toInt(),
+                cropToPortrait = request.cropToPortrait,
+            ),
+            outputFile = outputFile,
+            isCancelled = { isExportCancelled },
+            onProgress = { sendExportProgress(it) },
+        )
     }
 
     private fun startExportForegroundService() {
