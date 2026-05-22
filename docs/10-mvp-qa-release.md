@@ -35,6 +35,34 @@ Phase 1.6 tracks the manual validation needed before Play Console internal testi
 | Play pre-launch | No blocking crashes or policy warnings |
 | Signed build | Release AAB is signed with non-debug keystore |
 
+## Signed AAB Build
+
+Release signing reads `android/key.properties` locally or environment variables in CI. Do not commit keystores or `key.properties`.
+
+`android/key.properties` format:
+
+```properties
+storeFile=/absolute/path/to/upload-keystore.jks
+storePassword=...
+keyAlias=upload
+keyPassword=...
+```
+
+Equivalent CI environment variables:
+
+```text
+LANGGENG_STOREFILE
+LANGGENG_STOREPASSWORD
+LANGGENG_KEYALIAS
+LANGGENG_KEYPASSWORD
+```
+
+Build command:
+
+```bash
+flutter build appbundle --release
+```
+
 ## Notes
 
 - Do not mark Phase 1.6 complete until device QA and Play Console checks are actually performed.
