@@ -134,9 +134,9 @@ Master task list end-to-end. Centang sambil jalan. Update minimal mingguan.
 - [x] Pigeon API spec untuk render
 - [x] Native Media3 Transformer composer skeleton
 - [x] Step: trim
-- [ ] Step: center crop 9:16
-- [ ] Step: scale ke target resolution
-- [ ] Step: encode H.264
+- [x] Step: center crop 9:16
+- [x] Step: scale ke target resolution
+- [x] Step: encode H.264
 - [x] Progress event channel
 - [x] Foreground service untuk render lama
 - [x] Notification channel + ongoing notification
