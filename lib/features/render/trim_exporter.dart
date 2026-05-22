@@ -69,11 +69,13 @@ class TrimExporter {
     if (sourcePath.trim().isEmpty) {
       throw const TrimExportException(
         'File sumber tidak tersedia. Pilih ulang video.',
+        code: TrimExportErrorCode.invalidSource,
       );
     }
     if (endMillis <= startMillis) {
       throw const TrimExportException(
         'Range clip tidak valid. Geser start/end clip.',
+        code: TrimExportErrorCode.invalidRange,
       );
     }
 
@@ -115,7 +117,10 @@ class TrimExportResult {
   factory TrimExportResult.fromMap(Map<Object?, Object?> map) {
     final cachePath = map['cachePath'] as String?;
     if (cachePath == null || cachePath.isEmpty) {
-      throw const TrimExportException('Output cache export tidak tersedia.');
+      throw const TrimExportException(
+        'Output cache export tidak tersedia.',
+        code: TrimExportErrorCode.missingOutput,
+      );
     }
 
     return TrimExportResult(
@@ -133,7 +138,10 @@ class TrimExportResult {
 
   factory TrimExportResult.fromPigeon(pigeon.RenderResult result) {
     if (result.cachePath.isEmpty) {
-      throw const TrimExportException('Output cache export tidak tersedia.');
+      throw const TrimExportException(
+        'Output cache export tidak tersedia.',
+        code: TrimExportErrorCode.missingOutput,
+      );
     }
 
     return TrimExportResult(
@@ -163,28 +171,59 @@ class TrimExportResult {
 }
 
 class TrimExportException implements Exception {
-  const TrimExportException(this.message);
+  const TrimExportException(
+    this.message, {
+    required this.code,
+    this.recoverable = true,
+  });
 
   factory TrimExportException.fromPlatformException(PlatformException error) {
-    final message = error.message;
-    if (message != null && message.trim().isNotEmpty) {
-      return TrimExportException(message);
-    }
-
     return switch (error.code) {
       'invalid_source' => const TrimExportException(
         'File sumber tidak tersedia. Pilih ulang video.',
+        code: TrimExportErrorCode.invalidSource,
       ),
       'invalid_range' => const TrimExportException(
         'Range clip tidak valid. Geser start/end clip.',
+        code: TrimExportErrorCode.invalidRange,
       ),
-      'export_cancelled' => const TrimExportException('Export dibatalkan.'),
-      _ => const TrimExportException('Export gagal. Coba ulangi.'),
+      'export_cancelled' => const TrimExportException(
+        'Export dibatalkan.',
+        code: TrimExportErrorCode.cancelled,
+      ),
+      'missing_output' => const TrimExportException(
+        'Output cache export tidak tersedia.',
+        code: TrimExportErrorCode.missingOutput,
+      ),
+      _ => const TrimExportException(
+        'Export gagal. Coba ulangi.',
+        code: TrimExportErrorCode.unknown,
+      ),
     };
   }
 
   final String message;
+  final TrimExportErrorCode code;
+  final bool recoverable;
+
+  String get analyticsCode {
+    return switch (code) {
+      TrimExportErrorCode.invalidSource => 'invalid_source',
+      TrimExportErrorCode.invalidRange => 'invalid_range',
+      TrimExportErrorCode.cancelled => 'cancelled',
+      TrimExportErrorCode.missingOutput => 'missing_output',
+      TrimExportErrorCode.unknown => 'unknown',
+    };
+  }
 
   @override
   String toString() => message;
+}
+
+enum TrimExportErrorCode {
+  invalidSource,
+  invalidRange,
+  cancelled,
+  missingOutput,
+  unknown,
 }
