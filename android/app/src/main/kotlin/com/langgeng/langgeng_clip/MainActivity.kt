@@ -48,32 +48,6 @@ class MainActivity : FlutterActivity() {
             }
         }
 
-        MethodChannel(
-            flutterEngine.dartExecutor.binaryMessenger,
-            "com.langgeng.clip/trim_export",
-        ).setMethodCallHandler { call, result ->
-            when (call.method) {
-                "exportTrim" -> exportTrim(
-                    sourcePath = call.argument<String>("sourcePath"),
-                    startMillis = call.argument<Int>("startMillis") ?: 0,
-                    endMillis = call.argument<Int>("endMillis") ?: 0,
-                    resolution = call.argument<String>("resolution") ?: "1080p",
-                    frameRate = call.argument<String>("frameRate") ?: "30",
-                    codec = call.argument<String>("codec") ?: "H.264",
-                    targetWidth = call.argument<Int>("targetWidth") ?: 1080,
-                    targetHeight = call.argument<Int>("targetHeight") ?: 1920,
-                    cropToPortrait = call.argument<Boolean>("cropToPortrait") ?: true,
-                    requiresReencode = call.argument<Boolean>("requiresReencode") ?: true,
-                    result = result,
-                )
-                "cancelExport" -> {
-                    isExportCancelled = true
-                    result.success(null)
-                }
-                else -> result.notImplemented()
-            }
-        }
-
         NativeRenderApi.setUp(
             flutterEngine.dartExecutor.binaryMessenger,
             object : NativeRenderApi {
@@ -81,75 +55,7 @@ class MainActivity : FlutterActivity() {
                     request: RenderRequest,
                     callback: (Result<RenderResult>) -> Unit,
                 ) {
-                    exportTrim(
-                        sourcePath = request.sourcePath,
-                        startMillis = request.startMillis.toInt(),
-                        endMillis = request.endMillis.toInt(),
-                        resolution = request.resolution,
-                        frameRate = request.frameRate,
-                        codec = request.codec,
-                        targetWidth = request.targetWidth.toInt(),
-                        targetHeight = request.targetHeight.toInt(),
-                        cropToPortrait = request.cropToPortrait,
-                        requiresReencode = request.requiresReencode,
-                        result = object : MethodChannel.Result {
-                            override fun success(result: Any?) {
-                                val map = result as? Map<*, *>
-                                if (map == null) {
-                                    callback(
-                                        Result.failure(
-                                            FlutterError(
-                                                "invalid_result",
-                                                "Output export tidak tersedia.",
-                                                null,
-                                            ),
-                                        ),
-                                    )
-                                    return
-                                }
-
-                                callback(
-                                    Result.success(
-                                        RenderResult(
-                                            cachePath = map["cachePath"] as String,
-                                            galleryUri = map["galleryUri"] as String?,
-                                            resolution = map["resolution"] as String?,
-                                            frameRate = map["frameRate"] as String?,
-                                            codec = map["codec"] as String?,
-                                            targetWidth = (map["targetWidth"] as Int?)?.toLong(),
-                                            targetHeight = (map["targetHeight"] as Int?)?.toLong(),
-                                            cropToPortrait = map["cropToPortrait"] as Boolean?,
-                                            requiresReencode = map["requiresReencode"] as Boolean?,
-                                        ),
-                                    ),
-                                )
-                            }
-
-                            override fun error(
-                                errorCode: String,
-                                errorMessage: String?,
-                                errorDetails: Any?,
-                            ) {
-                                callback(
-                                    Result.failure(
-                                        FlutterError(errorCode, errorMessage, errorDetails),
-                                    ),
-                                )
-                            }
-
-                            override fun notImplemented() {
-                                callback(
-                                    Result.failure(
-                                        FlutterError(
-                                            "not_implemented",
-                                            "Render API belum tersedia.",
-                                            null,
-                                        ),
-                                    ),
-                                )
-                            }
-                        },
-                    )
+                    exportTrim(request, callback)
                 }
 
                 override fun cancelExport(callback: (Result<Unit>) -> Unit) {
@@ -245,29 +151,29 @@ class MainActivity : FlutterActivity() {
         return extractMetadata(keyCode)?.toIntOrNull() ?: 0
     }
 
-    private fun exportTrim(
-        sourcePath: String?,
-        startMillis: Int,
-        endMillis: Int,
-        resolution: String,
-        frameRate: String,
-        codec: String,
-        targetWidth: Int,
-        targetHeight: Int,
-        cropToPortrait: Boolean,
-        requiresReencode: Boolean,
-        result: MethodChannel.Result,
-    ) {
-        if (sourcePath.isNullOrBlank()) {
-            result.error("invalid_source", "Path sumber video kosong.", null)
+    private fun exportTrim(request: RenderRequest, callback: (Result<RenderResult>) -> Unit) {
+        if (request.sourcePath.isBlank()) {
+            callback(
+                Result.failure(
+                    FlutterError("invalid_source", "Path sumber video kosong.", null),
+                ),
+            )
             return
         }
-        if (endMillis <= startMillis) {
-            result.error("invalid_range", "Range export tidak valid.", null)
+        if (request.endMillis <= request.startMillis) {
+            callback(
+                Result.failure(
+                    FlutterError("invalid_range", "Range export tidak valid.", null),
+                ),
+            )
             return
         }
-        if (targetWidth <= 0 || targetHeight <= 0) {
-            result.error("invalid_target", "Resolusi target export tidak valid.", null)
+        if (request.targetWidth <= 0 || request.targetHeight <= 0) {
+            callback(
+                Result.failure(
+                    FlutterError("invalid_target", "Resolusi target export tidak valid.", null),
+                ),
+            )
             return
         }
 
@@ -276,34 +182,49 @@ class MainActivity : FlutterActivity() {
             try {
                 sendExportProgress(0.0)
                 val outputFile = File(cacheDir, "langgeng_clip_${System.currentTimeMillis()}.mp4")
-                trimWithMuxer(sourcePath, outputFile.absolutePath, startMillis, endMillis)
+                trimWithMuxer(
+                    request.sourcePath,
+                    outputFile.absolutePath,
+                    request.startMillis.toInt(),
+                    request.endMillis.toInt(),
+                )
                 ensureExportNotCancelled()
                 sendExportProgress(0.95)
                 val galleryUri = saveToGallery(outputFile)
                 ensureExportNotCancelled()
                 sendExportProgress(1.0)
                 mainHandler.post {
-                    result.success(
-                        mapOf(
-                            "cachePath" to outputFile.absolutePath,
-                            "galleryUri" to galleryUri,
-                            "resolution" to resolution,
-                            "frameRate" to frameRate,
-                            "codec" to codec,
-                            "targetWidth" to targetWidth,
-                            "targetHeight" to targetHeight,
-                            "cropToPortrait" to cropToPortrait,
-                            "requiresReencode" to requiresReencode,
+                    callback(
+                        Result.success(
+                            RenderResult(
+                                cachePath = outputFile.absolutePath,
+                                galleryUri = galleryUri,
+                                resolution = request.resolution,
+                                frameRate = request.frameRate,
+                                codec = request.codec,
+                                targetWidth = request.targetWidth,
+                                targetHeight = request.targetHeight,
+                                cropToPortrait = request.cropToPortrait,
+                                requiresReencode = request.requiresReencode,
+                            ),
                         ),
                     )
                 }
             } catch (error: ExportCancelledException) {
                 mainHandler.post {
-                    result.error("export_cancelled", "Export dibatalkan.", null)
+                    callback(
+                        Result.failure(
+                            FlutterError("export_cancelled", "Export dibatalkan.", null),
+                        ),
+                    )
                 }
             } catch (error: Exception) {
                 mainHandler.post {
-                    result.error("export_failed", error.message ?: "Export trim gagal.", null)
+                    callback(
+                        Result.failure(
+                            FlutterError("export_failed", error.message ?: "Export trim gagal.", null),
+                        ),
+                    )
                 }
             }
         }.start()
