@@ -43,6 +43,14 @@ Remote logs and crash breadcrumbs must redact:
 - Do not capture transcript text, selected file paths, gallery URIs, or Groq API keys.
 - Upload ProGuard/R8 mapping only from release CI.
 
+Flutter integration is enabled by setting `SENTRY_DSN` at build time:
+
+```bash
+flutter build apk --dart-define=SENTRY_DSN=https://examplePublicKey@o0.ingest.sentry.io/0
+```
+
+If `SENTRY_DSN` is empty, the app runs without remote crash reporting.
+
 ## Native Logging Requirements
 
 - Kotlin logs should only use normalized error codes for export failures.

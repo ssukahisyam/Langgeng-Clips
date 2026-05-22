@@ -71,11 +71,11 @@ Master task list end-to-end. Centang sambil jalan. Update minimal mingguan.
 
 ### 0.6 Observability Foundation
 - [x] Pilih: Sentry vs Firebase Crashlytics
-- [ ] Crash reporting integrate Flutter + native
+- [x] Crash reporting integrate Flutter + native
 - [x] Analytics tool pilih (Firebase Analytics / PostHog)
 - [x] Event schema documented
 - [x] Filter regex untuk API key di logger
-- [ ] Sentry PII scrubbing config
+- [x] Sentry PII scrubbing config
 
 ### 0.7 Splash & Onboarding (UI Stub)
 - [x] Splash screen UI
