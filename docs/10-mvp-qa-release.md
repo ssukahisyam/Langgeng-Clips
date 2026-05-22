@@ -2,6 +2,8 @@
 
 Phase 1.6 tracks the manual validation needed before Play Console internal testing.
 
+Use `docs/qa-run-template.md` for each release-candidate QA pass.
+
 ## Device Matrix
 
 | Tier | Device target | API | RAM | Vendor coverage |
