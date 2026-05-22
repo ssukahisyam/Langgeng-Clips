@@ -51,10 +51,17 @@ keyPassword=...
 Equivalent CI environment variables:
 
 ```text
+LANGGENG_KEYSTORE_BASE64
 LANGGENG_STOREFILE
 LANGGENG_STOREPASSWORD
 LANGGENG_KEYALIAS
 LANGGENG_KEYPASSWORD
+```
+
+`LANGGENG_KEYSTORE_BASE64` is only used by GitHub Actions to reconstruct the keystore file in the runner temp directory. Generate it locally with:
+
+```bash
+base64 -w 0 upload-keystore.jks
 ```
 
 Build command:
@@ -62,6 +69,12 @@ Build command:
 ```bash
 flutter build appbundle --release
 ```
+
+GitHub Actions workflow:
+
+- `.github/workflows/release-aab.yml` runs manually via `workflow_dispatch` or on tags matching `v*-internal`.
+- It uploads `app-release.aab` as a temporary workflow artifact.
+- Play Console upload remains manual until the Play API service account is configured.
 
 ## Notes
 
