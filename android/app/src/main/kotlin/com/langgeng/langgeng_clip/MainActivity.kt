@@ -1,6 +1,9 @@
 package com.langgeng.langgeng_clip
 
 import android.content.ContentValues
+import android.app.Notification
+import android.app.NotificationChannel
+import android.app.NotificationManager
 import android.content.Intent
 import android.media.MediaExtractor
 import android.media.MediaFormat
@@ -15,6 +18,13 @@ import io.flutter.embedding.android.FlutterActivity
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.EventChannel
 import io.flutter.plugin.common.MethodChannel
+import com.langgeng.langgeng_clip.pigeon.FlutterError
+import com.langgeng.langgeng_clip.pigeon.NativeRenderApi
+import com.langgeng.langgeng_clip.pigeon.RenderRequest
+import com.langgeng.langgeng_clip.pigeon.RenderResult
+import com.langgeng.langgeng_clip.render.Media3RenderCancelledException
+import com.langgeng.langgeng_clip.render.Media3RenderComposer
+import com.langgeng.langgeng_clip.render.Media3RenderRequest
 import java.io.File
 import java.io.FileInputStream
 import java.nio.ByteBuffer
@@ -27,6 +37,7 @@ class MainActivity : FlutterActivity() {
 
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
+        ensureExportNotificationChannel()
 
         MethodChannel(
             flutterEngine.dartExecutor.binaryMessenger,
@@ -38,27 +49,22 @@ class MainActivity : FlutterActivity() {
             }
         }
 
-        MethodChannel(
+        NativeRenderApi.setUp(
             flutterEngine.dartExecutor.binaryMessenger,
-            "com.langgeng.clip/trim_export",
-        ).setMethodCallHandler { call, result ->
-            when (call.method) {
-                "exportTrim" -> exportTrim(
-                    sourcePath = call.argument<String>("sourcePath"),
-                    startMillis = call.argument<Int>("startMillis") ?: 0,
-                    endMillis = call.argument<Int>("endMillis") ?: 0,
-                    resolution = call.argument<String>("resolution") ?: "1080p",
-                    frameRate = call.argument<String>("frameRate") ?: "30",
-                    codec = call.argument<String>("codec") ?: "H.264",
-                    result = result,
-                )
-                "cancelExport" -> {
-                    isExportCancelled = true
-                    result.success(null)
+            object : NativeRenderApi {
+                override fun exportTrim(
+                    request: RenderRequest,
+                    callback: (Result<RenderResult>) -> Unit,
+                ) {
+                    exportTrim(request, callback)
                 }
-                else -> result.notImplemented()
-            }
-        }
+
+                override fun cancelExport(callback: (Result<Unit>) -> Unit) {
+                    isExportCancelled = true
+                    callback(Result.success(Unit))
+                }
+            },
+        )
 
         EventChannel(
             flutterEngine.dartExecutor.binaryMessenger,
@@ -146,56 +152,130 @@ class MainActivity : FlutterActivity() {
         return extractMetadata(keyCode)?.toIntOrNull() ?: 0
     }
 
-    private fun exportTrim(
-        sourcePath: String?,
-        startMillis: Int,
-        endMillis: Int,
-        resolution: String,
-        frameRate: String,
-        codec: String,
-        result: MethodChannel.Result,
-    ) {
-        if (sourcePath.isNullOrBlank()) {
-            result.error("invalid_source", "Path sumber video kosong.", null)
+    private fun exportTrim(request: RenderRequest, callback: (Result<RenderResult>) -> Unit) {
+        if (request.sourcePath.isBlank()) {
+            callback(
+                Result.failure(
+                    FlutterError("invalid_source", "Path sumber video kosong.", null),
+                ),
+            )
             return
         }
-        if (endMillis <= startMillis) {
-            result.error("invalid_range", "Range export tidak valid.", null)
+        if (request.endMillis <= request.startMillis) {
+            callback(
+                Result.failure(
+                    FlutterError("invalid_range", "Range export tidak valid.", null),
+                ),
+            )
+            return
+        }
+        if (request.targetWidth <= 0 || request.targetHeight <= 0) {
+            callback(
+                Result.failure(
+                    FlutterError("invalid_target", "Resolusi target export tidak valid.", null),
+                ),
+            )
             return
         }
 
         isExportCancelled = false
         Thread {
             try {
+                startExportForegroundService()
                 sendExportProgress(0.0)
                 val outputFile = File(cacheDir, "langgeng_clip_${System.currentTimeMillis()}.mp4")
-                trimWithMuxer(sourcePath, outputFile.absolutePath, startMillis, endMillis)
+                if (request.requiresReencode) {
+                    renderWithMedia3(request, outputFile)
+                } else {
+                    trimWithMuxer(
+                        request.sourcePath,
+                        outputFile.absolutePath,
+                        request.startMillis.toInt(),
+                        request.endMillis.toInt(),
+                    )
+                }
                 ensureExportNotCancelled()
                 sendExportProgress(0.95)
                 val galleryUri = saveToGallery(outputFile)
                 ensureExportNotCancelled()
                 sendExportProgress(1.0)
                 mainHandler.post {
-                    result.success(
-                        mapOf(
-                            "cachePath" to outputFile.absolutePath,
-                            "galleryUri" to galleryUri,
-                            "resolution" to resolution,
-                            "frameRate" to frameRate,
-                            "codec" to codec,
+                    callback(
+                        Result.success(
+                            RenderResult(
+                                cachePath = outputFile.absolutePath,
+                                galleryUri = galleryUri,
+                                resolution = request.resolution,
+                                frameRate = request.frameRate,
+                                codec = request.codec,
+                                targetWidth = request.targetWidth,
+                                targetHeight = request.targetHeight,
+                                cropToPortrait = request.cropToPortrait,
+                                requiresReencode = request.requiresReencode,
+                            ),
                         ),
                     )
                 }
             } catch (error: ExportCancelledException) {
                 mainHandler.post {
-                    result.error("export_cancelled", "Export dibatalkan.", null)
+                    callback(
+                        Result.failure(
+                            FlutterError("export_cancelled", "Export dibatalkan.", null),
+                        ),
+                    )
+                }
+            } catch (error: Media3RenderCancelledException) {
+                mainHandler.post {
+                    callback(
+                        Result.failure(
+                            FlutterError("export_cancelled", "Export dibatalkan.", null),
+                        ),
+                    )
                 }
             } catch (error: Exception) {
                 mainHandler.post {
-                    result.error("export_failed", error.message ?: "Export trim gagal.", null)
+                    callback(
+                        Result.failure(
+                            FlutterError("export_failed", error.message ?: "Export trim gagal.", null),
+                        ),
+                    )
                 }
+            } finally {
+                stopExportForegroundService()
             }
         }.start()
+    }
+
+    private fun renderWithMedia3(request: RenderRequest, outputFile: File) {
+        Media3RenderComposer(applicationContext).render(
+            request = Media3RenderRequest(
+                sourcePath = request.sourcePath,
+                startMillis = request.startMillis.toInt(),
+                endMillis = request.endMillis.toInt(),
+                resolution = request.resolution,
+                frameRate = request.frameRate,
+                codec = request.codec,
+                targetWidth = request.targetWidth.toInt(),
+                targetHeight = request.targetHeight.toInt(),
+                cropToPortrait = request.cropToPortrait,
+            ),
+            outputFile = outputFile,
+            isCancelled = { isExportCancelled },
+            onProgress = { sendExportProgress(it) },
+        )
+    }
+
+    private fun startExportForegroundService() {
+        val intent = Intent(this, ExportForegroundService::class.java)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            startForegroundService(intent)
+        } else {
+            startService(intent)
+        }
+    }
+
+    private fun stopExportForegroundService() {
+        stopService(Intent(this, ExportForegroundService::class.java))
     }
 
     private fun ensureExportNotCancelled() {
@@ -206,11 +286,53 @@ class MainActivity : FlutterActivity() {
 
     private fun sendExportProgress(value: Double) {
         mainHandler.post {
+            showExportNotification(value)
             exportProgressSink?.success(
                 mapOf(
                     "progress" to value.coerceIn(0.0, 1.0),
                 ),
             )
+        }
+    }
+
+    private fun ensureExportNotificationChannel() {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) {
+            return
+        }
+
+        val channel = NotificationChannel(
+            ExportForegroundService.EXPORT_CHANNEL_ID,
+            "Export progress",
+            NotificationManager.IMPORTANCE_LOW,
+        ).apply {
+            description = "Shows Langgeng Clip export progress."
+        }
+        val nm = getSystemService(NotificationManager::class.java)
+        nm.createNotificationChannel(channel)
+    }
+
+    private fun showExportNotification(value: Double) {
+        val notificationManager = getSystemService(NotificationManager::class.java)
+        val progress = (value.coerceIn(0.0, 1.0) * 100).toInt()
+        val builder = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            Notification.Builder(this, ExportForegroundService.EXPORT_CHANNEL_ID)
+        } else {
+            @Suppress("DEPRECATION")
+            Notification.Builder(this)
+        }
+
+        val notification = builder
+            .setSmallIcon(android.R.drawable.stat_sys_upload)
+            .setContentTitle("Langgeng Clip export")
+            .setContentText(if (progress >= 100) "Export complete" else "Exporting... $progress%")
+            .setProgress(100, progress, false)
+            .setOngoing(progress < 100)
+            .build()
+
+        try {
+            notificationManager.notify(ExportForegroundService.EXPORT_NOTIFICATION_ID, notification)
+        } catch (_: SecurityException) {
+            // Android 13+ can require runtime notification permission; export still works.
         }
     }
 

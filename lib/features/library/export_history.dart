@@ -97,6 +97,13 @@ class ExportHistoryItem {
     required this.cachePath,
     required this.createdAtMillis,
     required this.durationMillis,
+    this.resolution,
+    this.frameRate,
+    this.codec,
+    this.targetWidth,
+    this.targetHeight,
+    this.cropToPortrait,
+    this.requiresReencode,
     this.galleryUri,
   });
 
@@ -108,6 +115,13 @@ class ExportHistoryItem {
       galleryUri: json['galleryUri'] as String?,
       createdAtMillis: json['createdAtMillis'] as int,
       durationMillis: json['durationMillis'] as int,
+      resolution: json['resolution'] as String?,
+      frameRate: json['frameRate'] as String?,
+      codec: json['codec'] as String?,
+      targetWidth: json['targetWidth'] as int?,
+      targetHeight: json['targetHeight'] as int?,
+      cropToPortrait: json['cropToPortrait'] as bool?,
+      requiresReencode: json['requiresReencode'] as bool?,
     );
   }
 
@@ -117,6 +131,13 @@ class ExportHistoryItem {
   final String? galleryUri;
   final int createdAtMillis;
   final int durationMillis;
+  final String? resolution;
+  final String? frameRate;
+  final String? codec;
+  final int? targetWidth;
+  final int? targetHeight;
+  final bool? cropToPortrait;
+  final bool? requiresReencode;
 
   bool get isSavedToGallery => galleryUri != null && galleryUri!.isNotEmpty;
 
@@ -127,6 +148,13 @@ class ExportHistoryItem {
     String? galleryUri,
     int? createdAtMillis,
     int? durationMillis,
+    String? resolution,
+    String? frameRate,
+    String? codec,
+    int? targetWidth,
+    int? targetHeight,
+    bool? cropToPortrait,
+    bool? requiresReencode,
   }) {
     return ExportHistoryItem(
       id: id ?? this.id,
@@ -135,6 +163,13 @@ class ExportHistoryItem {
       galleryUri: galleryUri ?? this.galleryUri,
       createdAtMillis: createdAtMillis ?? this.createdAtMillis,
       durationMillis: durationMillis ?? this.durationMillis,
+      resolution: resolution ?? this.resolution,
+      frameRate: frameRate ?? this.frameRate,
+      codec: codec ?? this.codec,
+      targetWidth: targetWidth ?? this.targetWidth,
+      targetHeight: targetHeight ?? this.targetHeight,
+      cropToPortrait: cropToPortrait ?? this.cropToPortrait,
+      requiresReencode: requiresReencode ?? this.requiresReencode,
     );
   }
 
@@ -146,6 +181,13 @@ class ExportHistoryItem {
       'galleryUri': galleryUri,
       'createdAtMillis': createdAtMillis,
       'durationMillis': durationMillis,
+      'resolution': resolution,
+      'frameRate': frameRate,
+      'codec': codec,
+      'targetWidth': targetWidth,
+      'targetHeight': targetHeight,
+      'cropToPortrait': cropToPortrait,
+      'requiresReencode': requiresReencode,
     };
   }
 }

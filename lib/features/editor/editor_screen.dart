@@ -229,6 +229,13 @@ class _EditorScreenState extends ConsumerState<EditorScreen> {
             galleryUri: exportResult.galleryUri,
             createdAtMillis: DateTime.now().millisecondsSinceEpoch,
             durationMillis: clip.durationMillis,
+            resolution: exportResult.resolution,
+            frameRate: exportResult.frameRate,
+            codec: exportResult.codec,
+            targetWidth: exportResult.targetWidth,
+            targetHeight: exportResult.targetHeight,
+            cropToPortrait: exportResult.cropToPortrait,
+            requiresReencode: exportResult.requiresReencode,
           ),
         );
         ref.invalidate(exportHistoryItemsProvider);

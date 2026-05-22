@@ -1,5 +1,6 @@
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:langgeng_clip/core/pigeon/render_api.g.dart' as pigeon;
 import 'package:langgeng_clip/features/render/export_options.dart';
 import 'package:langgeng_clip/features/render/trim_exporter.dart';
 
@@ -10,58 +11,57 @@ const _defaultOptions = ExportOptions(
 );
 
 void main() {
-  TestWidgetsFlutterBinding.ensureInitialized();
+  test('export returns result from Pigeon render gateway', () async {
+    final gateway = _FakeRenderGateway(
+      result: pigeon.RenderResult(
+        cachePath: '/cache/output.mp4',
+        galleryUri: 'content://media/video/1',
+        resolution: '1080p',
+        frameRate: '30',
+        codec: 'H.264',
+        targetWidth: 1080,
+        targetHeight: 1920,
+        cropToPortrait: true,
+        requiresReencode: true,
+      ),
+    );
 
-  const channel = MethodChannel('com.langgeng.clip/trim_export');
-
-  tearDown(() {
-    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
-        .setMockMethodCallHandler(channel, null);
-  });
-
-  test('export returns output path from native channel', () async {
-    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
-        .setMockMethodCallHandler(channel, (call) async {
-          expect(call.method, 'exportTrim');
-          expect(call.arguments, {
-            'sourcePath': '/video/input.mp4',
-            'startMillis': 1000,
-            'endMillis': 5000,
-            'resolution': '1080p',
-            'frameRate': '30',
-            'codec': 'H.264',
-          });
-
-          return {
-            'cachePath': '/cache/output.mp4',
-            'galleryUri': 'content://media/video/1',
-            'resolution': '1080p',
-            'frameRate': '30',
-            'codec': 'H.264',
-          };
-        });
-
-    final result = await const TrimExporter().export(
+    final result = await TrimExporter(nativeRenderGateway: gateway).export(
       sourcePath: '/video/input.mp4',
       startMillis: 1000,
       endMillis: 5000,
       options: _defaultOptions,
     );
 
+    expect(gateway.lastRequest?.sourcePath, '/video/input.mp4');
+    expect(gateway.lastRequest?.startMillis, 1000);
+    expect(gateway.lastRequest?.endMillis, 5000);
+    expect(gateway.lastRequest?.resolution, '1080p');
+    expect(gateway.lastRequest?.frameRate, '30');
+    expect(gateway.lastRequest?.codec, 'H.264');
+    expect(gateway.lastRequest?.targetWidth, 1080);
+    expect(gateway.lastRequest?.targetHeight, 1920);
+    expect(gateway.lastRequest?.cropToPortrait, isTrue);
+    expect(gateway.lastRequest?.requiresReencode, isTrue);
     expect(result.cachePath, '/cache/output.mp4');
     expect(result.galleryUri, 'content://media/video/1');
     expect(result.resolution, '1080p');
     expect(result.frameRate, '30');
     expect(result.codec, 'H.264');
+    expect(result.targetWidth, 1080);
+    expect(result.targetHeight, 1920);
+    expect(result.cropToPortrait, isTrue);
+    expect(result.requiresReencode, isTrue);
     expect(result.isSavedToGallery, isTrue);
   });
 
-  test('export throws when native channel returns empty path', () async {
-    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
-        .setMockMethodCallHandler(channel, (call) async => {'cachePath': ''});
+  test('export throws when Pigeon gateway returns empty path', () async {
+    final gateway = _FakeRenderGateway(
+      result: pigeon.RenderResult(cachePath: ''),
+    );
 
     await expectLater(
-      const TrimExporter().export(
+      TrimExporter(nativeRenderGateway: gateway).export(
         sourcePath: '/video/input.mp4',
         startMillis: 1000,
         endMillis: 5000,
@@ -72,8 +72,10 @@ void main() {
   });
 
   test('export validates empty source before native call', () async {
+    final gateway = _FakeRenderGateway();
+
     await expectLater(
-      const TrimExporter().export(
+      TrimExporter(nativeRenderGateway: gateway).export(
         sourcePath: '',
         startMillis: 1000,
         endMillis: 5000,
@@ -87,11 +89,14 @@ void main() {
         ),
       ),
     );
+    expect(gateway.lastRequest, isNull);
   });
 
   test('export validates invalid range before native call', () async {
+    final gateway = _FakeRenderGateway();
+
     await expectLater(
-      const TrimExporter().export(
+      TrimExporter(nativeRenderGateway: gateway).export(
         sourcePath: '/video/input.mp4',
         startMillis: 5000,
         endMillis: 1000,
@@ -105,16 +110,16 @@ void main() {
         ),
       ),
     );
+    expect(gateway.lastRequest, isNull);
   });
 
   test('export maps platform exceptions to readable errors', () async {
-    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
-        .setMockMethodCallHandler(channel, (call) async {
-          throw PlatformException(code: 'invalid_range');
-        });
+    final gateway = _FakeRenderGateway(
+      error: PlatformException(code: 'invalid_range'),
+    );
 
     await expectLater(
-      const TrimExporter().export(
+      TrimExporter(nativeRenderGateway: gateway).export(
         sourcePath: '/video/input.mp4',
         startMillis: 1000,
         endMillis: 5000,
@@ -130,17 +135,36 @@ void main() {
     );
   });
 
-  test('cancel calls native cancel method', () async {
-    var called = false;
-    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
-        .setMockMethodCallHandler(channel, (call) async {
-          expect(call.method, 'cancelExport');
-          called = true;
-          return null;
-        });
+  test('cancel calls Pigeon render gateway', () async {
+    final gateway = _FakeRenderGateway();
 
-    await const TrimExporter().cancel();
+    await TrimExporter(nativeRenderGateway: gateway).cancel();
 
-    expect(called, isTrue);
+    expect(gateway.cancelCalled, isTrue);
   });
+}
+
+class _FakeRenderGateway implements NativeRenderGateway {
+  _FakeRenderGateway({this.result, this.error});
+
+  final pigeon.RenderResult? result;
+  final PlatformException? error;
+  pigeon.RenderRequest? lastRequest;
+  bool cancelCalled = false;
+
+  @override
+  Future<pigeon.RenderResult> exportTrim(pigeon.RenderRequest request) async {
+    lastRequest = request;
+    final error = this.error;
+    if (error != null) {
+      throw error;
+    }
+
+    return result ?? pigeon.RenderResult(cachePath: '/cache/output.mp4');
+  }
+
+  @override
+  Future<void> cancelExport() async {
+    cancelCalled = true;
+  }
 }

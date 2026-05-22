@@ -34,4 +34,17 @@ void main() {
 
     expect(options.estimateSizeLabel(clip), endsWith('MB'));
   });
+
+  test('maps export resolution to portrait target dimensions', () {
+    const options = ExportOptions(
+      resolution: '1080p',
+      frameRate: '30',
+      codec: 'H.264',
+    );
+
+    expect(options.targetWidth, 1080);
+    expect(options.targetHeight, 1920);
+    expect(options.cropToPortrait, isTrue);
+    expect(options.requiresReencode, isTrue);
+  });
 }

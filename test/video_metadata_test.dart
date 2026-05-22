@@ -12,9 +12,24 @@ void main() {
     });
 
     expect(metadata.formattedDuration, '01:31');
-    expect(metadata.resolution, '1920x1080');
+    expect(metadata.resolution, '1080x1920');
     expect(metadata.rotationDegrees, 90);
     expect(metadata.mimeType, 'video/mp4');
+  });
+
+  test('uses display dimensions for sideways rotated video', () {
+    const metadata = VideoMetadata(
+      durationMillis: 1000,
+      width: 1920,
+      height: 1080,
+      rotationDegrees: 270,
+      mimeType: 'video/mp4',
+    );
+
+    expect(metadata.isRotatedSideways, isTrue);
+    expect(metadata.displayWidth, 1080);
+    expect(metadata.displayHeight, 1920);
+    expect(metadata.resolution, '1080x1920');
   });
 
   test('formats hour-long duration', () {

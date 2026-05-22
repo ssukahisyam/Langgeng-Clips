@@ -1,19 +1,47 @@
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../core/pigeon/render_api.g.dart' as pigeon;
 import 'export_options.dart';
 
 final trimExporterProvider = Provider<TrimExporter>(
   (ref) => const TrimExporter(),
 );
 
-class TrimExporter {
-  const TrimExporter();
+abstract class NativeRenderGateway {
+  Future<pigeon.RenderResult> exportTrim(pigeon.RenderRequest request);
 
-  static const _channel = MethodChannel('com.langgeng.clip/trim_export');
+  Future<void> cancelExport();
+}
+
+class PigeonNativeRenderGateway implements NativeRenderGateway {
+  PigeonNativeRenderGateway({pigeon.NativeRenderApi? api})
+    : _api = api ?? pigeon.NativeRenderApi();
+
+  final pigeon.NativeRenderApi _api;
+
+  @override
+  Future<pigeon.RenderResult> exportTrim(pigeon.RenderRequest request) {
+    return _api.exportTrim(request);
+  }
+
+  @override
+  Future<void> cancelExport() => _api.cancelExport();
+}
+
+class TrimExporter {
+  const TrimExporter({NativeRenderGateway? nativeRenderGateway})
+    : _nativeRenderGateway = nativeRenderGateway;
+
   static const _progressChannel = EventChannel(
     'com.langgeng.clip/trim_export_progress',
   );
+
+  final NativeRenderGateway? _nativeRenderGateway;
+
+  NativeRenderGateway get _gateway {
+    return _nativeRenderGateway ?? PigeonNativeRenderGateway();
+  }
 
   Stream<double> get progressStream {
     return _progressChannel.receiveBroadcastStream().map((event) {
@@ -29,7 +57,7 @@ class TrimExporter {
   }
 
   Future<void> cancel() {
-    return _channel.invokeMethod<void>('cancelExport');
+    return _gateway.cancelExport();
   }
 
   Future<TrimExportResult> export({
@@ -49,25 +77,25 @@ class TrimExporter {
       );
     }
 
-    Map<Object?, Object?>? result;
     try {
-      result = await _channel.invokeMapMethod<Object?, Object?>('exportTrim', {
-        'sourcePath': sourcePath,
-        'startMillis': startMillis,
-        'endMillis': endMillis,
-        'resolution': options.resolution,
-        'frameRate': options.frameRate,
-        'codec': options.codec,
-      });
+      final result = await _gateway.exportTrim(
+        pigeon.RenderRequest(
+          sourcePath: sourcePath,
+          startMillis: startMillis,
+          endMillis: endMillis,
+          resolution: options.resolution,
+          frameRate: options.frameRate,
+          codec: options.codec,
+          targetWidth: options.targetWidth,
+          targetHeight: options.targetHeight,
+          cropToPortrait: options.cropToPortrait,
+          requiresReencode: options.requiresReencode,
+        ),
+      );
+      return TrimExportResult.fromPigeon(result);
     } on PlatformException catch (error) {
       throw TrimExportException.fromPlatformException(error);
     }
-
-    if (result == null) {
-      throw const TrimExportException('Output export tidak tersedia.');
-    }
-
-    return TrimExportResult.fromMap(result);
   }
 }
 
@@ -78,6 +106,10 @@ class TrimExportResult {
     this.resolution,
     this.frameRate,
     this.codec,
+    this.targetWidth,
+    this.targetHeight,
+    this.cropToPortrait,
+    this.requiresReencode,
   });
 
   factory TrimExportResult.fromMap(Map<Object?, Object?> map) {
@@ -92,6 +124,28 @@ class TrimExportResult {
       resolution: map['resolution'] as String?,
       frameRate: map['frameRate'] as String?,
       codec: map['codec'] as String?,
+      targetWidth: (map['targetWidth'] as num?)?.toInt(),
+      targetHeight: (map['targetHeight'] as num?)?.toInt(),
+      cropToPortrait: map['cropToPortrait'] as bool?,
+      requiresReencode: map['requiresReencode'] as bool?,
+    );
+  }
+
+  factory TrimExportResult.fromPigeon(pigeon.RenderResult result) {
+    if (result.cachePath.isEmpty) {
+      throw const TrimExportException('Output cache export tidak tersedia.');
+    }
+
+    return TrimExportResult(
+      cachePath: result.cachePath,
+      galleryUri: result.galleryUri,
+      resolution: result.resolution,
+      frameRate: result.frameRate,
+      codec: result.codec,
+      targetWidth: result.targetWidth,
+      targetHeight: result.targetHeight,
+      cropToPortrait: result.cropToPortrait,
+      requiresReencode: result.requiresReencode,
     );
   }
 
@@ -100,6 +154,10 @@ class TrimExportResult {
   final String? resolution;
   final String? frameRate;
   final String? codec;
+  final int? targetWidth;
+  final int? targetHeight;
+  final bool? cropToPortrait;
+  final bool? requiresReencode;
 
   bool get isSavedToGallery => galleryUri != null && galleryUri!.isNotEmpty;
 }

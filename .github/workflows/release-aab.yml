@@ -1,0 +1,51 @@
+name: Release AAB
+
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - 'v*-internal'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Setup Gradle cache
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Decode upload keystore
+        env:
+          LANGGENG_KEYSTORE_BASE64: ${{ secrets.LANGGENG_KEYSTORE_BASE64 }}
+        run: |
+          test -n "$LANGGENG_KEYSTORE_BASE64"
+          mkdir -p "$RUNNER_TEMP/keystore"
+          echo "$LANGGENG_KEYSTORE_BASE64" | base64 --decode > "$RUNNER_TEMP/keystore/upload-keystore.jks"
+
+      - name: Build release AAB
+        env:
+          LANGGENG_STOREFILE: ${{ runner.temp }}/keystore/upload-keystore.jks
+          LANGGENG_STOREPASSWORD: ${{ secrets.LANGGENG_STOREPASSWORD }}
+          LANGGENG_KEYALIAS: ${{ secrets.LANGGENG_KEYALIAS }}
+          LANGGENG_KEYPASSWORD: ${{ secrets.LANGGENG_KEYPASSWORD }}
+        run: flutter build appbundle --release
+
+      - name: Upload AAB artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: langgeng-clip-release-aab
+          path: build/app/outputs/bundle/release/app-release.aab
+          if-no-files-found: error
+          retention-days: 14

@@ -23,6 +23,15 @@ class VideoMetadata {
   final int rotationDegrees;
   final String mimeType;
 
+  bool get isRotatedSideways {
+    final normalizedRotation = rotationDegrees % 360;
+    return normalizedRotation == 90 || normalizedRotation == 270;
+  }
+
+  int get displayWidth => isRotatedSideways ? height : width;
+
+  int get displayHeight => isRotatedSideways ? width : height;
+
   String get formattedDuration {
     final totalSeconds = (durationMillis / 1000).round();
     final hours = totalSeconds ~/ 3600;
@@ -40,10 +49,10 @@ class VideoMetadata {
   }
 
   String get resolution {
-    if (width <= 0 || height <= 0) {
+    if (displayWidth <= 0 || displayHeight <= 0) {
       return 'unknown';
     }
 
-    return '${width}x$height';
+    return '${displayWidth}x$displayHeight';
   }
 }
