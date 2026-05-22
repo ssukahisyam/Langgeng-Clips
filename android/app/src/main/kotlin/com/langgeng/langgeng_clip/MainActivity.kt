@@ -273,7 +273,8 @@ class MainActivity : FlutterActivity() {
         ).apply {
             description = "Shows Langgeng Clip export progress."
         }
-        notificationManager.createNotificationChannel(channel)
+        val nm = getSystemService(NotificationManager::class.java)
+        nm.createNotificationChannel(channel)
     }
 
     private fun showExportNotification(value: Double) {
