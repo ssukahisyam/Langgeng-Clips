@@ -63,7 +63,7 @@ Master task list end-to-end. Centang sambil jalan. Update minimal mingguan.
 - [x] GitHub Actions: lint job
 - [x] GitHub Actions: test job
 - [x] GitHub Actions: build APK debug on PR
-- [ ] Cache pub & gradle di CI
+- [x] Cache pub & gradle di CI
 - [ ] Keystore generated + backed up (3 lokasi)
 - [ ] Keystore password di password manager
 - [ ] Migrate ke Play App Signing saat upload pertama
