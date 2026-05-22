@@ -6,7 +6,7 @@ import androidx.annotation.OptIn
 import androidx.media3.common.Effect
 import androidx.media3.common.MediaItem
 import androidx.media3.common.MimeTypes
-import androidx.media3.common.util.ExperimentalApi
+import androidx.media3.common.util.UnstableApi
 import androidx.media3.effect.Presentation
 import androidx.media3.transformer.Composition
 import androidx.media3.transformer.EditedMediaItem
@@ -26,7 +26,7 @@ class Media3RenderComposer(private val context: Context) {
         return request.requiresReencode
     }
 
-    @OptIn(ExperimentalApi::class)
+    @OptIn(UnstableApi::class)
     fun render(
         request: Media3RenderRequest,
         outputFile: File,
@@ -49,7 +49,7 @@ class Media3RenderComposer(private val context: Context) {
             .setFrameRate(request.frameRate.toIntOrNull() ?: 30)
             .setEffects(Effects(emptyList(), request.videoEffects()))
             .build()
-        val sequence = EditedMediaItemSequence.Builder(editedItem).build()
+        val sequence = EditedMediaItemSequence(editedItem)
         val composition = Composition.Builder(sequence).build()
         val transformer = Transformer.Builder(context)
             .setVideoMimeType(request.videoMimeType())
@@ -89,7 +89,7 @@ class Media3RenderComposer(private val context: Context) {
         }
     }
 
-    @OptIn(ExperimentalApi::class)
+    @OptIn(UnstableApi::class)
     private fun Media3RenderRequest.videoEffects(): List<Effect> {
         if (!cropToPortrait) {
             return emptyList()
