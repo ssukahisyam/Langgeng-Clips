@@ -18,6 +18,10 @@ import io.flutter.embedding.android.FlutterActivity
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.EventChannel
 import io.flutter.plugin.common.MethodChannel
+import com.langgeng.langgeng_clip.pigeon.FlutterError
+import com.langgeng.langgeng_clip.pigeon.NativeRenderApi
+import com.langgeng.langgeng_clip.pigeon.RenderRequest
+import com.langgeng.langgeng_clip.pigeon.RenderResult
 import java.io.File
 import java.io.FileInputStream
 import java.nio.ByteBuffer
@@ -69,6 +73,91 @@ class MainActivity : FlutterActivity() {
                 else -> result.notImplemented()
             }
         }
+
+        NativeRenderApi.setUp(
+            flutterEngine.dartExecutor.binaryMessenger,
+            object : NativeRenderApi {
+                override fun exportTrim(
+                    request: RenderRequest,
+                    callback: (Result<RenderResult>) -> Unit,
+                ) {
+                    exportTrim(
+                        sourcePath = request.sourcePath,
+                        startMillis = request.startMillis.toInt(),
+                        endMillis = request.endMillis.toInt(),
+                        resolution = request.resolution,
+                        frameRate = request.frameRate,
+                        codec = request.codec,
+                        targetWidth = request.targetWidth.toInt(),
+                        targetHeight = request.targetHeight.toInt(),
+                        cropToPortrait = request.cropToPortrait,
+                        requiresReencode = request.requiresReencode,
+                        result = object : MethodChannel.Result {
+                            override fun success(result: Any?) {
+                                val map = result as? Map<*, *>
+                                if (map == null) {
+                                    callback(
+                                        Result.failure(
+                                            FlutterError(
+                                                "invalid_result",
+                                                "Output export tidak tersedia.",
+                                                null,
+                                            ),
+                                        ),
+                                    )
+                                    return
+                                }
+
+                                callback(
+                                    Result.success(
+                                        RenderResult(
+                                            cachePath = map["cachePath"] as String,
+                                            galleryUri = map["galleryUri"] as String?,
+                                            resolution = map["resolution"] as String?,
+                                            frameRate = map["frameRate"] as String?,
+                                            codec = map["codec"] as String?,
+                                            targetWidth = (map["targetWidth"] as Int?)?.toLong(),
+                                            targetHeight = (map["targetHeight"] as Int?)?.toLong(),
+                                            cropToPortrait = map["cropToPortrait"] as Boolean?,
+                                            requiresReencode = map["requiresReencode"] as Boolean?,
+                                        ),
+                                    ),
+                                )
+                            }
+
+                            override fun error(
+                                errorCode: String,
+                                errorMessage: String?,
+                                errorDetails: Any?,
+                            ) {
+                                callback(
+                                    Result.failure(
+                                        FlutterError(errorCode, errorMessage, errorDetails),
+                                    ),
+                                )
+                            }
+
+                            override fun notImplemented() {
+                                callback(
+                                    Result.failure(
+                                        FlutterError(
+                                            "not_implemented",
+                                            "Render API belum tersedia.",
+                                            null,
+                                        ),
+                                    ),
+                                )
+                            }
+                        },
+                    )
+                }
+
+                override fun cancelExport(callback: (Result<Unit>) -> Unit) {
+                    isExportCancelled = true
+                    callback(Result.success(Unit))
+                }
+            },
+        )
 
         EventChannel(
             flutterEngine.dartExecutor.binaryMessenger,
