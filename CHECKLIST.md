@@ -70,11 +70,11 @@ Master task list end-to-end. Centang sambil jalan. Update minimal mingguan.
 - [ ] CD: tag-based AAB upload internal track
 
 ### 0.6 Observability Foundation
-- [ ] Pilih: Sentry vs Firebase Crashlytics
+- [x] Pilih: Sentry vs Firebase Crashlytics
 - [ ] Crash reporting integrate Flutter + native
-- [ ] Analytics tool pilih (Firebase Analytics / PostHog)
-- [ ] Event schema documented
-- [ ] Filter regex untuk API key di logger
+- [x] Analytics tool pilih (Firebase Analytics / PostHog)
+- [x] Event schema documented
+- [x] Filter regex untuk API key di logger
 - [ ] Sentry PII scrubbing config
 
 ### 0.7 Splash & Onboarding (UI Stub)
