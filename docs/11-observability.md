@@ -23,6 +23,8 @@ This document records the MVP observability decisions before SDK integration.
 | `clip_export_failed` | `error_code`, `recoverable` | Use normalized error codes only. |
 | `clip_export_cancelled` | `progress_bucket` | Bucket progress, do not send exact timeline data. |
 
+The code contract for these events lives in `lib/core/observability/analytics_events.dart` and is covered by `test/analytics_events_test.dart`.
+
 ## PII And Secret Filtering
 
 Remote logs and crash breadcrumbs must redact:
