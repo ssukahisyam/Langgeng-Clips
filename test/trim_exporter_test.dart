@@ -82,11 +82,17 @@ void main() {
         options: _defaultOptions,
       ),
       throwsA(
-        isA<TrimExportException>().having(
-          (error) => error.message,
-          'message',
-          'File sumber tidak tersedia. Pilih ulang video.',
-        ),
+        isA<TrimExportException>()
+            .having(
+              (error) => error.message,
+              'message',
+              'File sumber tidak tersedia. Pilih ulang video.',
+            )
+            .having(
+              (error) => error.analyticsCode,
+              'analyticsCode',
+              'invalid_source',
+            ),
       ),
     );
     expect(gateway.lastRequest, isNull);
@@ -103,11 +109,17 @@ void main() {
         options: _defaultOptions,
       ),
       throwsA(
-        isA<TrimExportException>().having(
-          (error) => error.message,
-          'message',
-          'Range clip tidak valid. Geser start/end clip.',
-        ),
+        isA<TrimExportException>()
+            .having(
+              (error) => error.message,
+              'message',
+              'Range clip tidak valid. Geser start/end clip.',
+            )
+            .having(
+              (error) => error.analyticsCode,
+              'analyticsCode',
+              'invalid_range',
+            ),
       ),
     );
     expect(gateway.lastRequest, isNull);
@@ -126,14 +138,55 @@ void main() {
         options: _defaultOptions,
       ),
       throwsA(
-        isA<TrimExportException>().having(
-          (error) => error.message,
-          'message',
-          'Range clip tidak valid. Geser start/end clip.',
-        ),
+        isA<TrimExportException>()
+            .having(
+              (error) => error.message,
+              'message',
+              'Range clip tidak valid. Geser start/end clip.',
+            )
+            .having(
+              (error) => error.analyticsCode,
+              'analyticsCode',
+              'invalid_range',
+            ),
       ),
     );
   });
+
+  test(
+    'export ignores raw native message for unknown platform errors',
+    () async {
+      final gateway = _FakeRenderGateway(
+        error: PlatformException(
+          code: 'native_failure',
+          message: '/storage/emulated/0/private/input.mp4 failed',
+        ),
+      );
+
+      await expectLater(
+        TrimExporter(nativeRenderGateway: gateway).export(
+          sourcePath: '/video/input.mp4',
+          startMillis: 1000,
+          endMillis: 5000,
+          options: _defaultOptions,
+        ),
+        throwsA(
+          isA<TrimExportException>()
+              .having(
+                (error) => error.message,
+                'message',
+                'Export gagal. Coba ulangi.',
+              )
+              .having(
+                (error) => error.analyticsCode,
+                'analyticsCode',
+                'unknown',
+              )
+              .having((error) => error.recoverable, 'recoverable', isTrue),
+        ),
+      );
+    },
+  );
 
   test('cancel calls Pigeon render gateway', () async {
     final gateway = _FakeRenderGateway();
