@@ -56,31 +56,49 @@ void main() {
     expect(result.isSavedToGallery, isTrue);
   });
 
-  test('export passes caption segments to native render gateway', () async {
-    final gateway = _FakeRenderGateway(
-      result: pigeon.RenderResult(cachePath: '/cache/output.mp4'),
-    );
+  test(
+    'export clips and offsets caption segments for native render gateway',
+    () async {
+      final gateway = _FakeRenderGateway(
+        result: pigeon.RenderResult(cachePath: '/cache/output.mp4'),
+      );
 
-    await TrimExporter(nativeRenderGateway: gateway).export(
-      sourcePath: '/video/input.mp4',
-      startMillis: 1000,
-      endMillis: 5000,
-      options: _defaultOptions,
-      captionItems: const [
-        CaptionItem(
-          id: '1',
-          text: 'Hello clip',
-          startMillis: 1000,
-          endMillis: 2500,
-        ),
-      ],
-    );
+      await TrimExporter(nativeRenderGateway: gateway).export(
+        sourcePath: '/video/input.mp4',
+        startMillis: 1000,
+        endMillis: 5000,
+        options: _defaultOptions,
+        captionItems: const [
+          CaptionItem(
+            id: '0',
+            text: 'Before clip',
+            startMillis: 0,
+            endMillis: 900,
+          ),
+          CaptionItem(
+            id: '1',
+            text: 'Hello clip',
+            startMillis: 1000,
+            endMillis: 2500,
+          ),
+          CaptionItem(
+            id: '2',
+            text: 'Clip tail',
+            startMillis: 4500,
+            endMillis: 6000,
+          ),
+        ],
+      );
 
-    expect(gateway.lastRequest?.captionSegments, hasLength(1));
-    expect(gateway.lastRequest?.captionSegments?.single?.text, 'Hello clip');
-    expect(gateway.lastRequest?.captionSegments?.single?.startMillis, 1000);
-    expect(gateway.lastRequest?.captionSegments?.single?.endMillis, 2500);
-  });
+      expect(gateway.lastRequest?.captionSegments, hasLength(2));
+      expect(gateway.lastRequest?.captionSegments?.first?.text, 'Hello clip');
+      expect(gateway.lastRequest?.captionSegments?.first?.startMillis, 0);
+      expect(gateway.lastRequest?.captionSegments?.first?.endMillis, 1500);
+      expect(gateway.lastRequest?.captionSegments?.last?.text, 'Clip tail');
+      expect(gateway.lastRequest?.captionSegments?.last?.startMillis, 3500);
+      expect(gateway.lastRequest?.captionSegments?.last?.endMillis, 4000);
+    },
+  );
 
   test('export throws when Pigeon gateway returns empty path', () async {
     final gateway = _FakeRenderGateway(
