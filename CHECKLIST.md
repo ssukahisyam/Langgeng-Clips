@@ -197,7 +197,7 @@ Master task list end-to-end. Centang sambil jalan. Update minimal mingguan.
 - [x] Style: color highlight swatches
 - [x] Style: position 9-grid
 - [x] Animation: none / karaoke / typewriter
-- [ ] Subtitle render via Media3 OverlaySettings
+- [x] Subtitle render via Media3 OverlaySettings
 - [x] Safe area aware (top 10%, bottom 15%)
 - [x] Word-aware line break
 - [x] Test emoji + ID + EN mix

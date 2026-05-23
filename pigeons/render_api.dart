@@ -20,6 +20,7 @@ class RenderRequest {
     required this.targetHeight,
     required this.cropToPortrait,
     required this.requiresReencode,
+    this.captionSegments,
   });
 
   final String sourcePath;
@@ -32,6 +33,19 @@ class RenderRequest {
   final int targetHeight;
   final bool cropToPortrait;
   final bool requiresReencode;
+  final List<RenderCaptionSegment?>? captionSegments;
+}
+
+class RenderCaptionSegment {
+  RenderCaptionSegment({
+    required this.text,
+    required this.startMillis,
+    required this.endMillis,
+  });
+
+  final String text;
+  final int startMillis;
+  final int endMillis;
 }
 
 class RenderResult {
