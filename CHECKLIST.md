@@ -216,9 +216,9 @@ Master task list end-to-end. Centang sambil jalan. Update minimal mingguan.
 - [x] Prompt engineering iterasi 1
 - [x] Output schema: ranges with score & reason
 - [x] Sentence-boundary refinement validator
-- [ ] Eval dataset: 10-20 video sampel + ground truth
-- [ ] Benchmark akurasi prompt
-- [ ] A/B test prompt antar model
+- [x] Eval dataset: 10-20 video sampel + ground truth
+- [x] Benchmark akurasi prompt
+- [x] A/B test prompt antar model
 - [x] Cache hasil scoring per source+config
 - [x] User preview & adjust hasil
 - [x] Score badge di timeline
@@ -235,13 +235,13 @@ Master task list end-to-end. Centang sambil jalan. Update minimal mingguan.
 
 ### 2.6 Watermark
 - [x] Watermark module: text input
-- [ ] Watermark module: image picker
+- [x] Watermark module: image picker
 - [x] Position 9-anchor
-- [ ] Position drag custom
+- [x] Position drag custom
 - [x] Opacity slider
 - [x] Scale slider
 - [ ] Native overlay implementation
-- [ ] Preview di editor
+- [x] Preview di editor
 
 ### 2.7 Subject Tracking
 - [ ] MLKit Face Detection integrate native

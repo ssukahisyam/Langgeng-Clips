@@ -19,6 +19,19 @@ void main() {
     expect(restored.hasContent, isTrue);
   });
 
+  test('custom drag position serializes when provided', () {
+    const config = WatermarkConfig(
+      text: '@langgeng',
+      customX: 0.25,
+      customY: 0.75,
+    );
+
+    final restored = WatermarkConfig.fromJson(config.toJson());
+
+    expect(restored.customX, 0.25);
+    expect(restored.customY, 0.75);
+  });
+
   test('opacity and scale are clamped to safe ranges', () {
     final config = WatermarkConfig.fromJson({
       'opacity': 5,
