@@ -18,6 +18,16 @@ class TranscriptionChunk {
   final String mimeType;
   final int startOffsetMillis;
   final String? language;
+
+  TranscriptionChunk copyWith({String? language}) {
+    return TranscriptionChunk(
+      bytes: bytes,
+      fileName: fileName,
+      mimeType: mimeType,
+      startOffsetMillis: startOffsetMillis,
+      language: language ?? this.language,
+    );
+  }
 }
 
 class Transcript {

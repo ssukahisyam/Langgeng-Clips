@@ -183,8 +183,8 @@ Master task list end-to-end. Centang sambil jalan. Update minimal mingguan.
 - [x] Cache transcript by source SHA256
 - [x] Retry exponential backoff
 - [x] Resume from last successful chunk
-- [ ] Multi-language detection
-- [ ] Bahasa override manual
+- [x] Multi-language detection
+- [x] Bahasa override manual
 - [ ] Progress UI saat transcribe
 
 ### 2.2 Auto Subtitle
