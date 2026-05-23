@@ -22,6 +22,7 @@ class PricingScreen extends StatelessWidget {
             title: 'Free',
             price: 'Rp0',
             features: [
+              'Unlimited export minggu pertama',
               '3 export per hari',
               'Watermark Made with Langgeng Clip',
               'Template dasar',

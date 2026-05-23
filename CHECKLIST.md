@@ -38,11 +38,11 @@ Master task list end-to-end. Centang sambil jalan. Update minimal mingguan.
 - [ ] `.gitignore` Flutter + Android + IDE
 - [ ] Branch protection main: require PR review, no force push
 - [ ] Repo description + topics di GitHub
-- [ ] Issue templates (bug, feature, question)
-- [ ] PR template
-- [ ] CONTRIBUTING.md (kalau buka kontribusi)
-- [ ] CODE_OF_CONDUCT.md
-- [ ] SECURITY.md (cara report vulnerability)
+- [x] Issue templates (bug, feature, question)
+- [x] PR template
+- [x] CONTRIBUTING.md (kalau buka kontribusi)
+- [x] CODE_OF_CONDUCT.md
+- [x] SECURITY.md (cara report vulnerability)
 
 ### 0.4 Project Init
 - [x] `flutter create` dengan org `com.langgeng.clip`
@@ -278,7 +278,7 @@ Master task list end-to-end. Centang sambil jalan. Update minimal mingguan.
 - [x] Paywall flow
 - [x] Free trial 7 hari
 - [x] Restore purchase
-- [ ] Receipt validation client-side
+- [x] Receipt validation client-side
 - [ ] Receipt validation server-side (opsional)
 - [x] Cancel subscription flow
 
@@ -287,11 +287,11 @@ Master task list end-to-end. Centang sambil jalan. Update minimal mingguan.
 - [x] Watermark "Made with Langgeng Clip" auto di free tier
 - [x] Premium template lock di free tier
 - [x] Limit communication jelas sebelum user kena dinding
-- [ ] Promo first-week unlimited untuk user baru (opsional)
+- [x] Promo first-week unlimited untuk user baru (opsional)
 
 ### 3.4 Polish
-- [ ] Performance audit (memory, frame drop, render speed)
-- [ ] A11y audit (TalkBack, dynamic type 200%)
+- [x] Performance audit (memory, frame drop, render speed)
+- [x] A11y audit (TalkBack, dynamic type 200%)
 - [x] Empty states copy review (UX writer kalau ada)
 - [x] Error messages catalog finalisasi
 - [x] In-app onboarding tutorial post-import

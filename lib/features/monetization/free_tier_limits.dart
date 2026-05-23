@@ -12,6 +12,24 @@ class FreeTierLimits {
   }
 }
 
+class FirstWeekUnlimitedPromo {
+  const FirstWeekUnlimitedPromo({this.duration = const Duration(days: 7)});
+
+  final Duration duration;
+
+  bool isActive({required DateTime firstSeenAt, required DateTime now}) {
+    if (now.isBefore(firstSeenAt)) {
+      return false;
+    }
+
+    return now.difference(firstSeenAt) < duration;
+  }
+
+  String exportLimitLabel({required bool isActive}) {
+    return isActive ? 'Unlimited export minggu pertama' : '3 export per hari';
+  }
+}
+
 class RewardedExportCredit {
   const RewardedExportCredit({this.extraExports = 1});
 
