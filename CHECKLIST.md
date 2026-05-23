@@ -234,12 +234,12 @@ Master task list end-to-end. Centang sambil jalan. Update minimal mingguan.
 - [ ] Preview template visual
 
 ### 2.6 Watermark
-- [ ] Watermark module: text input
+- [x] Watermark module: text input
 - [ ] Watermark module: image picker
-- [ ] Position 9-anchor
+- [x] Position 9-anchor
 - [ ] Position drag custom
-- [ ] Opacity slider
-- [ ] Scale slider
+- [x] Opacity slider
+- [x] Scale slider
 - [ ] Native overlay implementation
 - [ ] Preview di editor
 
