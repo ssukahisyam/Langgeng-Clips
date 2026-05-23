@@ -205,7 +205,7 @@ Master task list end-to-end. Centang sambil jalan. Update minimal mingguan.
 
 ### 2.3 Semi-Auto Mode
 - [ ] FFmpeg ebur128 audio peak detection
-- [ ] Scene change detection
+- [x] Scene change detection
 - [ ] Silence detection (untuk podcast)
 - [x] UI: highlight kandidat di timeline
 - [x] User pilih kandidat untuk jadi clip

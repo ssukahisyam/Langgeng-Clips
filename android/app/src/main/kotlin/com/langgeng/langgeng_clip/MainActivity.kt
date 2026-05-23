@@ -5,6 +5,7 @@ import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.content.Intent
+import android.graphics.Bitmap
 import android.media.MediaExtractor
 import android.media.MediaFormat
 import android.media.MediaMetadataRetriever
@@ -109,6 +110,109 @@ class MainActivity : FlutterActivity() {
                 else -> result.notImplemented()
             }
         }
+
+        MethodChannel(
+            flutterEngine.dartExecutor.binaryMessenger,
+            "com.langgeng.clip/media_intelligence",
+        ).setMethodCallHandler { call, result ->
+            when (call.method) {
+                "detectSceneChanges" -> detectSceneChanges(
+                    sourcePath = call.argument<String>("sourcePath"),
+                    intervalMillis = call.argument<Int>("intervalMillis") ?: 1000,
+                    threshold = call.argument<Double>("threshold") ?: 0.35,
+                    result = result,
+                )
+                else -> result.notImplemented()
+            }
+        }
+    }
+
+    private fun detectSceneChanges(
+        sourcePath: String?,
+        intervalMillis: Int,
+        threshold: Double,
+        result: MethodChannel.Result,
+    ) {
+        if (sourcePath.isNullOrBlank()) {
+            result.error("invalid_source", "Path sumber video kosong.", null)
+            return
+        }
+        if (intervalMillis <= 0) {
+            result.error("invalid_interval", "Interval scene detection tidak valid.", null)
+            return
+        }
+
+        Thread {
+            val retriever = MediaMetadataRetriever()
+            try {
+                retriever.setDataSource(sourcePath)
+                val durationMillis = retriever.extractInt(
+                    MediaMetadataRetriever.METADATA_KEY_DURATION,
+                )
+                val changes = mutableListOf<Map<String, Any>>()
+                var previousSignature: DoubleArray? = null
+                var timeMillis = 0
+                while (timeMillis <= durationMillis) {
+                    val bitmap = retriever.getFrameAtTime(
+                        timeMillis * 1000L,
+                        MediaMetadataRetriever.OPTION_CLOSEST_SYNC,
+                    )
+                    val signature = bitmap?.lumaSignature()
+                    bitmap?.recycle()
+                    if (signature != null) {
+                        val previous = previousSignature
+                        if (previous != null) {
+                            val score = signature.distanceFrom(previous)
+                            if (score >= threshold) {
+                                changes.add(
+                                    mapOf(
+                                        "timeMillis" to timeMillis,
+                                        "score" to score,
+                                    ),
+                                )
+                            }
+                        }
+                        previousSignature = signature
+                    }
+                    timeMillis += intervalMillis
+                }
+                mainHandler.post { result.success(changes) }
+            } catch (error: Exception) {
+                mainHandler.post {
+                    result.error("scene_detection_failed", "Scene detection gagal.", null)
+                }
+            } finally {
+                retriever.release()
+            }
+        }.start()
+    }
+
+    private fun Bitmap.lumaSignature(): DoubleArray {
+        val grid = 8
+        val signature = DoubleArray(grid * grid)
+        var index = 0
+        for (y in 0 until grid) {
+            for (x in 0 until grid) {
+                val pixel = getPixel(
+                    ((x + 0.5) * width / grid).toInt().coerceIn(0, width - 1),
+                    ((y + 0.5) * height / grid).toInt().coerceIn(0, height - 1),
+                )
+                val red = (pixel shr 16) and 0xFF
+                val green = (pixel shr 8) and 0xFF
+                val blue = pixel and 0xFF
+                signature[index] = (0.2126 * red + 0.7152 * green + 0.0722 * blue) / 255.0
+                index += 1
+            }
+        }
+        return signature
+    }
+
+    private fun DoubleArray.distanceFrom(other: DoubleArray): Double {
+        var total = 0.0
+        for (index in indices) {
+            total += kotlin.math.abs(this[index] - other[index])
+        }
+        return total / size
     }
 
     private fun extractWav16kMono(
