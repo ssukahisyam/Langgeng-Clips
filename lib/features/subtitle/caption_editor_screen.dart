@@ -1,62 +1,45 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../editor/editor_project.dart';
 import 'caption_document.dart';
 import 'caption_preview.dart';
 
-class CaptionEditorScreen extends StatefulWidget {
+class CaptionEditorScreen extends ConsumerWidget {
   const CaptionEditorScreen({super.key});
 
   @override
-  State<CaptionEditorScreen> createState() => _CaptionEditorScreenState();
-}
-
-class _CaptionEditorScreenState extends State<CaptionEditorScreen> {
-  CaptionDocument _document = const CaptionDocument(
-    items: [
-      CaptionItem(
-        id: '1',
-        text: 'Tap to edit caption text',
-        startMillis: 0,
-        endMillis: 1800,
-      ),
-      CaptionItem(
-        id: '2',
-        text: 'Drag timing handles later',
-        startMillis: 1900,
-        endMillis: 3600,
-      ),
-    ],
-  );
-
-  @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final document = ref.watch(captionDocumentProvider);
     return Scaffold(
       appBar: AppBar(title: const Text('Caption Editor')),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
           _CaptionStyleCard(
-            style: _document.style,
+            style: document.style,
             onChanged: (style) =>
-                setState(() => _document = _document.updateStyle(style)),
+                ref.read(captionDocumentProvider.notifier).state = document
+                    .updateStyle(style),
           ),
           const SizedBox(height: 16),
-          CaptionPreview(document: _document),
+          CaptionPreview(document: document),
           const SizedBox(height: 16),
-          for (final item in _document.items) ...[
+          for (final item in document.items) ...[
             _CaptionItemCard(
               item: item,
-              onChanged: (text) => setState(() {
-                _document = _document.updateText(id: item.id, text: text);
-              }),
-              onTimingChanged: (values) => setState(() {
-                _document = _document.updateTiming(
-                  id: item.id,
-                  startMillis: values.start.round(),
-                  endMillis: values.end.round(),
-                );
-              }),
+              onChanged: (text) {
+                ref.read(captionDocumentProvider.notifier).state = document
+                    .updateText(id: item.id, text: text);
+              },
+              onTimingChanged: (values) {
+                ref.read(captionDocumentProvider.notifier).state = document
+                    .updateTiming(
+                      id: item.id,
+                      startMillis: values.start.round(),
+                      endMillis: values.end.round(),
+                    );
+              },
             ),
             const SizedBox(height: 12),
           ],

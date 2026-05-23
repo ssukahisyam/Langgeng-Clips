@@ -11,6 +11,7 @@ import '../render/export_sheet.dart';
 import '../render/trim_exporter.dart';
 import '../subject_tracking/subject_tracking.dart';
 import '../subject_tracking/subject_tracking_panel.dart';
+import '../subtitle/caption_document.dart';
 import '../templates/template_presets.dart';
 import '../transcription/transcription_progress.dart';
 import '../transcription/transcription_progress_card.dart';
@@ -172,6 +173,7 @@ class _EditorScreenState extends ConsumerState<EditorScreen> {
                               video.path,
                               project.activeClip,
                               options,
+                              ref.read(captionDocumentProvider).items,
                             ),
                           ),
                     child: _isExporting
@@ -237,6 +239,7 @@ class _EditorScreenState extends ConsumerState<EditorScreen> {
     String sourcePath,
     EditorClip clip,
     ExportOptions options,
+    List<CaptionItem> captionItems,
   ) async {
     setState(() {
       _isExporting = true;
@@ -252,6 +255,7 @@ class _EditorScreenState extends ConsumerState<EditorScreen> {
             startMillis: clip.startMillis,
             endMillis: clip.endMillis,
             options: options,
+            captionItems: captionItems,
           );
       final project = ref.read(editorProjectProvider);
       if (project != null) {

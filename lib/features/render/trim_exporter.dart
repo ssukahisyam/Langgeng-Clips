@@ -2,6 +2,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/pigeon/render_api.g.dart' as pigeon;
+import '../subtitle/caption_document.dart';
 import 'export_options.dart';
 
 final trimExporterProvider = Provider<TrimExporter>(
@@ -65,6 +66,7 @@ class TrimExporter {
     required int startMillis,
     required int endMillis,
     required ExportOptions options,
+    List<CaptionItem> captionItems = const [],
   }) async {
     if (sourcePath.trim().isEmpty) {
       throw const TrimExportException(
@@ -92,6 +94,15 @@ class TrimExporter {
           targetHeight: options.targetHeight,
           cropToPortrait: options.cropToPortrait,
           requiresReencode: options.requiresReencode,
+          captionSegments: captionItems
+              .map(
+                (caption) => pigeon.RenderCaptionSegment(
+                  text: caption.text,
+                  startMillis: caption.startMillis,
+                  endMillis: caption.endMillis,
+                ),
+              )
+              .toList(),
         ),
       );
       return TrimExportResult.fromPigeon(result);
