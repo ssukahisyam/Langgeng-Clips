@@ -245,10 +245,10 @@ Master task list end-to-end. Centang sambil jalan. Update minimal mingguan.
 
 ### 2.7 Subject Tracking
 - [ ] MLKit Face Detection integrate native
-- [ ] Face tracking timeline (per detik atau per frame sample)
-- [ ] Smooth crop transition (kalman atau ease)
-- [ ] Fallback ke center crop saat no face
-- [ ] Multi-face: pilih primary
+- [x] Face tracking timeline (per detik atau per frame sample)
+- [x] Smooth crop transition (kalman atau ease)
+- [x] Fallback ke center crop saat no face
+- [x] Multi-face: pilih primary
 - [ ] Test dengan video podcast 2 orang
 
 ### 2.8 V1.0 QA & Release

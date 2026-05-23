@@ -9,6 +9,8 @@ import '../library/export_history.dart';
 import '../render/export_options.dart';
 import '../render/export_sheet.dart';
 import '../render/trim_exporter.dart';
+import '../subject_tracking/subject_tracking.dart';
+import '../subject_tracking/subject_tracking_panel.dart';
 import '../templates/template_presets.dart';
 import '../transcription/transcription_progress.dart';
 import '../transcription/transcription_progress_card.dart';
@@ -710,6 +712,8 @@ class _AudioToolPanel extends StatelessWidget {
             const Text(
               'Auto highlight scoring, filler-word toggle, dan semi-auto candidate model sudah siap. Deteksi audio/scene native masih pending.',
             ),
+            const SizedBox(height: 12),
+            const SubjectTrackingPanel(config: SubjectTrackingConfig()),
             const SizedBox(height: 12),
             SwitchListTile.adaptive(
               contentPadding: EdgeInsets.zero,
