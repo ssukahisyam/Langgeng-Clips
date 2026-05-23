@@ -25,6 +25,8 @@ import com.langgeng.langgeng_clip.pigeon.RenderResult
 import com.langgeng.langgeng_clip.render.Media3RenderCancelledException
 import com.langgeng.langgeng_clip.render.Media3RenderComposer
 import com.langgeng.langgeng_clip.render.Media3RenderRequest
+import com.arthenica.ffmpegkit.FFmpegKit
+import com.arthenica.ffmpegkit.ReturnCode
 import java.io.File
 import java.io.FileInputStream
 import java.nio.ByteBuffer
@@ -94,6 +96,71 @@ class MainActivity : FlutterActivity() {
                 else -> result.notImplemented()
             }
         }
+
+        MethodChannel(
+            flutterEngine.dartExecutor.binaryMessenger,
+            "com.langgeng.clip/audio_tools",
+        ).setMethodCallHandler { call, result ->
+            when (call.method) {
+                "extractWav16kMono" -> extractWav16kMono(
+                    sourcePath = call.argument<String>("sourcePath"),
+                    startMillis = call.argument<Int>("startMillis") ?: 0,
+                    endMillis = call.argument<Int>("endMillis") ?: 0,
+                    result = result,
+                )
+                else -> result.notImplemented()
+            }
+        }
+    }
+
+    private fun extractWav16kMono(
+        sourcePath: String?,
+        startMillis: Int,
+        endMillis: Int,
+        result: MethodChannel.Result,
+    ) {
+        if (sourcePath.isNullOrBlank()) {
+            result.error("invalid_source", "Path sumber video kosong.", null)
+            return
+        }
+        if (endMillis <= startMillis) {
+            result.error("invalid_range", "Range audio tidak valid.", null)
+            return
+        }
+
+        val outputFile = File(cacheDir, "langgeng_audio_${System.currentTimeMillis()}.wav")
+        val startSeconds = startMillis / 1000.0
+        val durationSeconds = (endMillis - startMillis) / 1000.0
+        val command = listOf(
+            "-y",
+            "-ss", startSeconds.toString(),
+            "-t", durationSeconds.toString(),
+            "-i", sourcePath,
+            "-vn",
+            "-ac", "1",
+            "-ar", "16000",
+            "-acodec", "pcm_s16le",
+            outputFile.absolutePath,
+        ).joinToString(" ") { it.ffmpegQuote() }
+
+        Thread {
+            val session = FFmpegKit.execute(command)
+            mainHandler.post {
+                if (ReturnCode.isSuccess(session.returnCode)) {
+                    result.success(outputFile.absolutePath)
+                } else {
+                    result.error("extract_failed", "Gagal mengekstrak audio WAV.", null)
+                }
+            }
+        }.start()
+    }
+
+    private fun String.ffmpegQuote(): String {
+        if (!contains(' ') && !contains('\'')) {
+            return this
+        }
+
+        return "'${replace("'", "'\\''")}'"
     }
 
     private fun shareExport(uri: String?, title: String, result: MethodChannel.Result) {
