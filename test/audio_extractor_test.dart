@@ -78,4 +78,26 @@ void main() {
       ),
     );
   });
+
+  test('maps unavailable native extraction to readable error', () async {
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+        .setMockMethodCallHandler(channel, (call) async {
+          throw PlatformException(code: 'extract_unavailable');
+        });
+
+    await expectLater(
+      const AudioExtractor(channel: channel).extractWav16kMono(
+        sourcePath: '/video/input.mp4',
+        startMillis: 1000,
+        endMillis: 5000,
+      ),
+      throwsA(
+        isA<AudioExtractionException>().having(
+          (error) => error.message,
+          'message',
+          'FFmpeg audio extraction belum tersedia di build ini.',
+        ),
+      ),
+    );
+  });
 }

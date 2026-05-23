@@ -51,6 +51,9 @@ class AudioExtractionException implements Exception {
       'invalid_range' => const AudioExtractionException(
         'Range audio tidak valid.',
       ),
+      'extract_unavailable' => const AudioExtractionException(
+        'FFmpeg audio extraction belum tersedia di build ini.',
+      ),
       _ => const AudioExtractionException('Gagal mengekstrak audio WAV.'),
     };
   }

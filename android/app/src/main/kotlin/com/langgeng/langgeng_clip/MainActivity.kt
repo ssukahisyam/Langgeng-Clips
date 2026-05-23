@@ -25,8 +25,6 @@ import com.langgeng.langgeng_clip.pigeon.RenderResult
 import com.langgeng.langgeng_clip.render.Media3RenderCancelledException
 import com.langgeng.langgeng_clip.render.Media3RenderComposer
 import com.langgeng.langgeng_clip.render.Media3RenderRequest
-import com.arthenica.ffmpegkit.FFmpegKit
-import com.arthenica.ffmpegkit.ReturnCode
 import java.io.File
 import java.io.FileInputStream
 import java.nio.ByteBuffer
@@ -128,39 +126,11 @@ class MainActivity : FlutterActivity() {
             return
         }
 
-        val outputFile = File(cacheDir, "langgeng_audio_${System.currentTimeMillis()}.wav")
-        val startSeconds = startMillis / 1000.0
-        val durationSeconds = (endMillis - startMillis) / 1000.0
-        val command = listOf(
-            "-y",
-            "-ss", startSeconds.toString(),
-            "-t", durationSeconds.toString(),
-            "-i", sourcePath,
-            "-vn",
-            "-ac", "1",
-            "-ar", "16000",
-            "-acodec", "pcm_s16le",
-            outputFile.absolutePath,
-        ).joinToString(" ") { it.ffmpegQuote() }
-
-        Thread {
-            val session = FFmpegKit.execute(command)
-            mainHandler.post {
-                if (ReturnCode.isSuccess(session.returnCode)) {
-                    result.success(outputFile.absolutePath)
-                } else {
-                    result.error("extract_failed", "Gagal mengekstrak audio WAV.", null)
-                }
-            }
-        }.start()
-    }
-
-    private fun String.ffmpegQuote(): String {
-        if (!contains(' ') && !contains('\'')) {
-            return this
-        }
-
-        return "'${replace("'", "'\\''")}'"
+        result.error(
+            "extract_unavailable",
+            "FFmpeg audio extraction belum tersedia di build ini.",
+            null,
+        )
     }
 
     private fun shareExport(uri: String?, title: String, result: MethodChannel.Result) {
