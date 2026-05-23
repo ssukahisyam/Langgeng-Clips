@@ -199,8 +199,8 @@ Master task list end-to-end. Centang sambil jalan. Update minimal mingguan.
 - [ ] Animation: none / karaoke / typewriter
 - [ ] Subtitle render via Media3 OverlaySettings
 - [ ] Safe area aware (top 10%, bottom 15%)
-- [ ] Word-aware line break
-- [ ] Test emoji + ID + EN mix
+- [x] Word-aware line break
+- [x] Test emoji + ID + EN mix
 - [ ] Live preview real-time
 
 ### 2.3 Semi-Auto Mode
