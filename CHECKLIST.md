@@ -240,7 +240,7 @@ Master task list end-to-end. Centang sambil jalan. Update minimal mingguan.
 - [x] Position drag custom
 - [x] Opacity slider
 - [x] Scale slider
-- [ ] Native overlay implementation
+- [x] Native overlay implementation
 - [x] Preview di editor
 
 ### 2.7 Subject Tracking

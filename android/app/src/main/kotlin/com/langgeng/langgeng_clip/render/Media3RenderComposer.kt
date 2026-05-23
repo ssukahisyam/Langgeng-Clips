@@ -1,12 +1,22 @@
 package com.langgeng.langgeng_clip.render
 
 import android.content.Context
+import android.graphics.Bitmap
+import android.graphics.Canvas
+import android.graphics.Color
+import android.graphics.Paint
+import android.graphics.Rect
+import android.graphics.RectF
+import android.graphics.Typeface
 import android.net.Uri
 import androidx.annotation.OptIn
 import androidx.media3.common.Effect
 import androidx.media3.common.MediaItem
 import androidx.media3.common.MimeTypes
 import androidx.media3.common.util.UnstableApi
+import androidx.media3.effect.BitmapOverlay
+import androidx.media3.effect.OverlayEffect
+import androidx.media3.effect.OverlaySettings
 import androidx.media3.effect.Presentation
 import androidx.media3.transformer.Composition
 import androidx.media3.transformer.EditedMediaItem
@@ -20,6 +30,7 @@ import java.io.File
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicReference
+import com.google.common.collect.ImmutableList
 
 class Media3RenderComposer(private val context: Context) {
     fun supports(request: Media3RenderRequest): Boolean {
@@ -91,17 +102,60 @@ class Media3RenderComposer(private val context: Context) {
 
     @OptIn(UnstableApi::class)
     private fun Media3RenderRequest.videoEffects(): List<Effect> {
-        if (!cropToPortrait) {
-            return emptyList()
+        val effects = mutableListOf<Effect>()
+        if (cropToPortrait) {
+            effects.add(
+                Presentation.createForWidthAndHeight(
+                    targetWidth,
+                    targetHeight,
+                    Presentation.LAYOUT_SCALE_TO_FIT_WITH_CROP,
+                ),
+            )
         }
 
-        return listOf(
-            Presentation.createForWidthAndHeight(
-                targetWidth,
-                targetHeight,
-                Presentation.LAYOUT_SCALE_TO_FIT_WITH_CROP,
+        effects.add(
+            OverlayEffect(
+                ImmutableList.of(
+                    BitmapOverlay.createStaticBitmapOverlay(
+                        createWatermarkBitmap("Made with Langgeng Clip"),
+                        OverlaySettings.Builder()
+                            .setBackgroundFrameAnchor(0f, -0.82f)
+                            .setOverlayFrameAnchor(0f, -1f)
+                            .setScale(0.82f, 0.16f)
+                            .setAlphaScale(0.92f)
+                            .build(),
+                    ),
+                ),
             ),
         )
+        return effects
+    }
+
+    private fun createWatermarkBitmap(text: String): Bitmap {
+        val width = 960
+        val height = 160
+        val bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
+        val canvas = Canvas(bitmap)
+        val backgroundPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+            color = Color.argb(150, 0, 0, 0)
+        }
+        canvas.drawRoundRect(RectF(0f, 0f, width.toFloat(), height.toFloat()), 40f, 40f, backgroundPaint)
+
+        val textPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+            color = Color.WHITE
+            textSize = 54f
+            typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
+            textAlign = Paint.Align.CENTER
+        }
+        val bounds = Rect()
+        textPaint.getTextBounds(text, 0, text.length, bounds)
+        canvas.drawText(
+            text,
+            width / 2f,
+            height / 2f - bounds.exactCenterY(),
+            textPaint,
+        )
+        return bitmap
     }
 
     private fun Media3RenderRequest.videoMimeType(): String {
