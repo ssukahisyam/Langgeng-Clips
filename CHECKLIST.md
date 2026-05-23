@@ -185,7 +185,7 @@ Master task list end-to-end. Centang sambil jalan. Update minimal mingguan.
 - [x] Resume from last successful chunk
 - [x] Multi-language detection
 - [x] Bahasa override manual
-- [ ] Progress UI saat transcribe
+- [x] Progress UI saat transcribe
 
 ### 2.2 Auto Subtitle
 - [x] Caption Editor screen
@@ -198,18 +198,18 @@ Master task list end-to-end. Centang sambil jalan. Update minimal mingguan.
 - [x] Style: position 9-grid
 - [x] Animation: none / karaoke / typewriter
 - [ ] Subtitle render via Media3 OverlaySettings
-- [ ] Safe area aware (top 10%, bottom 15%)
+- [x] Safe area aware (top 10%, bottom 15%)
 - [x] Word-aware line break
 - [x] Test emoji + ID + EN mix
-- [ ] Live preview real-time
+- [x] Live preview real-time
 
 ### 2.3 Semi-Auto Mode
 - [ ] FFmpeg ebur128 audio peak detection
 - [ ] Scene change detection
 - [ ] Silence detection (untuk podcast)
-- [ ] UI: highlight kandidat di timeline
-- [ ] User pilih kandidat untuk jadi clip
-- [ ] Tuning threshold parameter
+- [x] UI: highlight kandidat di timeline
+- [x] User pilih kandidat untuk jadi clip
+- [x] Tuning threshold parameter
 
 ### 2.4 Auto Highlight (AI)
 - [x] Groq LLM client (Llama 3.3 / DeepSeek)
@@ -220,9 +220,9 @@ Master task list end-to-end. Centang sambil jalan. Update minimal mingguan.
 - [ ] Benchmark akurasi prompt
 - [ ] A/B test prompt antar model
 - [x] Cache hasil scoring per source+config
-- [ ] User preview & adjust hasil
-- [ ] Score badge di timeline
-- [ ] Filler word removal (toggle, default off)
+- [x] User preview & adjust hasil
+- [x] Score badge di timeline
+- [x] Filler word removal (toggle, default off)
 
 ### 2.5 Templates
 - [x] Template definition format (JSON)
@@ -230,8 +230,8 @@ Master task list end-to-end. Centang sambil jalan. Update minimal mingguan.
 - [x] Preset Gaming (pip kamera + game, dynamic caption)
 - [x] Preset Talking Head (face-tracked crop, karaoke caption)
 - [x] Preset Tutorial (clean caption, watermark logo)
-- [ ] Apply template flow di Editor
-- [ ] Preview template visual
+- [x] Apply template flow di Editor
+- [x] Preview template visual
 
 ### 2.6 Watermark
 - [x] Watermark module: text input

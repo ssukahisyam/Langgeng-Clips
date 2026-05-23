@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../editor/editor_project.dart';
 import 'caption_document.dart';
+import 'caption_preview.dart';
 
 class CaptionEditorScreen extends StatefulWidget {
   const CaptionEditorScreen({super.key});
@@ -40,6 +41,8 @@ class _CaptionEditorScreenState extends State<CaptionEditorScreen> {
             onChanged: (style) =>
                 setState(() => _document = _document.updateStyle(style)),
           ),
+          const SizedBox(height: 16),
+          CaptionPreview(document: _document),
           const SizedBox(height: 16),
           for (final item in _document.items) ...[
             _CaptionItemCard(
