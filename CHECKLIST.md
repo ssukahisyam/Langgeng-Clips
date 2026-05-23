@@ -204,9 +204,9 @@ Master task list end-to-end. Centang sambil jalan. Update minimal mingguan.
 - [x] Live preview real-time
 
 ### 2.3 Semi-Auto Mode
-- [ ] FFmpeg ebur128 audio peak detection
+- [x] Audio peak detection (PCM WAV window RMS/peak)
 - [x] Scene change detection
-- [ ] Silence detection (untuk podcast)
+- [x] Silence detection (untuk podcast)
 - [x] UI: highlight kandidat di timeline
 - [x] User pilih kandidat untuk jadi clip
 - [x] Tuning threshold parameter
