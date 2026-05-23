@@ -48,6 +48,38 @@ class Transcript {
     );
   }
 
+  factory Transcript.mergeChunks(List<Transcript> chunks) {
+    if (chunks.isEmpty) {
+      return const Transcript(text: '', words: []);
+    }
+
+    final words = chunks.expand((chunk) => chunk.words).toList()
+      ..sort((a, b) {
+        final startCompare = a.startMillis.compareTo(b.startMillis);
+        if (startCompare != 0) {
+          return startCompare;
+        }
+
+        return a.endMillis.compareTo(b.endMillis);
+      });
+    final mergedWords = <TranscriptWord>[];
+    for (final word in words) {
+      if (mergedWords.isNotEmpty &&
+          word.text == mergedWords.last.text &&
+          word.startMillis < mergedWords.last.endMillis) {
+        continue;
+      }
+      mergedWords.add(word);
+    }
+
+    return Transcript(
+      text: mergedWords.map((word) => word.text).join(' ').trim(),
+      language: chunks.first.language,
+      durationSeconds: chunks.last.durationSeconds,
+      words: mergedWords,
+    );
+  }
+
   final String text;
   final String? language;
   final double? durationSeconds;
