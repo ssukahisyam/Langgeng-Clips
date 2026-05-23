@@ -212,14 +212,14 @@ Master task list end-to-end. Centang sambil jalan. Update minimal mingguan.
 - [ ] Tuning threshold parameter
 
 ### 2.4 Auto Highlight (AI)
-- [ ] Groq LLM client (Llama 3.3 / DeepSeek)
-- [ ] Prompt engineering iterasi 1
-- [ ] Output schema: ranges with score & reason
-- [ ] Sentence-boundary refinement validator
+- [x] Groq LLM client (Llama 3.3 / DeepSeek)
+- [x] Prompt engineering iterasi 1
+- [x] Output schema: ranges with score & reason
+- [x] Sentence-boundary refinement validator
 - [ ] Eval dataset: 10-20 video sampel + ground truth
 - [ ] Benchmark akurasi prompt
 - [ ] A/B test prompt antar model
-- [ ] Cache hasil scoring per source+config
+- [x] Cache hasil scoring per source+config
 - [ ] User preview & adjust hasil
 - [ ] Score badge di timeline
 - [ ] Filler word removal (toggle, default off)
