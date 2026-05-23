@@ -225,11 +225,11 @@ Master task list end-to-end. Centang sambil jalan. Update minimal mingguan.
 - [ ] Filler word removal (toggle, default off)
 
 ### 2.5 Templates
-- [ ] Template definition format (JSON)
-- [ ] Preset Podcast (talking head, subtitle large, watermark optional)
-- [ ] Preset Gaming (pip kamera + game, dynamic caption)
-- [ ] Preset Talking Head (face-tracked crop, karaoke caption)
-- [ ] Preset Tutorial (clean caption, watermark logo)
+- [x] Template definition format (JSON)
+- [x] Preset Podcast (talking head, subtitle large, watermark optional)
+- [x] Preset Gaming (pip kamera + game, dynamic caption)
+- [x] Preset Talking Head (face-tracked crop, karaoke caption)
+- [x] Preset Tutorial (clean caption, watermark logo)
 - [ ] Apply template flow di Editor
 - [ ] Preview template visual
 
