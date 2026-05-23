@@ -180,9 +180,9 @@ Master task list end-to-end. Centang sambil jalan. Update minimal mingguan.
 - [x] Audio chunking 10 menit + overlap 5 detik
 - [x] Upload chunk ke Groq Whisper API
 - [x] Merge word-level timestamps lintas chunk
-- [ ] Cache transcript by source SHA256
-- [ ] Retry exponential backoff
-- [ ] Resume from last successful chunk
+- [x] Cache transcript by source SHA256
+- [x] Retry exponential backoff
+- [x] Resume from last successful chunk
 - [ ] Multi-language detection
 - [ ] Bahasa override manual
 - [ ] Progress UI saat transcribe

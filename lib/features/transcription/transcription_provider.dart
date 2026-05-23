@@ -48,6 +48,21 @@ class Transcript {
     );
   }
 
+  factory Transcript.fromJson(Map<String, dynamic> json) {
+    final wordsJson = json['words'];
+    return Transcript(
+      text: json['text'] as String? ?? '',
+      language: json['language'] as String?,
+      durationSeconds: (json['durationSeconds'] as num?)?.toDouble(),
+      words: wordsJson is List
+          ? wordsJson
+                .whereType<Map<String, dynamic>>()
+                .map(TranscriptWord.fromJson)
+                .toList()
+          : const <TranscriptWord>[],
+    );
+  }
+
   factory Transcript.mergeChunks(List<Transcript> chunks) {
     if (chunks.isEmpty) {
       return const Transcript(text: '', words: []);
@@ -84,6 +99,15 @@ class Transcript {
   final String? language;
   final double? durationSeconds;
   final List<TranscriptWord> words;
+
+  Map<String, dynamic> toJson() {
+    return {
+      'text': text,
+      if (language != null) 'language': language,
+      if (durationSeconds != null) 'durationSeconds': durationSeconds,
+      'words': words.map((word) => word.toJson()).toList(),
+    };
+  }
 }
 
 class TranscriptWord {
@@ -104,9 +128,21 @@ class TranscriptWord {
     );
   }
 
+  factory TranscriptWord.fromJson(Map<String, dynamic> json) {
+    return TranscriptWord(
+      text: json['text'] as String? ?? '',
+      startMillis: (json['startMillis'] as num?)?.toInt() ?? 0,
+      endMillis: (json['endMillis'] as num?)?.toInt() ?? 0,
+    );
+  }
+
   final String text;
   final int startMillis;
   final int endMillis;
+
+  Map<String, dynamic> toJson() {
+    return {'text': text, 'startMillis': startMillis, 'endMillis': endMillis};
+  }
 
   static int _secondsToMillis(Object? value) {
     if (value is num) {
