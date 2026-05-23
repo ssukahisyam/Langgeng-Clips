@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
 import '../import/import_sheet.dart';
+import '../monetization/ad_placeholder.dart';
 import '../../shared/widgets/app_scaffold.dart';
 
 class HomeScreen extends StatelessWidget {
@@ -25,6 +27,20 @@ class HomeScreen extends StatelessWidget {
             style: Theme.of(context).textTheme.bodyLarge,
           ),
           const SizedBox(height: 20),
+          Card(
+            child: ListTile(
+              leading: const Icon(Icons.workspace_premium_rounded),
+              title: const Text('Free tier: 3 export per hari'),
+              subtitle: const Text(
+                'Upgrade Pro untuk unlimited export dan tanpa watermark.',
+              ),
+              trailing: const Icon(Icons.chevron_right_rounded),
+              onTap: () => context.go('/pricing'),
+            ),
+          ),
+          const SizedBox(height: 12),
+          const AdPlaceholder(label: 'Banner ad placeholder · Home'),
+          const SizedBox(height: 12),
           Card(
             child: Padding(
               padding: const EdgeInsets.all(20),
