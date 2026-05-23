@@ -27,6 +27,7 @@ class RenderRequest {
     required this.targetHeight,
     required this.cropToPortrait,
     required this.requiresReencode,
+    this.captionSegments,
   });
 
   String sourcePath;
@@ -49,6 +50,8 @@ class RenderRequest {
 
   bool requiresReencode;
 
+  List<RenderCaptionSegment?>? captionSegments;
+
   Object encode() {
     return <Object?>[
       sourcePath,
@@ -61,6 +64,7 @@ class RenderRequest {
       targetHeight,
       cropToPortrait,
       requiresReencode,
+      captionSegments,
     ];
   }
 
@@ -77,6 +81,35 @@ class RenderRequest {
       targetHeight: result[7]! as int,
       cropToPortrait: result[8]! as bool,
       requiresReencode: result[9]! as bool,
+      captionSegments: (result[10] as List<Object?>?)
+          ?.cast<RenderCaptionSegment?>(),
+    );
+  }
+}
+
+class RenderCaptionSegment {
+  RenderCaptionSegment({
+    required this.text,
+    required this.startMillis,
+    required this.endMillis,
+  });
+
+  String text;
+
+  int startMillis;
+
+  int endMillis;
+
+  Object encode() {
+    return <Object?>[text, startMillis, endMillis];
+  }
+
+  static RenderCaptionSegment decode(Object result) {
+    result as List<Object?>;
+    return RenderCaptionSegment(
+      text: result[0]! as String,
+      startMillis: result[1]! as int,
+      endMillis: result[2]! as int,
     );
   }
 }
@@ -152,8 +185,11 @@ class _PigeonCodec extends StandardMessageCodec {
     } else if (value is RenderRequest) {
       buffer.putUint8(129);
       writeValue(buffer, value.encode());
-    } else if (value is RenderResult) {
+    } else if (value is RenderCaptionSegment) {
       buffer.putUint8(130);
+      writeValue(buffer, value.encode());
+    } else if (value is RenderResult) {
+      buffer.putUint8(131);
       writeValue(buffer, value.encode());
     } else {
       super.writeValue(buffer, value);
@@ -166,6 +202,8 @@ class _PigeonCodec extends StandardMessageCodec {
       case 129:
         return RenderRequest.decode(readValue(buffer)!);
       case 130:
+        return RenderCaptionSegment.decode(readValue(buffer)!);
+      case 131:
         return RenderResult.decode(readValue(buffer)!);
       default:
         return super.readValueOfType(type, buffer);

@@ -57,7 +57,8 @@ data class RenderRequest (
   val targetWidth: Long,
   val targetHeight: Long,
   val cropToPortrait: Boolean,
-  val requiresReencode: Boolean
+  val requiresReencode: Boolean,
+  val captionSegments: List<RenderCaptionSegment?>? = null
 )
  {
   companion object {
@@ -72,7 +73,8 @@ data class RenderRequest (
       val targetHeight = pigeonVar_list[7] as Long
       val cropToPortrait = pigeonVar_list[8] as Boolean
       val requiresReencode = pigeonVar_list[9] as Boolean
-      return RenderRequest(sourcePath, startMillis, endMillis, resolution, frameRate, codec, targetWidth, targetHeight, cropToPortrait, requiresReencode)
+      val captionSegments = pigeonVar_list[10] as List<RenderCaptionSegment?>?
+      return RenderRequest(sourcePath, startMillis, endMillis, resolution, frameRate, codec, targetWidth, targetHeight, cropToPortrait, requiresReencode, captionSegments)
     }
   }
   fun toList(): List<Any?> {
@@ -87,6 +89,31 @@ data class RenderRequest (
       targetHeight,
       cropToPortrait,
       requiresReencode,
+      captionSegments,
+    )
+  }
+}
+
+/** Generated class from Pigeon that represents data sent in messages. */
+data class RenderCaptionSegment (
+  val text: String,
+  val startMillis: Long,
+  val endMillis: Long
+)
+ {
+  companion object {
+    fun fromList(pigeonVar_list: List<Any?>): RenderCaptionSegment {
+      val text = pigeonVar_list[0] as String
+      val startMillis = pigeonVar_list[1] as Long
+      val endMillis = pigeonVar_list[2] as Long
+      return RenderCaptionSegment(text, startMillis, endMillis)
+    }
+  }
+  fun toList(): List<Any?> {
+    return listOf(
+      text,
+      startMillis,
+      endMillis,
     )
   }
 }
@@ -142,6 +169,11 @@ private open class RenderApiPigeonCodec : StandardMessageCodec() {
       }
       130.toByte() -> {
         return (readValue(buffer) as? List<Any?>)?.let {
+          RenderCaptionSegment.fromList(it)
+        }
+      }
+      131.toByte() -> {
+        return (readValue(buffer) as? List<Any?>)?.let {
           RenderResult.fromList(it)
         }
       }
@@ -154,8 +186,12 @@ private open class RenderApiPigeonCodec : StandardMessageCodec() {
         stream.write(129)
         writeValue(stream, value.toList())
       }
-      is RenderResult -> {
+      is RenderCaptionSegment -> {
         stream.write(130)
+        writeValue(stream, value.toList())
+      }
+      is RenderResult -> {
+        stream.write(131)
         writeValue(stream, value.toList())
       }
       else -> super.writeValue(stream, value)

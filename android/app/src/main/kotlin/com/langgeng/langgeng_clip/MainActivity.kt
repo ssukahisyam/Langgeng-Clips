@@ -24,6 +24,7 @@ import com.langgeng.langgeng_clip.pigeon.NativeRenderApi
 import com.langgeng.langgeng_clip.pigeon.RenderRequest
 import com.langgeng.langgeng_clip.pigeon.RenderResult
 import com.langgeng.langgeng_clip.render.Media3RenderCancelledException
+import com.langgeng.langgeng_clip.render.Media3CaptionSegment
 import com.langgeng.langgeng_clip.render.Media3RenderComposer
 import com.langgeng.langgeng_clip.render.Media3RenderRequest
 import java.io.File
@@ -399,6 +400,16 @@ class MainActivity : FlutterActivity() {
                 targetWidth = request.targetWidth.toInt(),
                 targetHeight = request.targetHeight.toInt(),
                 cropToPortrait = request.cropToPortrait,
+                captionSegments = request.captionSegments
+                    ?.filterNotNull()
+                    ?.map {
+                        Media3CaptionSegment(
+                            text = it.text,
+                            startMillis = it.startMillis.toInt(),
+                            endMillis = it.endMillis.toInt(),
+                        )
+                    }
+                    ?: emptyList(),
             ),
             outputFile = outputFile,
             isCancelled = { isExportCancelled },

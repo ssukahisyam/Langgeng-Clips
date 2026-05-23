@@ -115,20 +115,49 @@ class Media3RenderComposer(private val context: Context) {
 
         effects.add(
             OverlayEffect(
-                ImmutableList.of(
-                    BitmapOverlay.createStaticBitmapOverlay(
-                        createWatermarkBitmap("Made with Langgeng Clip"),
-                        OverlaySettings.Builder()
-                            .setBackgroundFrameAnchor(0f, -0.82f)
-                            .setOverlayFrameAnchor(0f, -1f)
-                            .setScale(0.82f, 0.16f)
-                            .setAlphaScale(0.92f)
-                            .build(),
-                    ),
+                ImmutableList.copyOf(
+                    buildList {
+                        add(
+                            BitmapOverlay.createStaticBitmapOverlay(
+                                createWatermarkBitmap("Made with Langgeng Clip"),
+                                OverlaySettings.Builder()
+                                    .setBackgroundFrameAnchor(0f, -0.82f)
+                                    .setOverlayFrameAnchor(0f, -1f)
+                                    .setScale(0.82f, 0.16f)
+                                    .setAlphaScale(0.92f)
+                                    .build(),
+                            ),
+                        )
+                        if (captionSegments.isNotEmpty()) {
+                            add(createCaptionOverlay(captionSegments))
+                        }
+                    },
                 ),
             ),
         )
         return effects
+    }
+
+    private fun createCaptionOverlay(segments: List<Media3CaptionSegment>): BitmapOverlay {
+        val emptyBitmap = Bitmap.createBitmap(1, 1, Bitmap.Config.ARGB_8888)
+        return object : BitmapOverlay() {
+            override fun getBitmap(presentationTimeUs: Long): Bitmap {
+                val timeMillis = presentationTimeUs / 1000
+                val active = segments.firstOrNull {
+                    timeMillis >= it.startMillis && timeMillis <= it.endMillis
+                } ?: return emptyBitmap
+                return createCaptionBitmap(active.text)
+            }
+
+            override fun getOverlaySettings(presentationTimeUs: Long): OverlaySettings {
+                return OverlaySettings.Builder()
+                    .setBackgroundFrameAnchor(0f, -0.48f)
+                    .setOverlayFrameAnchor(0f, -1f)
+                    .setScale(0.92f, 0.22f)
+                    .setAlphaScale(1f)
+                    .build()
+            }
+        }
     }
 
     private fun createWatermarkBitmap(text: String): Bitmap {
@@ -158,6 +187,31 @@ class Media3RenderComposer(private val context: Context) {
         return bitmap
     }
 
+    private fun createCaptionBitmap(text: String): Bitmap {
+        val width = 1080
+        val height = 240
+        val bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
+        val canvas = Canvas(bitmap)
+        val backgroundPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+            color = Color.argb(175, 0, 0, 0)
+        }
+        canvas.drawRoundRect(RectF(0f, 0f, width.toFloat(), height.toFloat()), 36f, 36f, backgroundPaint)
+
+        val textPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+            color = Color.WHITE
+            textSize = 64f
+            typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
+            textAlign = Paint.Align.CENTER
+        }
+        val lines = text.chunked(28).take(2)
+        val lineHeight = 76f
+        val firstBaseline = height / 2f - ((lines.size - 1) * lineHeight / 2f) + 24f
+        lines.forEachIndexed { index, line ->
+            canvas.drawText(line.trim(), width / 2f, firstBaseline + index * lineHeight, textPaint)
+        }
+        return bitmap
+    }
+
     private fun Media3RenderRequest.videoMimeType(): String {
         return when (codec.lowercase()) {
             "hevc", "h.265", "h265" -> MimeTypes.VIDEO_H265
@@ -176,9 +230,16 @@ data class Media3RenderRequest(
     val targetWidth: Int,
     val targetHeight: Int,
     val cropToPortrait: Boolean,
+    val captionSegments: List<Media3CaptionSegment>,
 ) {
     val requiresReencode: Boolean
         get() = cropToPortrait || resolution != "source" || codec != "copy"
 }
+
+data class Media3CaptionSegment(
+    val text: String,
+    val startMillis: Int,
+    val endMillis: Int,
+)
 
 class Media3RenderCancelledException : Exception("Export dibatalkan.")
