@@ -351,7 +351,7 @@ Master task list end-to-end. Centang sambil jalan. Update minimal mingguan.
 
 ### Documentation
 - [ ] ADR untuk keputusan besar (`docs/adr/NNNN-*.md`)
-- [ ] Setup guide di CONTRIBUTING.md
+- [x] Setup guide di CONTRIBUTING.md
 - [ ] Changelog auto-generate
 - [ ] In-code dartdoc untuk public API
 

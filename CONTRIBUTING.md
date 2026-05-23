@@ -9,6 +9,36 @@ Langgeng Clip is currently a private development project. Contributions should s
 3. Update tests and documentation when behavior changes.
 4. Do not commit secrets, API keys, keystores, or generated build outputs.
 
+## Local Setup
+
+Requirements:
+
+- Flutter 3.x with Dart 3.x.
+- Android Studio or Android SDK command-line tools.
+- Android API level matching the project Gradle config.
+- A local Android emulator or physical Android device.
+
+Initial setup:
+
+```sh
+flutter pub get
+flutter doctor
+```
+
+Run the app locally:
+
+```sh
+flutter run
+```
+
+Generate Pigeon bindings after changing files under `pigeons/`:
+
+```sh
+dart run pigeon --input pigeons/render_api.dart
+```
+
+Release signing files such as `android/key.properties` and keystores must stay local or in secure CI secrets. Never commit them.
+
 ## Local Checks
 
 Run these before opening a pull request when possible:
