@@ -9,6 +9,11 @@ import '../library/export_history.dart';
 import '../render/export_options.dart';
 import '../render/export_sheet.dart';
 import '../render/trim_exporter.dart';
+import '../templates/template_presets.dart';
+import '../transcription/transcription_progress.dart';
+import '../transcription/transcription_progress_card.dart';
+import '../watermark/watermark_config.dart';
+import '../watermark/watermark_preview.dart';
 import 'editor_project.dart';
 import 'editor_project_controller.dart';
 
@@ -483,6 +488,37 @@ class _EditorPanel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    return switch (activePanel) {
+      'Caption' => _CaptionToolPanel(),
+      'Style' => _TemplateToolPanel(
+        template: template,
+        clipCount: clipCount,
+        targetDuration: targetDuration,
+      ),
+      'Watermark' => const _WatermarkToolPanel(),
+      'Audio' => const _AudioToolPanel(),
+      _ => _ClipsToolPanel(
+        template: template,
+        clipCount: clipCount,
+        targetDuration: targetDuration,
+      ),
+    };
+  }
+}
+
+class _ClipsToolPanel extends StatelessWidget {
+  const _ClipsToolPanel({
+    required this.template,
+    required this.clipCount,
+    required this.targetDuration,
+  });
+
+  final String template;
+  final String clipCount;
+  final String targetDuration;
+
+  @override
+  Widget build(BuildContext context) {
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(16),
@@ -490,7 +526,7 @@ class _EditorPanel extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              activePanel,
+              'Clips',
               style: Theme.of(
                 context,
               ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
@@ -500,7 +536,175 @@ class _EditorPanel extends StatelessWidget {
             Text('Jumlah clip: $clipCount'),
             Text('Durasi target: $targetDuration'),
             const SizedBox(height: 12),
-            const Text('Panel detail akan diisi setelah timeline manual siap.'),
+            const Text(
+              'Gunakan timeline untuk atur range, lalu Add untuk membuat clip.',
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _CaptionToolPanel extends StatelessWidget {
+  const _CaptionToolPanel();
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Captions',
+              style: Theme.of(
+                context,
+              ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
+            ),
+            const SizedBox(height: 12),
+            const TranscriptionProgressCard(
+              state: TranscriptionProgressState(
+                completedChunks: 0,
+                totalChunks: 0,
+                currentLabel: 'Transcription belum dijalankan',
+              ),
+            ),
+            const SizedBox(height: 12),
+            FilledButton.icon(
+              onPressed: () => context.go('/editor/captions'),
+              icon: const Icon(Icons.closed_caption_rounded),
+              label: const Text('Open caption editor'),
+            ),
+            const SizedBox(height: 8),
+            const Text(
+              'Transcribe pipeline sudah disiapkan; audio extraction native masih menunggu backend final.',
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _TemplateToolPanel extends StatelessWidget {
+  const _TemplateToolPanel({
+    required this.template,
+    required this.clipCount,
+    required this.targetDuration,
+  });
+
+  final String template;
+  final String clipCount;
+  final String targetDuration;
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Templates',
+              style: Theme.of(
+                context,
+              ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Current setup: $template · $clipCount clips · $targetDuration',
+            ),
+            const SizedBox(height: 12),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: [
+                for (final preset in TemplatePresets.all)
+                  ActionChip(
+                    label: Text(preset.name),
+                    avatar: const Icon(Icons.auto_awesome_rounded, size: 18),
+                    onPressed: () {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text('${preset.name} template ready.'),
+                        ),
+                      );
+                    },
+                  ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _AudioToolPanel extends StatelessWidget {
+  const _AudioToolPanel();
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'AI Highlights',
+              style: Theme.of(
+                context,
+              ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
+            ),
+            const SizedBox(height: 8),
+            const Text(
+              'Auto highlight scoring, filler-word toggle, dan semi-auto candidate model sudah siap. Deteksi audio/scene native masih pending.',
+            ),
+            const SizedBox(height: 12),
+            FilledButton.icon(
+              onPressed: () {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('AI highlight engine ready.')),
+                );
+              },
+              icon: const Icon(Icons.auto_graph_rounded),
+              label: const Text('Preview AI candidates'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _WatermarkToolPanel extends StatelessWidget {
+  const _WatermarkToolPanel();
+
+  @override
+  Widget build(BuildContext context) {
+    const config = WatermarkConfig(text: '@LanggengClip');
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Watermark',
+              style: Theme.of(
+                context,
+              ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
+            ),
+            const SizedBox(height: 12),
+            const WatermarkPreview(config: config),
+            const SizedBox(height: 12),
+            const Text(
+              'Text/image config, anchors, drag coordinates, opacity, scale, dan preview sudah siap. Native overlay render masih pending.',
+            ),
           ],
         ),
       ),
