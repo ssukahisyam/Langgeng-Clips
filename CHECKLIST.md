@@ -177,9 +177,9 @@ Master task list end-to-end. Centang sambil jalan. Update minimal mingguan.
 - [x] `TranscriptionProvider` interface
 - [x] `GroqWhisperProvider` impl
 - [ ] FFmpeg extract audio 16kHz mono WAV
-- [ ] Audio chunking 10 menit + overlap 5 detik
+- [x] Audio chunking 10 menit + overlap 5 detik
 - [x] Upload chunk ke Groq Whisper API
-- [ ] Merge word-level timestamps lintas chunk
+- [x] Merge word-level timestamps lintas chunk
 - [ ] Cache transcript by source SHA256
 - [ ] Retry exponential backoff
 - [ ] Resume from last successful chunk
