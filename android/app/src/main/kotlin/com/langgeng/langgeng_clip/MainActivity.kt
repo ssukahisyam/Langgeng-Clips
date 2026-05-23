@@ -6,6 +6,7 @@ import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.content.Intent
 import android.graphics.Bitmap
+import android.media.MediaCodec
 import android.media.MediaExtractor
 import android.media.MediaFormat
 import android.media.MediaMetadataRetriever
@@ -28,8 +29,11 @@ import com.langgeng.langgeng_clip.render.Media3CaptionSegment
 import com.langgeng.langgeng_clip.render.Media3RenderComposer
 import com.langgeng.langgeng_clip.render.Media3RenderRequest
 import java.io.File
+import java.io.ByteArrayOutputStream
 import java.io.FileInputStream
+import java.io.FileOutputStream
 import java.nio.ByteBuffer
+import java.nio.ByteOrder
 
 class MainActivity : FlutterActivity() {
     private var exportProgressSink: EventChannel.EventSink? = null
@@ -231,11 +235,146 @@ class MainActivity : FlutterActivity() {
             return
         }
 
-        result.error(
-            "extract_unavailable",
-            "FFmpeg audio extraction belum tersedia di build ini.",
-            null,
-        )
+        Thread {
+            try {
+                val outputFile = File(cacheDir, "langgeng_audio_${System.currentTimeMillis()}.wav")
+                decodeAudioToWav16kMono(sourcePath, startMillis, endMillis, outputFile)
+                mainHandler.post { result.success(outputFile.absolutePath) }
+            } catch (error: Exception) {
+                mainHandler.post {
+                    result.error("extract_failed", "Gagal mengekstrak audio WAV.", null)
+                }
+            }
+        }.start()
+    }
+
+    private fun decodeAudioToWav16kMono(sourcePath: String, startMillis: Int, endMillis: Int, outputFile: File) {
+        val extractor = MediaExtractor()
+        var decoder: MediaCodec? = null
+        try {
+            extractor.setDataSource(sourcePath)
+            val trackIndex = (0 until extractor.trackCount).firstOrNull { index ->
+                extractor.getTrackFormat(index).getString(MediaFormat.KEY_MIME)?.startsWith("audio/") == true
+            } ?: throw IllegalStateException("No audio track")
+            extractor.selectTrack(trackIndex)
+            extractor.seekTo(startMillis * 1000L, MediaExtractor.SEEK_TO_CLOSEST_SYNC)
+            val inputFormat = extractor.getTrackFormat(trackIndex)
+            val mime = inputFormat.getString(MediaFormat.KEY_MIME) ?: throw IllegalStateException("Missing audio mime")
+            decoder = MediaCodec.createDecoderByType(mime)
+            decoder.configure(inputFormat, null, null, 0)
+            decoder.start()
+
+            val pcm = ByteArrayOutputStream()
+            val info = MediaCodec.BufferInfo()
+            var inputDone = false
+            var outputDone = false
+            var outputSampleRate = inputFormat.getInteger(MediaFormat.KEY_SAMPLE_RATE)
+            var outputChannels = inputFormat.getInteger(MediaFormat.KEY_CHANNEL_COUNT)
+            val startUs = startMillis * 1000L
+            val endUs = endMillis * 1000L
+
+            while (!outputDone) {
+                if (!inputDone) {
+                    val inputIndex = decoder.dequeueInputBuffer(10_000)
+                    if (inputIndex >= 0) {
+                        val inputBuffer = decoder.getInputBuffer(inputIndex)!!
+                        val sampleSize = extractor.readSampleData(inputBuffer, 0)
+                        val sampleTime = extractor.sampleTime
+                        if (sampleSize < 0 || sampleTime > endUs) {
+                            decoder.queueInputBuffer(inputIndex, 0, 0, 0, MediaCodec.BUFFER_FLAG_END_OF_STREAM)
+                            inputDone = true
+                        } else {
+                            decoder.queueInputBuffer(inputIndex, 0, sampleSize, sampleTime, 0)
+                            extractor.advance()
+                        }
+                    }
+                }
+
+                when (val outputIndex = decoder.dequeueOutputBuffer(info, 10_000)) {
+                    MediaCodec.INFO_OUTPUT_FORMAT_CHANGED -> {
+                        val outputFormat = decoder.outputFormat
+                        outputSampleRate = outputFormat.getInteger(MediaFormat.KEY_SAMPLE_RATE)
+                        outputChannels = outputFormat.getInteger(MediaFormat.KEY_CHANNEL_COUNT)
+                    }
+                    MediaCodec.INFO_TRY_AGAIN_LATER -> Unit
+                    else -> if (outputIndex >= 0) {
+                        val outputBuffer = decoder.getOutputBuffer(outputIndex)
+                        if (outputBuffer != null && info.size > 0 && info.presentationTimeUs >= startUs) {
+                            val bytes = ByteArray(info.size)
+                            outputBuffer.position(info.offset)
+                            outputBuffer.limit(info.offset + info.size)
+                            outputBuffer.get(bytes)
+                            pcm.write(bytes)
+                        }
+                        outputDone = info.flags and MediaCodec.BUFFER_FLAG_END_OF_STREAM != 0
+                        decoder.releaseOutputBuffer(outputIndex, false)
+                    }
+                }
+            }
+
+            val mono16k = pcm.toByteArray().pcm16ToMono16k(outputSampleRate, outputChannels)
+            writeWav(outputFile, mono16k, sampleRate = 16_000, channels = 1)
+        } finally {
+            decoder?.stop()
+            decoder?.release()
+            extractor.release()
+        }
+    }
+
+    private fun ByteArray.pcm16ToMono16k(sourceSampleRate: Int, sourceChannels: Int): ShortArray {
+        val input = ByteBuffer.wrap(this).order(ByteOrder.LITTLE_ENDIAN).asShortBuffer()
+        val frameCount = input.limit() / sourceChannels
+        val mono = ShortArray(frameCount)
+        for (frame in 0 until frameCount) {
+            var mixed = 0
+            for (channel in 0 until sourceChannels) {
+                mixed += input.get(frame * sourceChannels + channel).toInt()
+            }
+            mono[frame] = (mixed / sourceChannels).toShort()
+        }
+        if (sourceSampleRate == 16_000) return mono
+
+        val outputFrameCount = (mono.size.toLong() * 16_000L / sourceSampleRate).toInt().coerceAtLeast(1)
+        return ShortArray(outputFrameCount) { index ->
+            val sourceIndex = (index.toLong() * sourceSampleRate / 16_000L).toInt().coerceIn(0, mono.lastIndex)
+            mono[sourceIndex]
+        }
+    }
+
+    private fun writeWav(outputFile: File, samples: ShortArray, sampleRate: Int, channels: Int) {
+        val dataSize = samples.size * 2
+        FileOutputStream(outputFile).use { output ->
+            output.write("RIFF".toByteArray())
+            output.writeIntLe(36 + dataSize)
+            output.write("WAVE".toByteArray())
+            output.write("fmt ".toByteArray())
+            output.writeIntLe(16)
+            output.writeShortLe(1)
+            output.writeShortLe(channels)
+            output.writeIntLe(sampleRate)
+            output.writeIntLe(sampleRate * channels * 2)
+            output.writeShortLe(channels * 2)
+            output.writeShortLe(16)
+            output.write("data".toByteArray())
+            output.writeIntLe(dataSize)
+            samples.forEach { output.writeShortLe(it.toInt()) }
+        }
+    }
+
+    private fun FileOutputStream.writeIntLe(value: Int) {
+        write(byteArrayOf(
+            (value and 0xFF).toByte(),
+            ((value shr 8) and 0xFF).toByte(),
+            ((value shr 16) and 0xFF).toByte(),
+            ((value shr 24) and 0xFF).toByte(),
+        ))
+    }
+
+    private fun FileOutputStream.writeShortLe(value: Int) {
+        write(byteArrayOf(
+            (value and 0xFF).toByte(),
+            ((value shr 8) and 0xFF).toByte(),
+        ))
     }
 
     private fun shareExport(uri: String?, title: String, result: MethodChannel.Result) {
