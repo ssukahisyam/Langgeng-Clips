@@ -1,0 +1,95 @@
+import 'dart:typed_data';
+
+abstract interface class TranscriptionProvider {
+  Future<Transcript> transcribeChunk(TranscriptionChunk chunk);
+}
+
+class TranscriptionChunk {
+  const TranscriptionChunk({
+    required this.bytes,
+    required this.fileName,
+    required this.mimeType,
+    required this.startOffsetMillis,
+    this.language,
+  });
+
+  final Uint8List bytes;
+  final String fileName;
+  final String mimeType;
+  final int startOffsetMillis;
+  final String? language;
+}
+
+class Transcript {
+  const Transcript({
+    required this.text,
+    required this.words,
+    this.language,
+    this.durationSeconds,
+  });
+
+  factory Transcript.fromGroqJson(
+    Map<String, dynamic> json, {
+    int offsetMillis = 0,
+  }) {
+    final wordsJson = json['words'];
+    final words = wordsJson is List
+        ? wordsJson
+              .whereType<Map<String, dynamic>>()
+              .map((word) => TranscriptWord.fromGroqJson(word, offsetMillis))
+              .toList()
+        : const <TranscriptWord>[];
+
+    return Transcript(
+      text: json['text'] as String? ?? '',
+      language: json['language'] as String?,
+      durationSeconds: (json['duration'] as num?)?.toDouble(),
+      words: words,
+    );
+  }
+
+  final String text;
+  final String? language;
+  final double? durationSeconds;
+  final List<TranscriptWord> words;
+}
+
+class TranscriptWord {
+  const TranscriptWord({
+    required this.text,
+    required this.startMillis,
+    required this.endMillis,
+  });
+
+  factory TranscriptWord.fromGroqJson(
+    Map<String, dynamic> json,
+    int offsetMillis,
+  ) {
+    return TranscriptWord(
+      text: json['word'] as String? ?? '',
+      startMillis: offsetMillis + _secondsToMillis(json['start']),
+      endMillis: offsetMillis + _secondsToMillis(json['end']),
+    );
+  }
+
+  final String text;
+  final int startMillis;
+  final int endMillis;
+
+  static int _secondsToMillis(Object? value) {
+    if (value is num) {
+      return (value * 1000).round();
+    }
+
+    return 0;
+  }
+}
+
+class TranscriptionException implements Exception {
+  const TranscriptionException(this.message);
+
+  final String message;
+
+  @override
+  String toString() => message;
+}

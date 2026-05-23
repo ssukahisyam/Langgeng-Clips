@@ -174,11 +174,11 @@ Master task list end-to-end. Centang sambil jalan. Update minimal mingguan.
 ## Phase 2 — V1.0 (6-8 minggu)
 
 ### 2.1 Transcription
-- [ ] `TranscriptionProvider` interface
-- [ ] `GroqWhisperProvider` impl
+- [x] `TranscriptionProvider` interface
+- [x] `GroqWhisperProvider` impl
 - [ ] FFmpeg extract audio 16kHz mono WAV
 - [ ] Audio chunking 10 menit + overlap 5 detik
-- [ ] Upload chunk ke Groq Whisper API
+- [x] Upload chunk ke Groq Whisper API
 - [ ] Merge word-level timestamps lintas chunk
 - [ ] Cache transcript by source SHA256
 - [ ] Retry exponential backoff

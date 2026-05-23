@@ -3,8 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/security/api_key_store.dart';
 import 'groq_api_key_validator.dart';
 
-final apiKeyStoreProvider = Provider<ApiKeyStore>((ref) => ApiKeyStore());
-
 final groqApiKeyValidatorProvider = Provider<GroqApiKeyValidator>(
   (ref) => GroqApiKeyValidator(),
 );
