@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../shared/widgets/app_scaffold.dart';
 import '../editor/editor_project.dart';
+import '../monetization/ad_placeholder.dart';
 import 'export_history.dart';
 
 enum LibraryFilter { all, done, drafts }
@@ -45,6 +46,10 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
           final filtered = _applyFilter(items);
           return Column(
             children: [
+              const Padding(
+                padding: EdgeInsets.fromLTRB(16, 12, 16, 0),
+                child: AdPlaceholder(label: 'Banner ad placeholder · Library'),
+              ),
               if (_isSearching)
                 Padding(
                   padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),

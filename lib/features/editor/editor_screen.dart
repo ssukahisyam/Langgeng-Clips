@@ -18,6 +18,7 @@ import '../watermark/watermark_config.dart';
 import '../watermark/watermark_preview.dart';
 import 'editor_project.dart';
 import 'editor_project_controller.dart';
+import 'post_import_tutorial_card.dart';
 
 class EditorScreen extends ConsumerStatefulWidget {
   const EditorScreen({super.key});
@@ -92,6 +93,8 @@ class _EditorScreenState extends ConsumerState<EditorScreen> {
                 padding: const EdgeInsets.all(16),
                 children: [
                   _PreviewPanel(fileName: video.name),
+                  const SizedBox(height: 12),
+                  const PostImportTutorialCard(),
                   const SizedBox(height: 12),
                   _TransportBar(
                     isPlaying: _isPlaying,

@@ -1,12 +1,16 @@
 import 'package:go_router/go_router.dart';
 
 import '../features/editor/editor_screen.dart';
+import '../features/help/feedback_screen.dart';
+import '../features/help/help_center_screen.dart';
 import '../features/home/home_screen.dart';
 import '../features/library/export_detail_screen.dart';
 import '../features/library/export_viewer_screen.dart';
 import '../features/library/library_screen.dart';
 import '../features/onboarding/api_key_setup_screen.dart';
 import '../features/onboarding/onboarding_screen.dart';
+import '../features/monetization/paywall_screen.dart';
+import '../features/monetization/pricing_screen.dart';
 import '../features/project_setup/project_setup_screen.dart';
 import '../features/settings/settings_screen.dart';
 import '../features/subtitle/caption_editor_screen.dart';
@@ -53,6 +57,22 @@ final appRouter = GoRouter(
     GoRoute(
       path: '/settings',
       builder: (context, state) => const SettingsScreen(),
+    ),
+    GoRoute(
+      path: '/pricing',
+      builder: (context, state) => const PricingScreen(),
+    ),
+    GoRoute(
+      path: '/paywall',
+      builder: (context, state) => const PaywallScreen(),
+    ),
+    GoRoute(
+      path: '/help',
+      builder: (context, state) => const HelpCenterScreen(),
+    ),
+    GoRoute(
+      path: '/feedback',
+      builder: (context, state) => const FeedbackScreen(),
     ),
   ],
 );

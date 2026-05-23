@@ -265,48 +265,48 @@ Master task list end-to-end. Centang sambil jalan. Update minimal mingguan.
 
 ### 3.1 AdMob Integration
 - [ ] AdMob account + app ID
-- [ ] Banner ad Library + Home
-- [ ] Rewarded ad untuk extra export
-- [ ] Interstitial low frequency (max 1x per 3 menit)
-- [ ] Disclosure di Privacy Policy
-- [ ] Test ad units di debug
+- [x] Banner ad Library + Home
+- [x] Rewarded ad untuk extra export
+- [x] Interstitial low frequency (max 1x per 3 menit)
+- [x] Disclosure di Privacy Policy
+- [x] Test ad units di debug
 
 ### 3.2 Subscription
 - [ ] Play Billing setup
 - [ ] Subscription product configured
-- [ ] Pricing page UI
-- [ ] Paywall flow
-- [ ] Free trial 7 hari
-- [ ] Restore purchase
+- [x] Pricing page UI
+- [x] Paywall flow
+- [x] Free trial 7 hari
+- [x] Restore purchase
 - [ ] Receipt validation client-side
 - [ ] Receipt validation server-side (opsional)
-- [ ] Cancel subscription flow
+- [x] Cancel subscription flow
 
 ### 3.3 Free Tier Limits
-- [ ] Daily export counter (3/hari, reset 00:00 WIB)
-- [ ] Watermark "Made with Langgeng Clip" auto di free tier
-- [ ] Premium template lock di free tier
-- [ ] Limit communication jelas sebelum user kena dinding
+- [x] Daily export counter (3/hari, reset 00:00 WIB)
+- [x] Watermark "Made with Langgeng Clip" auto di free tier
+- [x] Premium template lock di free tier
+- [x] Limit communication jelas sebelum user kena dinding
 - [ ] Promo first-week unlimited untuk user baru (opsional)
 
 ### 3.4 Polish
 - [ ] Performance audit (memory, frame drop, render speed)
 - [ ] A11y audit (TalkBack, dynamic type 200%)
-- [ ] Empty states copy review (UX writer kalau ada)
-- [ ] Error messages catalog finalisasi
-- [ ] In-app onboarding tutorial post-import
-- [ ] Help center / FAQ minimal 10 artikel
-- [ ] Send feedback form di Settings
+- [x] Empty states copy review (UX writer kalau ada)
+- [x] Error messages catalog finalisasi
+- [x] In-app onboarding tutorial post-import
+- [x] Help center / FAQ minimal 10 artikel
+- [x] Send feedback form di Settings
 
 ### 3.5 Production Launch
-- [ ] Listing Play Store: short + full description
+- [x] Listing Play Store: short + full description
 - [ ] Screenshots phone (min 2, ideal 6-8)
 - [ ] Screenshots tablet 7" + 10"
 - [ ] Feature graphic 1024×500
 - [ ] Promo video YouTube
 - [ ] IARC content rating
-- [ ] Categorization Video Players & Editors
-- [ ] Target audience age 13+ atau 17+
+- [x] Categorization Video Players & Editors
+- [x] Target audience age 13+ atau 17+
 - [ ] Staged rollout 10%
 - [ ] Monitor crash 48 jam
 - [ ] Promote 50%

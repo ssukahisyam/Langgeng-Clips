@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../core/preferences/preferences_providers.dart';
 import '../../shared/widgets/app_scaffold.dart';
@@ -49,6 +50,33 @@ class SettingsScreen extends ConsumerWidget {
                 onTap: () => _showThemeModeSheet(context, ref),
               ),
               const _SettingsRow(title: 'Bahasa', subtitle: 'Indonesia'),
+            ],
+          ),
+          const SizedBox(height: 16),
+          _SettingsGroup(
+            title: 'Langgeng Pro',
+            children: [
+              _SettingsRow(
+                title: 'Pricing & subscription',
+                subtitle: 'Free trial, restore, cancel info',
+                onTap: () => context.go('/pricing'),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          _SettingsGroup(
+            title: 'Bantuan',
+            children: [
+              _SettingsRow(
+                title: 'Help Center',
+                subtitle: 'FAQ dan panduan singkat',
+                onTap: () => context.go('/help'),
+              ),
+              _SettingsRow(
+                title: 'Send feedback',
+                subtitle: 'Laporkan bug atau ide fitur',
+                onTap: () => context.go('/feedback'),
+              ),
             ],
           ),
           const SizedBox(height: 16),
