@@ -188,15 +188,15 @@ Master task list end-to-end. Centang sambil jalan. Update minimal mingguan.
 - [ ] Progress UI saat transcribe
 
 ### 2.2 Auto Subtitle
-- [ ] Caption Editor screen
-- [ ] Word list editable inline
-- [ ] Edit text only (timestamp tetap)
-- [ ] Edit timing via drag handle
-- [ ] Style: font picker
-- [ ] Style: size slider
-- [ ] Style: color highlight swatches
-- [ ] Style: position 9-grid
-- [ ] Animation: none / karaoke / typewriter
+- [x] Caption Editor screen
+- [x] Word list editable inline
+- [x] Edit text only (timestamp tetap)
+- [x] Edit timing via drag handle
+- [x] Style: font picker
+- [x] Style: size slider
+- [x] Style: color highlight swatches
+- [x] Style: position 9-grid
+- [x] Animation: none / karaoke / typewriter
 - [ ] Subtitle render via Media3 OverlaySettings
 - [ ] Safe area aware (top 10%, bottom 15%)
 - [x] Word-aware line break

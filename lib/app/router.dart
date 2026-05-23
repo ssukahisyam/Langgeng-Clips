@@ -9,6 +9,7 @@ import '../features/onboarding/api_key_setup_screen.dart';
 import '../features/onboarding/onboarding_screen.dart';
 import '../features/project_setup/project_setup_screen.dart';
 import '../features/settings/settings_screen.dart';
+import '../features/subtitle/caption_editor_screen.dart';
 import '../features/splash/splash_screen.dart';
 
 final appRouter = GoRouter(
@@ -29,6 +30,10 @@ final appRouter = GoRouter(
       builder: (context, state) => const ProjectSetupScreen(),
     ),
     GoRoute(path: '/editor', builder: (context, state) => const EditorScreen()),
+    GoRoute(
+      path: '/editor/captions',
+      builder: (context, state) => const CaptionEditorScreen(),
+    ),
     GoRoute(
       path: '/library',
       builder: (context, state) => const LibraryScreen(),
