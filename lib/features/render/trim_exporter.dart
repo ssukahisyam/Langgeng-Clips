@@ -2,6 +2,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/pigeon/render_api.g.dart' as pigeon;
+import '../subtitle/caption_document.dart';
 import 'export_options.dart';
 
 final trimExporterProvider = Provider<TrimExporter>(
@@ -65,6 +66,7 @@ class TrimExporter {
     required int startMillis,
     required int endMillis,
     required ExportOptions options,
+    List<CaptionItem> captionItems = const [],
   }) async {
     if (sourcePath.trim().isEmpty) {
       throw const TrimExportException(
@@ -92,12 +94,46 @@ class TrimExporter {
           targetHeight: options.targetHeight,
           cropToPortrait: options.cropToPortrait,
           requiresReencode: options.requiresReencode,
+          captionSegments: _captionSegmentsForExport(
+            captionItems: captionItems,
+            startMillis: startMillis,
+            endMillis: endMillis,
+          ),
         ),
       );
       return TrimExportResult.fromPigeon(result);
     } on PlatformException catch (error) {
       throw TrimExportException.fromPlatformException(error);
     }
+  }
+
+  List<pigeon.RenderCaptionSegment> _captionSegmentsForExport({
+    required List<CaptionItem> captionItems,
+    required int startMillis,
+    required int endMillis,
+  }) {
+    final durationMillis = endMillis - startMillis;
+    return captionItems
+        .where(
+          (caption) =>
+              caption.endMillis > startMillis &&
+              caption.startMillis < endMillis,
+        )
+        .map(
+          (caption) => pigeon.RenderCaptionSegment(
+            text: caption.text,
+            startMillis: (caption.startMillis - startMillis).clamp(
+              0,
+              durationMillis,
+            ),
+            endMillis: (caption.endMillis - startMillis).clamp(
+              0,
+              durationMillis,
+            ),
+          ),
+        )
+        .where((caption) => caption.endMillis > caption.startMillis)
+        .toList();
   }
 }
 

@@ -1,3 +1,24 @@
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+final captionDocumentProvider = StateProvider<CaptionDocument>((ref) {
+  return const CaptionDocument(
+    items: [
+      CaptionItem(
+        id: '1',
+        text: 'Tap to edit caption text',
+        startMillis: 0,
+        endMillis: 1800,
+      ),
+      CaptionItem(
+        id: '2',
+        text: 'Drag timing handles later',
+        startMillis: 1900,
+        endMillis: 3600,
+      ),
+    ],
+  );
+});
+
 class CaptionDocument {
   const CaptionDocument({
     required this.items,
