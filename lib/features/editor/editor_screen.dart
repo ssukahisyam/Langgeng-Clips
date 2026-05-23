@@ -28,7 +28,11 @@ class _EditorScreenState extends ConsumerState<EditorScreen> {
   String _activePanel = 'Clips';
   bool _isPlaying = false;
   bool _isExporting = false;
+  bool _removeFillerWords = false;
   double _exportProgress = 0;
+  WatermarkConfig _watermarkConfig = const WatermarkConfig(
+    text: '@LanggengClip',
+  );
   StreamSubscription<double>? _exportProgressSubscription;
 
   @override
@@ -124,6 +128,15 @@ class _EditorScreenState extends ConsumerState<EditorScreen> {
                     template: project.template,
                     clipCount: project.clipCount,
                     targetDuration: project.targetDuration,
+                    removeFillerWords: _removeFillerWords,
+                    watermarkConfig: _watermarkConfig,
+                    onTemplateSelected: _applyTemplate,
+                    onRemoveFillerWordsChanged: (value) {
+                      setState(() => _removeFillerWords = value);
+                    },
+                    onWatermarkChanged: (value) {
+                      setState(() => _watermarkConfig = value);
+                    },
                   ),
                 ],
               ),
@@ -199,6 +212,20 @@ class _EditorScreenState extends ConsumerState<EditorScreen> {
     }
 
     ref.read(editorProjectProvider.notifier).state = project.setActiveClip(id);
+  }
+
+  void _applyTemplate(String templateName) {
+    final project = ref.read(editorProjectProvider);
+    if (project == null) {
+      return;
+    }
+
+    ref.read(editorProjectProvider.notifier).state = project.applyTemplate(
+      templateName,
+    );
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text('$templateName template applied.')));
   }
 
   Future<void> _exportActiveClipWithOptions(
@@ -479,12 +506,22 @@ class _EditorPanel extends StatelessWidget {
     required this.template,
     required this.clipCount,
     required this.targetDuration,
+    required this.removeFillerWords,
+    required this.watermarkConfig,
+    required this.onTemplateSelected,
+    required this.onRemoveFillerWordsChanged,
+    required this.onWatermarkChanged,
   });
 
   final String activePanel;
   final String template;
   final String clipCount;
   final String targetDuration;
+  final bool removeFillerWords;
+  final WatermarkConfig watermarkConfig;
+  final ValueChanged<String> onTemplateSelected;
+  final ValueChanged<bool> onRemoveFillerWordsChanged;
+  final ValueChanged<WatermarkConfig> onWatermarkChanged;
 
   @override
   Widget build(BuildContext context) {
@@ -494,9 +531,16 @@ class _EditorPanel extends StatelessWidget {
         template: template,
         clipCount: clipCount,
         targetDuration: targetDuration,
+        onTemplateSelected: onTemplateSelected,
       ),
-      'Watermark' => const _WatermarkToolPanel(),
-      'Audio' => const _AudioToolPanel(),
+      'Watermark' => _WatermarkToolPanel(
+        config: watermarkConfig,
+        onChanged: onWatermarkChanged,
+      ),
+      'Audio' => _AudioToolPanel(
+        removeFillerWords: removeFillerWords,
+        onRemoveFillerWordsChanged: onRemoveFillerWordsChanged,
+      ),
       _ => _ClipsToolPanel(
         template: template,
         clipCount: clipCount,
@@ -593,11 +637,13 @@ class _TemplateToolPanel extends StatelessWidget {
     required this.template,
     required this.clipCount,
     required this.targetDuration,
+    required this.onTemplateSelected,
   });
 
   final String template;
   final String clipCount;
   final String targetDuration;
+  final ValueChanged<String> onTemplateSelected;
 
   @override
   Widget build(BuildContext context) {
@@ -626,13 +672,7 @@ class _TemplateToolPanel extends StatelessWidget {
                   ActionChip(
                     label: Text(preset.name),
                     avatar: const Icon(Icons.auto_awesome_rounded, size: 18),
-                    onPressed: () {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text('${preset.name} template ready.'),
-                        ),
-                      );
-                    },
+                    onPressed: () => onTemplateSelected(preset.name),
                   ),
               ],
             ),
@@ -644,7 +684,13 @@ class _TemplateToolPanel extends StatelessWidget {
 }
 
 class _AudioToolPanel extends StatelessWidget {
-  const _AudioToolPanel();
+  const _AudioToolPanel({
+    required this.removeFillerWords,
+    required this.onRemoveFillerWordsChanged,
+  });
+
+  final bool removeFillerWords;
+  final ValueChanged<bool> onRemoveFillerWordsChanged;
 
   @override
   Widget build(BuildContext context) {
@@ -665,6 +711,16 @@ class _AudioToolPanel extends StatelessWidget {
               'Auto highlight scoring, filler-word toggle, dan semi-auto candidate model sudah siap. Deteksi audio/scene native masih pending.',
             ),
             const SizedBox(height: 12),
+            SwitchListTile.adaptive(
+              contentPadding: EdgeInsets.zero,
+              title: const Text('Remove filler words'),
+              subtitle: const Text(
+                'Default off; applies when transcript is ready.',
+              ),
+              value: removeFillerWords,
+              onChanged: onRemoveFillerWordsChanged,
+            ),
+            const SizedBox(height: 12),
             FilledButton.icon(
               onPressed: () {
                 ScaffoldMessenger.of(context).showSnackBar(
@@ -682,11 +738,13 @@ class _AudioToolPanel extends StatelessWidget {
 }
 
 class _WatermarkToolPanel extends StatelessWidget {
-  const _WatermarkToolPanel();
+  const _WatermarkToolPanel({required this.config, required this.onChanged});
+
+  final WatermarkConfig config;
+  final ValueChanged<WatermarkConfig> onChanged;
 
   @override
   Widget build(BuildContext context) {
-    const config = WatermarkConfig(text: '@LanggengClip');
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(16),
@@ -700,8 +758,69 @@ class _WatermarkToolPanel extends StatelessWidget {
               ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
             ),
             const SizedBox(height: 12),
-            const WatermarkPreview(config: config),
+            WatermarkPreview(config: config),
             const SizedBox(height: 12),
+            TextFormField(
+              initialValue: config.text,
+              decoration: const InputDecoration(labelText: 'Text watermark'),
+              onChanged: (value) => onChanged(config.copyWith(text: value)),
+            ),
+            const SizedBox(height: 8),
+            DropdownButtonFormField<WatermarkAnchor>(
+              initialValue: config.anchor,
+              decoration: const InputDecoration(labelText: 'Position'),
+              items: const [
+                DropdownMenuItem(
+                  value: WatermarkAnchor.topLeft,
+                  child: Text('Top left'),
+                ),
+                DropdownMenuItem(
+                  value: WatermarkAnchor.topCenter,
+                  child: Text('Top center'),
+                ),
+                DropdownMenuItem(
+                  value: WatermarkAnchor.topRight,
+                  child: Text('Top right'),
+                ),
+                DropdownMenuItem(
+                  value: WatermarkAnchor.center,
+                  child: Text('Center'),
+                ),
+                DropdownMenuItem(
+                  value: WatermarkAnchor.bottomLeft,
+                  child: Text('Bottom left'),
+                ),
+                DropdownMenuItem(
+                  value: WatermarkAnchor.bottomCenter,
+                  child: Text('Bottom center'),
+                ),
+                DropdownMenuItem(
+                  value: WatermarkAnchor.bottomRight,
+                  child: Text('Bottom right'),
+                ),
+              ],
+              onChanged: (value) {
+                if (value != null) {
+                  onChanged(config.copyWith(anchor: value));
+                }
+              },
+            ),
+            Slider(
+              value: config.opacity,
+              min: 0,
+              max: 1,
+              divisions: 10,
+              label: 'Opacity ${(config.opacity * 100).round()}%',
+              onChanged: (value) => onChanged(config.copyWith(opacity: value)),
+            ),
+            Slider(
+              value: config.scale,
+              min: 0.25,
+              max: 4,
+              divisions: 15,
+              label: 'Scale ${config.scale.toStringAsFixed(2)}x',
+              onChanged: (value) => onChanged(config.copyWith(scale: value)),
+            ),
             const Text(
               'Text/image config, anchors, drag coordinates, opacity, scale, dan preview sudah siap. Native overlay render masih pending.',
             ),
