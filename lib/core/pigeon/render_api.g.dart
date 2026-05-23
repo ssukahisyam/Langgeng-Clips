@@ -81,7 +81,8 @@ class RenderRequest {
       targetHeight: result[7]! as int,
       cropToPortrait: result[8]! as bool,
       requiresReencode: result[9]! as bool,
-      captionSegments: (result[10] as List<Object?>?)?.cast<RenderCaptionSegment?>(),
+      captionSegments: (result[10] as List<Object?>?)
+          ?.cast<RenderCaptionSegment?>(),
     );
   }
 }
@@ -100,11 +101,7 @@ class RenderCaptionSegment {
   int endMillis;
 
   Object encode() {
-    return <Object?>[
-      text,
-      startMillis,
-      endMillis,
-    ];
+    return <Object?>[text, startMillis, endMillis];
   }
 
   static RenderCaptionSegment decode(Object result) {
@@ -178,7 +175,6 @@ class RenderResult {
   }
 }
 
-
 class _PigeonCodec extends StandardMessageCodec {
   const _PigeonCodec();
   @override
@@ -186,13 +182,13 @@ class _PigeonCodec extends StandardMessageCodec {
     if (value is int) {
       buffer.putUint8(4);
       buffer.putInt64(value);
-    }    else if (value is RenderRequest) {
+    } else if (value is RenderRequest) {
       buffer.putUint8(129);
       writeValue(buffer, value.encode());
-    }    else if (value is RenderCaptionSegment) {
+    } else if (value is RenderCaptionSegment) {
       buffer.putUint8(130);
       writeValue(buffer, value.encode());
-    }    else if (value is RenderResult) {
+    } else if (value is RenderResult) {
       buffer.putUint8(131);
       writeValue(buffer, value.encode());
     } else {
@@ -203,11 +199,11 @@ class _PigeonCodec extends StandardMessageCodec {
   @override
   Object? readValueOfType(int type, ReadBuffer buffer) {
     switch (type) {
-      case 129: 
+      case 129:
         return RenderRequest.decode(readValue(buffer)!);
-      case 130: 
+      case 130:
         return RenderCaptionSegment.decode(readValue(buffer)!);
-      case 131: 
+      case 131:
         return RenderResult.decode(readValue(buffer)!);
       default:
         return super.readValueOfType(type, buffer);
@@ -219,9 +215,13 @@ class NativeRenderApi {
   /// Constructor for [NativeRenderApi].  The [binaryMessenger] named argument is
   /// available for dependency injection.  If it is left null, the default
   /// BinaryMessenger will be used which routes to the host platform.
-  NativeRenderApi({BinaryMessenger? binaryMessenger, String messageChannelSuffix = ''})
-      : pigeonVar_binaryMessenger = binaryMessenger,
-        pigeonVar_messageChannelSuffix = messageChannelSuffix.isNotEmpty ? '.$messageChannelSuffix' : '';
+  NativeRenderApi({
+    BinaryMessenger? binaryMessenger,
+    String messageChannelSuffix = '',
+  }) : pigeonVar_binaryMessenger = binaryMessenger,
+       pigeonVar_messageChannelSuffix = messageChannelSuffix.isNotEmpty
+           ? '.$messageChannelSuffix'
+           : '';
   final BinaryMessenger? pigeonVar_binaryMessenger;
 
   static const MessageCodec<Object?> pigeonChannelCodec = _PigeonCodec();
@@ -229,12 +229,14 @@ class NativeRenderApi {
   final String pigeonVar_messageChannelSuffix;
 
   Future<RenderResult> exportTrim(RenderRequest request) async {
-    final String pigeonVar_channelName = 'dev.flutter.pigeon.langgeng_clip.NativeRenderApi.exportTrim$pigeonVar_messageChannelSuffix';
-    final BasicMessageChannel<Object?> pigeonVar_channel = BasicMessageChannel<Object?>(
-      pigeonVar_channelName,
-      pigeonChannelCodec,
-      binaryMessenger: pigeonVar_binaryMessenger,
-    );
+    final String pigeonVar_channelName =
+        'dev.flutter.pigeon.langgeng_clip.NativeRenderApi.exportTrim$pigeonVar_messageChannelSuffix';
+    final BasicMessageChannel<Object?> pigeonVar_channel =
+        BasicMessageChannel<Object?>(
+          pigeonVar_channelName,
+          pigeonChannelCodec,
+          binaryMessenger: pigeonVar_binaryMessenger,
+        );
     final List<Object?>? pigeonVar_replyList =
         await pigeonVar_channel.send(<Object?>[request]) as List<Object?>?;
     if (pigeonVar_replyList == null) {
@@ -256,12 +258,14 @@ class NativeRenderApi {
   }
 
   Future<void> cancelExport() async {
-    final String pigeonVar_channelName = 'dev.flutter.pigeon.langgeng_clip.NativeRenderApi.cancelExport$pigeonVar_messageChannelSuffix';
-    final BasicMessageChannel<Object?> pigeonVar_channel = BasicMessageChannel<Object?>(
-      pigeonVar_channelName,
-      pigeonChannelCodec,
-      binaryMessenger: pigeonVar_binaryMessenger,
-    );
+    final String pigeonVar_channelName =
+        'dev.flutter.pigeon.langgeng_clip.NativeRenderApi.cancelExport$pigeonVar_messageChannelSuffix';
+    final BasicMessageChannel<Object?> pigeonVar_channel =
+        BasicMessageChannel<Object?>(
+          pigeonVar_channelName,
+          pigeonChannelCodec,
+          binaryMessenger: pigeonVar_binaryMessenger,
+        );
     final List<Object?>? pigeonVar_replyList =
         await pigeonVar_channel.send(null) as List<Object?>?;
     if (pigeonVar_replyList == null) {
