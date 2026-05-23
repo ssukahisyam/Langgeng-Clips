@@ -133,6 +133,10 @@ class EditorProject {
 
     return copyWith(activeClipId: id);
   }
+
+  EditorProject applyTemplate(String templateName) {
+    return copyWith(template: templateName);
+  }
 }
 
 String formatMillis(int millis) {

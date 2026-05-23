@@ -94,6 +94,43 @@ class MainActivity : FlutterActivity() {
                 else -> result.notImplemented()
             }
         }
+
+        MethodChannel(
+            flutterEngine.dartExecutor.binaryMessenger,
+            "com.langgeng.clip/audio_tools",
+        ).setMethodCallHandler { call, result ->
+            when (call.method) {
+                "extractWav16kMono" -> extractWav16kMono(
+                    sourcePath = call.argument<String>("sourcePath"),
+                    startMillis = call.argument<Int>("startMillis") ?: 0,
+                    endMillis = call.argument<Int>("endMillis") ?: 0,
+                    result = result,
+                )
+                else -> result.notImplemented()
+            }
+        }
+    }
+
+    private fun extractWav16kMono(
+        sourcePath: String?,
+        startMillis: Int,
+        endMillis: Int,
+        result: MethodChannel.Result,
+    ) {
+        if (sourcePath.isNullOrBlank()) {
+            result.error("invalid_source", "Path sumber video kosong.", null)
+            return
+        }
+        if (endMillis <= startMillis) {
+            result.error("invalid_range", "Range audio tidak valid.", null)
+            return
+        }
+
+        result.error(
+            "extract_unavailable",
+            "FFmpeg audio extraction belum tersedia di build ini.",
+            null,
+        )
     }
 
     private fun shareExport(uri: String?, title: String, result: MethodChannel.Result) {

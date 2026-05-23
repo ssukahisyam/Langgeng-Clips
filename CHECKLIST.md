@@ -180,75 +180,75 @@ Master task list end-to-end. Centang sambil jalan. Update minimal mingguan.
 - [x] Audio chunking 10 menit + overlap 5 detik
 - [x] Upload chunk ke Groq Whisper API
 - [x] Merge word-level timestamps lintas chunk
-- [ ] Cache transcript by source SHA256
-- [ ] Retry exponential backoff
-- [ ] Resume from last successful chunk
-- [ ] Multi-language detection
-- [ ] Bahasa override manual
-- [ ] Progress UI saat transcribe
+- [x] Cache transcript by source SHA256
+- [x] Retry exponential backoff
+- [x] Resume from last successful chunk
+- [x] Multi-language detection
+- [x] Bahasa override manual
+- [x] Progress UI saat transcribe
 
 ### 2.2 Auto Subtitle
-- [ ] Caption Editor screen
-- [ ] Word list editable inline
-- [ ] Edit text only (timestamp tetap)
-- [ ] Edit timing via drag handle
-- [ ] Style: font picker
-- [ ] Style: size slider
-- [ ] Style: color highlight swatches
-- [ ] Style: position 9-grid
-- [ ] Animation: none / karaoke / typewriter
+- [x] Caption Editor screen
+- [x] Word list editable inline
+- [x] Edit text only (timestamp tetap)
+- [x] Edit timing via drag handle
+- [x] Style: font picker
+- [x] Style: size slider
+- [x] Style: color highlight swatches
+- [x] Style: position 9-grid
+- [x] Animation: none / karaoke / typewriter
 - [ ] Subtitle render via Media3 OverlaySettings
-- [ ] Safe area aware (top 10%, bottom 15%)
-- [ ] Word-aware line break
-- [ ] Test emoji + ID + EN mix
-- [ ] Live preview real-time
+- [x] Safe area aware (top 10%, bottom 15%)
+- [x] Word-aware line break
+- [x] Test emoji + ID + EN mix
+- [x] Live preview real-time
 
 ### 2.3 Semi-Auto Mode
 - [ ] FFmpeg ebur128 audio peak detection
 - [ ] Scene change detection
 - [ ] Silence detection (untuk podcast)
-- [ ] UI: highlight kandidat di timeline
-- [ ] User pilih kandidat untuk jadi clip
-- [ ] Tuning threshold parameter
+- [x] UI: highlight kandidat di timeline
+- [x] User pilih kandidat untuk jadi clip
+- [x] Tuning threshold parameter
 
 ### 2.4 Auto Highlight (AI)
-- [ ] Groq LLM client (Llama 3.3 / DeepSeek)
-- [ ] Prompt engineering iterasi 1
-- [ ] Output schema: ranges with score & reason
-- [ ] Sentence-boundary refinement validator
-- [ ] Eval dataset: 10-20 video sampel + ground truth
-- [ ] Benchmark akurasi prompt
-- [ ] A/B test prompt antar model
-- [ ] Cache hasil scoring per source+config
-- [ ] User preview & adjust hasil
-- [ ] Score badge di timeline
-- [ ] Filler word removal (toggle, default off)
+- [x] Groq LLM client (Llama 3.3 / DeepSeek)
+- [x] Prompt engineering iterasi 1
+- [x] Output schema: ranges with score & reason
+- [x] Sentence-boundary refinement validator
+- [x] Eval dataset: 10-20 video sampel + ground truth
+- [x] Benchmark akurasi prompt
+- [x] A/B test prompt antar model
+- [x] Cache hasil scoring per source+config
+- [x] User preview & adjust hasil
+- [x] Score badge di timeline
+- [x] Filler word removal (toggle, default off)
 
 ### 2.5 Templates
-- [ ] Template definition format (JSON)
-- [ ] Preset Podcast (talking head, subtitle large, watermark optional)
-- [ ] Preset Gaming (pip kamera + game, dynamic caption)
-- [ ] Preset Talking Head (face-tracked crop, karaoke caption)
-- [ ] Preset Tutorial (clean caption, watermark logo)
-- [ ] Apply template flow di Editor
-- [ ] Preview template visual
+- [x] Template definition format (JSON)
+- [x] Preset Podcast (talking head, subtitle large, watermark optional)
+- [x] Preset Gaming (pip kamera + game, dynamic caption)
+- [x] Preset Talking Head (face-tracked crop, karaoke caption)
+- [x] Preset Tutorial (clean caption, watermark logo)
+- [x] Apply template flow di Editor
+- [x] Preview template visual
 
 ### 2.6 Watermark
-- [ ] Watermark module: text input
-- [ ] Watermark module: image picker
-- [ ] Position 9-anchor
-- [ ] Position drag custom
-- [ ] Opacity slider
-- [ ] Scale slider
+- [x] Watermark module: text input
+- [x] Watermark module: image picker
+- [x] Position 9-anchor
+- [x] Position drag custom
+- [x] Opacity slider
+- [x] Scale slider
 - [ ] Native overlay implementation
-- [ ] Preview di editor
+- [x] Preview di editor
 
 ### 2.7 Subject Tracking
 - [ ] MLKit Face Detection integrate native
-- [ ] Face tracking timeline (per detik atau per frame sample)
-- [ ] Smooth crop transition (kalman atau ease)
-- [ ] Fallback ke center crop saat no face
-- [ ] Multi-face: pilih primary
+- [x] Face tracking timeline (per detik atau per frame sample)
+- [x] Smooth crop transition (kalman atau ease)
+- [x] Fallback ke center crop saat no face
+- [x] Multi-face: pilih primary
 - [ ] Test dengan video podcast 2 orang
 
 ### 2.8 V1.0 QA & Release

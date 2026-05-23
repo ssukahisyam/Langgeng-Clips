@@ -9,6 +9,13 @@ import '../library/export_history.dart';
 import '../render/export_options.dart';
 import '../render/export_sheet.dart';
 import '../render/trim_exporter.dart';
+import '../subject_tracking/subject_tracking.dart';
+import '../subject_tracking/subject_tracking_panel.dart';
+import '../templates/template_presets.dart';
+import '../transcription/transcription_progress.dart';
+import '../transcription/transcription_progress_card.dart';
+import '../watermark/watermark_config.dart';
+import '../watermark/watermark_preview.dart';
 import 'editor_project.dart';
 import 'editor_project_controller.dart';
 
@@ -23,7 +30,11 @@ class _EditorScreenState extends ConsumerState<EditorScreen> {
   String _activePanel = 'Clips';
   bool _isPlaying = false;
   bool _isExporting = false;
+  bool _removeFillerWords = false;
   double _exportProgress = 0;
+  WatermarkConfig _watermarkConfig = const WatermarkConfig(
+    text: '@LanggengClip',
+  );
   StreamSubscription<double>? _exportProgressSubscription;
 
   @override
@@ -119,6 +130,15 @@ class _EditorScreenState extends ConsumerState<EditorScreen> {
                     template: project.template,
                     clipCount: project.clipCount,
                     targetDuration: project.targetDuration,
+                    removeFillerWords: _removeFillerWords,
+                    watermarkConfig: _watermarkConfig,
+                    onTemplateSelected: _applyTemplate,
+                    onRemoveFillerWordsChanged: (value) {
+                      setState(() => _removeFillerWords = value);
+                    },
+                    onWatermarkChanged: (value) {
+                      setState(() => _watermarkConfig = value);
+                    },
                   ),
                 ],
               ),
@@ -194,6 +214,20 @@ class _EditorScreenState extends ConsumerState<EditorScreen> {
     }
 
     ref.read(editorProjectProvider.notifier).state = project.setActiveClip(id);
+  }
+
+  void _applyTemplate(String templateName) {
+    final project = ref.read(editorProjectProvider);
+    if (project == null) {
+      return;
+    }
+
+    ref.read(editorProjectProvider.notifier).state = project.applyTemplate(
+      templateName,
+    );
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text('$templateName template applied.')));
   }
 
   Future<void> _exportActiveClipWithOptions(
@@ -474,9 +508,57 @@ class _EditorPanel extends StatelessWidget {
     required this.template,
     required this.clipCount,
     required this.targetDuration,
+    required this.removeFillerWords,
+    required this.watermarkConfig,
+    required this.onTemplateSelected,
+    required this.onRemoveFillerWordsChanged,
+    required this.onWatermarkChanged,
   });
 
   final String activePanel;
+  final String template;
+  final String clipCount;
+  final String targetDuration;
+  final bool removeFillerWords;
+  final WatermarkConfig watermarkConfig;
+  final ValueChanged<String> onTemplateSelected;
+  final ValueChanged<bool> onRemoveFillerWordsChanged;
+  final ValueChanged<WatermarkConfig> onWatermarkChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    return switch (activePanel) {
+      'Caption' => _CaptionToolPanel(),
+      'Style' => _TemplateToolPanel(
+        template: template,
+        clipCount: clipCount,
+        targetDuration: targetDuration,
+        onTemplateSelected: onTemplateSelected,
+      ),
+      'Watermark' => _WatermarkToolPanel(
+        config: watermarkConfig,
+        onChanged: onWatermarkChanged,
+      ),
+      'Audio' => _AudioToolPanel(
+        removeFillerWords: removeFillerWords,
+        onRemoveFillerWordsChanged: onRemoveFillerWordsChanged,
+      ),
+      _ => _ClipsToolPanel(
+        template: template,
+        clipCount: clipCount,
+        targetDuration: targetDuration,
+      ),
+    };
+  }
+}
+
+class _ClipsToolPanel extends StatelessWidget {
+  const _ClipsToolPanel({
+    required this.template,
+    required this.clipCount,
+    required this.targetDuration,
+  });
+
   final String template;
   final String clipCount;
   final String targetDuration;
@@ -490,7 +572,7 @@ class _EditorPanel extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              activePanel,
+              'Clips',
               style: Theme.of(
                 context,
               ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
@@ -500,7 +582,252 @@ class _EditorPanel extends StatelessWidget {
             Text('Jumlah clip: $clipCount'),
             Text('Durasi target: $targetDuration'),
             const SizedBox(height: 12),
-            const Text('Panel detail akan diisi setelah timeline manual siap.'),
+            const Text(
+              'Gunakan timeline untuk atur range, lalu Add untuk membuat clip.',
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _CaptionToolPanel extends StatelessWidget {
+  const _CaptionToolPanel();
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Captions',
+              style: Theme.of(
+                context,
+              ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
+            ),
+            const SizedBox(height: 12),
+            const TranscriptionProgressCard(
+              state: TranscriptionProgressState(
+                completedChunks: 0,
+                totalChunks: 0,
+                currentLabel: 'Transcription belum dijalankan',
+              ),
+            ),
+            const SizedBox(height: 12),
+            FilledButton.icon(
+              onPressed: () => context.go('/editor/captions'),
+              icon: const Icon(Icons.closed_caption_rounded),
+              label: const Text('Open caption editor'),
+            ),
+            const SizedBox(height: 8),
+            const Text(
+              'Transcribe pipeline sudah disiapkan; audio extraction native masih menunggu backend final.',
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _TemplateToolPanel extends StatelessWidget {
+  const _TemplateToolPanel({
+    required this.template,
+    required this.clipCount,
+    required this.targetDuration,
+    required this.onTemplateSelected,
+  });
+
+  final String template;
+  final String clipCount;
+  final String targetDuration;
+  final ValueChanged<String> onTemplateSelected;
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Templates',
+              style: Theme.of(
+                context,
+              ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Current setup: $template · $clipCount clips · $targetDuration',
+            ),
+            const SizedBox(height: 12),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: [
+                for (final preset in TemplatePresets.all)
+                  ActionChip(
+                    label: Text(preset.name),
+                    avatar: const Icon(Icons.auto_awesome_rounded, size: 18),
+                    onPressed: () => onTemplateSelected(preset.name),
+                  ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _AudioToolPanel extends StatelessWidget {
+  const _AudioToolPanel({
+    required this.removeFillerWords,
+    required this.onRemoveFillerWordsChanged,
+  });
+
+  final bool removeFillerWords;
+  final ValueChanged<bool> onRemoveFillerWordsChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'AI Highlights',
+              style: Theme.of(
+                context,
+              ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
+            ),
+            const SizedBox(height: 8),
+            const Text(
+              'Auto highlight scoring, filler-word toggle, dan semi-auto candidate model sudah siap. Deteksi audio/scene native masih pending.',
+            ),
+            const SizedBox(height: 12),
+            const SubjectTrackingPanel(config: SubjectTrackingConfig()),
+            const SizedBox(height: 12),
+            SwitchListTile.adaptive(
+              contentPadding: EdgeInsets.zero,
+              title: const Text('Remove filler words'),
+              subtitle: const Text(
+                'Default off; applies when transcript is ready.',
+              ),
+              value: removeFillerWords,
+              onChanged: onRemoveFillerWordsChanged,
+            ),
+            const SizedBox(height: 12),
+            FilledButton.icon(
+              onPressed: () {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('AI highlight engine ready.')),
+                );
+              },
+              icon: const Icon(Icons.auto_graph_rounded),
+              label: const Text('Preview AI candidates'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _WatermarkToolPanel extends StatelessWidget {
+  const _WatermarkToolPanel({required this.config, required this.onChanged});
+
+  final WatermarkConfig config;
+  final ValueChanged<WatermarkConfig> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Watermark',
+              style: Theme.of(
+                context,
+              ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
+            ),
+            const SizedBox(height: 12),
+            WatermarkPreview(config: config),
+            const SizedBox(height: 12),
+            TextFormField(
+              initialValue: config.text,
+              decoration: const InputDecoration(labelText: 'Text watermark'),
+              onChanged: (value) => onChanged(config.copyWith(text: value)),
+            ),
+            const SizedBox(height: 8),
+            DropdownButtonFormField<WatermarkAnchor>(
+              initialValue: config.anchor,
+              decoration: const InputDecoration(labelText: 'Position'),
+              items: const [
+                DropdownMenuItem(
+                  value: WatermarkAnchor.topLeft,
+                  child: Text('Top left'),
+                ),
+                DropdownMenuItem(
+                  value: WatermarkAnchor.topCenter,
+                  child: Text('Top center'),
+                ),
+                DropdownMenuItem(
+                  value: WatermarkAnchor.topRight,
+                  child: Text('Top right'),
+                ),
+                DropdownMenuItem(
+                  value: WatermarkAnchor.center,
+                  child: Text('Center'),
+                ),
+                DropdownMenuItem(
+                  value: WatermarkAnchor.bottomLeft,
+                  child: Text('Bottom left'),
+                ),
+                DropdownMenuItem(
+                  value: WatermarkAnchor.bottomCenter,
+                  child: Text('Bottom center'),
+                ),
+                DropdownMenuItem(
+                  value: WatermarkAnchor.bottomRight,
+                  child: Text('Bottom right'),
+                ),
+              ],
+              onChanged: (value) {
+                if (value != null) {
+                  onChanged(config.copyWith(anchor: value));
+                }
+              },
+            ),
+            Slider(
+              value: config.opacity,
+              min: 0,
+              max: 1,
+              divisions: 10,
+              label: 'Opacity ${(config.opacity * 100).round()}%',
+              onChanged: (value) => onChanged(config.copyWith(opacity: value)),
+            ),
+            Slider(
+              value: config.scale,
+              min: 0.25,
+              max: 4,
+              divisions: 15,
+              label: 'Scale ${config.scale.toStringAsFixed(2)}x',
+              onChanged: (value) => onChanged(config.copyWith(scale: value)),
+            ),
+            const Text(
+              'Text/image config, anchors, drag coordinates, opacity, scale, dan preview sudah siap. Native overlay render masih pending.',
+            ),
           ],
         ),
       ),

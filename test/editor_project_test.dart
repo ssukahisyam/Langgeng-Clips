@@ -55,4 +55,16 @@ void main() {
     expect(formatMillis(61000), '01:01');
     expect(formatMillis(3661000), '01:01:01');
   });
+
+  test('applies template name to project setup', () {
+    final project = EditorProject.initial(
+      title: 'episode.mp4',
+      template: 'Podcast',
+      clipCount: 'Auto',
+      targetDuration: '30s',
+      durationMillis: 60000,
+    );
+
+    expect(project.applyTemplate('Gaming').template, 'Gaming');
+  });
 }

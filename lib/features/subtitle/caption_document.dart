@@ -1,0 +1,113 @@
+class CaptionDocument {
+  const CaptionDocument({
+    required this.items,
+    this.style = const CaptionStyleConfig(),
+  });
+
+  final List<CaptionItem> items;
+  final CaptionStyleConfig style;
+
+  CaptionDocument updateText({required String id, required String text}) {
+    return CaptionDocument(
+      style: style,
+      items: [
+        for (final item in items)
+          if (item.id == id) item.copyWith(text: text) else item,
+      ],
+    );
+  }
+
+  CaptionDocument updateTiming({
+    required String id,
+    required int startMillis,
+    required int endMillis,
+  }) {
+    if (endMillis <= startMillis) {
+      return this;
+    }
+
+    return CaptionDocument(
+      style: style,
+      items: [
+        for (final item in items)
+          if (item.id == id)
+            item.copyWith(startMillis: startMillis, endMillis: endMillis)
+          else
+            item,
+      ],
+    );
+  }
+
+  CaptionDocument updateStyle(CaptionStyleConfig value) {
+    return CaptionDocument(items: items, style: value);
+  }
+}
+
+class CaptionItem {
+  const CaptionItem({
+    required this.id,
+    required this.text,
+    required this.startMillis,
+    required this.endMillis,
+  });
+
+  final String id;
+  final String text;
+  final int startMillis;
+  final int endMillis;
+
+  CaptionItem copyWith({String? text, int? startMillis, int? endMillis}) {
+    return CaptionItem(
+      id: id,
+      text: text ?? this.text,
+      startMillis: startMillis ?? this.startMillis,
+      endMillis: endMillis ?? this.endMillis,
+    );
+  }
+}
+
+class CaptionStyleConfig {
+  const CaptionStyleConfig({
+    this.fontFamily = 'System',
+    this.size = 42,
+    this.highlightColor = 0xFF4F46E5,
+    this.position = CaptionPosition.bottomCenter,
+    this.animation = CaptionAnimation.none,
+  });
+
+  final String fontFamily;
+  final double size;
+  final int highlightColor;
+  final CaptionPosition position;
+  final CaptionAnimation animation;
+
+  CaptionStyleConfig copyWith({
+    String? fontFamily,
+    double? size,
+    int? highlightColor,
+    CaptionPosition? position,
+    CaptionAnimation? animation,
+  }) {
+    return CaptionStyleConfig(
+      fontFamily: fontFamily ?? this.fontFamily,
+      size: (size ?? this.size).clamp(20, 96),
+      highlightColor: highlightColor ?? this.highlightColor,
+      position: position ?? this.position,
+      animation: animation ?? this.animation,
+    );
+  }
+}
+
+enum CaptionPosition {
+  topLeft,
+  topCenter,
+  topRight,
+  centerLeft,
+  center,
+  centerRight,
+  bottomLeft,
+  bottomCenter,
+  bottomRight,
+}
+
+enum CaptionAnimation { none, karaoke, typewriter }
