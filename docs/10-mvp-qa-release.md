@@ -66,7 +66,7 @@ LANGGENG_KEYPASSWORD
 base64 -w 0 upload-keystore.jks
 ```
 
-Build command:
+Local AAB build command for Play upload later:
 
 ```bash
 flutter build appbundle --release
@@ -74,9 +74,10 @@ flutter build appbundle --release
 
 GitHub Actions workflow:
 
-- `.github/workflows/release-aab.yml` runs manually via `workflow_dispatch` or on tags matching `v*-internal`.
-- It uploads `app-release.aab` as a temporary workflow artifact.
-- Play Console upload remains manual until the Play API service account is configured.
+- `.github/workflows/release-apk.yml` builds a signed release APK for tester installs.
+- It runs manually via `workflow_dispatch` with a release tag input or on tags matching `v*-apk`.
+- It attaches `app-release.apk` directly to a GitHub Release. It does not use workflow artifacts.
+- Play Console AAB upload remains manual until the Play API service account is configured.
 
 ## Notes
 

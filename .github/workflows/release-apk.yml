@@ -1,10 +1,17 @@
-name: Release AAB
+name: Release APK
 
 on:
   workflow_dispatch:
+    inputs:
+      tag_name:
+        description: GitHub Release tag to create or update, for example v0.1.0-test1
+        required: true
   push:
     tags:
-      - 'v*-internal'
+      - 'v*-apk'
+
+permissions:
+  contents: write
 
 jobs:
   build:
@@ -34,18 +41,17 @@ jobs:
           mkdir -p "$RUNNER_TEMP/keystore"
           echo "$LANGGENG_KEYSTORE_BASE64" | base64 --decode > "$RUNNER_TEMP/keystore/upload-keystore.jks"
 
-      - name: Build release AAB
+      - name: Build release APK
         env:
           LANGGENG_STOREFILE: ${{ runner.temp }}/keystore/upload-keystore.jks
           LANGGENG_STOREPASSWORD: ${{ secrets.LANGGENG_STOREPASSWORD }}
           LANGGENG_KEYALIAS: ${{ secrets.LANGGENG_KEYALIAS }}
           LANGGENG_KEYPASSWORD: ${{ secrets.LANGGENG_KEYPASSWORD }}
-        run: flutter build appbundle --release
+        run: flutter build apk --release
 
-      - name: Upload AAB artifact
-        uses: actions/upload-artifact@v4
+      - name: Publish APK to GitHub Release
+        uses: softprops/action-gh-release@v2
         with:
-          name: langgeng-clip-release-aab
-          path: build/app/outputs/bundle/release/app-release.aab
-          if-no-files-found: error
-          retention-days: 14
+          tag_name: ${{ github.event.inputs.tag_name || github.ref_name }}
+          files: build/app/outputs/flutter-apk/app-release.apk
+          generate_release_notes: true

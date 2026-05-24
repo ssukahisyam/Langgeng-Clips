@@ -18,5 +18,6 @@ This project uses a simple Keep a Changelog-style format until release automatio
 
 ### Changed
 
+- Release workflow now builds a signed APK and publishes it to GitHub Releases for tester installs.
 - Expanded QA run template with Phase 3 polish audit checks.
 - Expanded contributor setup instructions for local Flutter development.
