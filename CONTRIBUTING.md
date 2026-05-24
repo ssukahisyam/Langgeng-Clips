@@ -58,3 +58,9 @@ flutter test
 ## Changelog
 
 Update `CHANGELOG.md` under `[Unreleased]` for user-visible behavior, release process, security, or operational changes. Keep entries short and grouped by `Added`, `Changed`, `Fixed`, `Removed`, or `Security`.
+
+For simple Added entries, use:
+
+```sh
+dart run tool/update_changelog.dart "Describe the change"
+```

@@ -8,6 +8,8 @@ This project uses a simple Keep a Changelog-style format until release automatio
 
 ### Added
 
+- Changelog automation helper for simple Added entries.
+- ID/EN localization scaffold with persisted language override.
 - Repo governance templates for issues, pull requests, contribution guidance, conduct, and security reporting.
 - Phase 3 first-week unlimited promo model and messaging.
 - Client-side receipt validation model for Pro subscription state.

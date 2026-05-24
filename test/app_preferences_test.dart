@@ -28,4 +28,15 @@ void main() {
 
     expect(preferences.themeMode, ThemeMode.dark);
   });
+
+  test('persists locale override', () async {
+    final preferences = await SharedPreferences.getInstance();
+    final appPreferences = AppPreferences(preferences);
+
+    expect(appPreferences.locale, isNull);
+    await appPreferences.setLocale(const Locale('en'));
+    expect(appPreferences.locale, const Locale('en'));
+    await appPreferences.setLocale(null);
+    expect(appPreferences.locale, isNull);
+  });
 }

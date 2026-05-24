@@ -1,5 +1,7 @@
+/// Client-side subscription receipt state.
 enum ReceiptValidationStatus { valid, expired, invalidProduct, invalidPurchase }
 
+/// Minimal Play Billing receipt fields needed for local premium gating.
 class PlayReceipt {
   const PlayReceipt({
     required this.productId,
@@ -18,6 +20,7 @@ class PlayReceipt {
   final bool isAutoRenewing;
 }
 
+/// Result of validating a purchase receipt on-device.
 class ReceiptValidationResult {
   const ReceiptValidationResult({
     required this.status,
@@ -28,6 +31,7 @@ class ReceiptValidationResult {
   final bool isPremiumActive;
 }
 
+/// Performs local receipt sanity checks before premium features are enabled.
 class ClientReceiptValidator {
   const ClientReceiptValidator({
     this.allowedProductIds = const {'langgeng_pro_monthly'},
@@ -35,6 +39,7 @@ class ClientReceiptValidator {
 
   final Set<String> allowedProductIds;
 
+  /// Returns whether [receipt] is structurally valid and currently active.
   ReceiptValidationResult validate(
     PlayReceipt receipt, {
     required DateTime now,

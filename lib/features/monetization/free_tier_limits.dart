@@ -1,5 +1,6 @@
 import 'package:shared_preferences/shared_preferences.dart';
 
+/// Daily export quota rules for non-premium users.
 class FreeTierLimits {
   const FreeTierLimits({this.dailyExportLimit = 3});
 
@@ -12,6 +13,7 @@ class FreeTierLimits {
   }
 }
 
+/// New-user promo window that temporarily removes the daily export quota.
 class FirstWeekUnlimitedPromo {
   const FirstWeekUnlimitedPromo({this.duration = const Duration(days: 7)});
 
@@ -30,6 +32,7 @@ class FirstWeekUnlimitedPromo {
   }
 }
 
+/// Extra export credit granted after a rewarded ad completes.
 class RewardedExportCredit {
   const RewardedExportCredit({this.extraExports = 1});
 
@@ -38,6 +41,7 @@ class RewardedExportCredit {
   int apply(int remainingExports) => remainingExports + extraExports;
 }
 
+/// Persists the number of free-tier exports used for the current WIB day.
 class DailyExportCounter {
   DailyExportCounter({
     required SharedPreferences preferences,

@@ -18,6 +18,9 @@ final themeModeControllerProvider =
       ThemeModeController.new,
     );
 
+final localeControllerProvider =
+    AsyncNotifierProvider<LocaleController, Locale?>(LocaleController.new);
+
 class ThemeModeController extends AsyncNotifier<ThemeMode> {
   @override
   Future<ThemeMode> build() async {
@@ -29,5 +32,19 @@ class ThemeModeController extends AsyncNotifier<ThemeMode> {
     final preferences = await ref.read(appPreferencesProvider.future);
     await preferences.setThemeMode(themeMode);
     state = AsyncValue.data(themeMode);
+  }
+}
+
+class LocaleController extends AsyncNotifier<Locale?> {
+  @override
+  Future<Locale?> build() async {
+    final preferences = await ref.watch(appPreferencesProvider.future);
+    return preferences.locale;
+  }
+
+  Future<void> setLocale(Locale? locale) async {
+    final preferences = await ref.read(appPreferencesProvider.future);
+    await preferences.setLocale(locale);
+    state = AsyncValue.data(locale);
   }
 }

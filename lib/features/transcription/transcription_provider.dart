@@ -1,9 +1,12 @@
 import 'dart:typed_data';
 
+/// Contract for a service that transcribes one prepared audio chunk.
 abstract interface class TranscriptionProvider {
+  /// Returns transcript text and optional word timestamps for [chunk].
   Future<Transcript> transcribeChunk(TranscriptionChunk chunk);
 }
 
+/// Audio payload and metadata sent to a transcription provider.
 class TranscriptionChunk {
   const TranscriptionChunk({
     required this.bytes,
@@ -30,6 +33,7 @@ class TranscriptionChunk {
   }
 }
 
+/// Transcript text, language metadata, and word-level timing data.
 class Transcript {
   const Transcript({
     required this.text,
@@ -38,6 +42,7 @@ class Transcript {
     this.durationSeconds,
   });
 
+  /// Builds a transcript from Groq Whisper JSON and shifts word timings.
   factory Transcript.fromGroqJson(
     Map<String, dynamic> json, {
     int offsetMillis = 0,
@@ -58,6 +63,7 @@ class Transcript {
     );
   }
 
+  /// Builds a transcript from the app cache JSON format.
   factory Transcript.fromJson(Map<String, dynamic> json) {
     final wordsJson = json['words'];
     return Transcript(
@@ -73,6 +79,7 @@ class Transcript {
     );
   }
 
+  /// Merges chunk transcripts and removes overlapping duplicate words.
   factory Transcript.mergeChunks(List<Transcript> chunks) {
     if (chunks.isEmpty) {
       return const Transcript(text: '', words: []);
@@ -110,6 +117,7 @@ class Transcript {
   final double? durationSeconds;
   final List<TranscriptWord> words;
 
+  /// Converts this transcript to the app cache JSON format.
   Map<String, dynamic> toJson() {
     return {
       'text': text,
@@ -120,6 +128,7 @@ class Transcript {
   }
 }
 
+/// One transcript token with inclusive start and exclusive end timing.
 class TranscriptWord {
   const TranscriptWord({
     required this.text,
@@ -163,6 +172,7 @@ class TranscriptWord {
   }
 }
 
+/// User-readable transcription failure.
 class TranscriptionException implements Exception {
   const TranscriptionException(this.message);
 
