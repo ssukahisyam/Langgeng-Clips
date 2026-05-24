@@ -54,3 +54,7 @@ flutter test
 - Prefer small, readable Dart classes and functions.
 - Keep platform-specific Android code isolated behind Pigeon or feature adapters.
 - Document non-obvious privacy, storage, rendering, or API-key decisions.
+
+## Changelog
+
+Update `CHANGELOG.md` under `[Unreleased]` for user-visible behavior, release process, security, or operational changes. Keep entries short and grouped by `Added`, `Changed`, `Fixed`, `Removed`, or `Security`.
