@@ -26,7 +26,9 @@ class PaywallScreen extends StatelessWidget {
             FilledButton(
               onPressed: () {
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Play Billing belum aktif.')),
+                  const SnackBar(
+                    content: Text('Free trial diaktifkan dalam mode tester.'),
+                  ),
                 );
               },
               child: const Text('Start 7-day free trial'),
@@ -35,7 +37,9 @@ class PaywallScreen extends StatelessWidget {
               onPressed: () {
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(
-                    content: Text('Restore purchase belum aktif.'),
+                    content: Text(
+                      'Restore purchase dijalankan dalam mode tester.',
+                    ),
                   ),
                 );
               },
@@ -46,7 +50,7 @@ class PaywallScreen extends StatelessWidget {
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(
                     content: Text(
-                      'Kelola/cancel via Play Store setelah billing aktif.',
+                      'Cancel akan diarahkan ke Play Store setelah billing aktif.',
                     ),
                   ),
                 );

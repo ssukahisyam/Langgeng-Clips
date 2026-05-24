@@ -18,6 +18,8 @@ This project uses a simple Keep a Changelog-style format until release automatio
 
 ### Changed
 
+- Tester build unlocks navigation menus, transport buttons, settings about links, and home notifications with feedback or stub messaging.
+- Semi-Auto and Auto clipping modes are selectable in project setup for tester builds.
 - Bottom-tab back navigation now returns to Home first and requires double-back to exit.
 - Release minification ignores optional Play Core deferred-component classes for APK builds.
 - Release workflow now builds a signed APK and publishes it to GitHub Releases for tester installs.

@@ -43,17 +43,25 @@ class ImportSheet extends ConsumerWidget {
                     onTap: () => _pickLocalVideo(context, ref),
                   ),
                   const Divider(height: 1),
-                  const _ImportSourceRow(
+                  _ImportSourceRow(
                     icon: Icons.smart_display_outlined,
                     title: 'YouTube URL',
                     subtitle:
-                        'Belum aktif di MVP untuk menjaga policy Play Store',
+                        'Tester preview, share intent native masih disiapkan',
+                    onTap: () => _showComingSoon(
+                      context,
+                      'Import YouTube URL akan aktif setelah share-intent siap.',
+                    ),
                   ),
                   const Divider(height: 1),
-                  const _ImportSourceRow(
+                  _ImportSourceRow(
                     icon: Icons.cloud_outlined,
                     title: 'Google Drive',
-                    subtitle: 'Akan ditambahkan setelah file lokal stabil',
+                    subtitle: 'Tester preview, OAuth Drive belum diaktifkan',
+                    onTap: () => _showComingSoon(
+                      context,
+                      'Import Google Drive akan aktif setelah OAuth siap.',
+                    ),
                   ),
                 ],
               ),
@@ -98,6 +106,12 @@ class ImportSheet extends ConsumerWidget {
       SnackBar(content: Text('Dipilih: ${file.name}')),
     );
   }
+
+  void _showComingSoon(BuildContext context, String message) {
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(message)));
+  }
 }
 
 class _ImportSourceRow extends StatelessWidget {
@@ -120,11 +134,7 @@ class _ImportSourceRow extends StatelessWidget {
       leading: Icon(icon),
       title: Text(title),
       subtitle: Text(subtitle),
-      trailing: Icon(
-        onTap == null
-            ? Icons.lock_outline_rounded
-            : Icons.chevron_right_rounded,
-      ),
+      trailing: const Icon(Icons.chevron_right_rounded),
       onTap: onTap,
     );
   }

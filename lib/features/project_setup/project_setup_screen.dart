@@ -53,17 +53,19 @@ class _ProjectSetupScreenState extends ConsumerState<ProjectSetupScreen> {
                   ),
                   _ModeCard(
                     title: 'Semi-Auto',
-                    subtitle: 'Silence dan scene detection akan ditambahkan.',
+                    subtitle:
+                        'Gunakan kandidat silence, scene, dan audio peak.',
                     selected: _mode == 'Semi-Auto',
-                    enabled: false,
-                    onTap: () {},
+                    enabled: true,
+                    onTap: () => setState(() => _mode = 'Semi-Auto'),
                   ),
                   _ModeCard(
                     title: 'Auto (AI)',
-                    subtitle: 'Highlight via transcript dan LLM scoring nanti.',
+                    subtitle:
+                        'Generate kandidat highlight dari transcript dan AI.',
                     selected: _mode == 'Auto (AI)',
-                    enabled: false,
-                    onTap: () {},
+                    enabled: true,
+                    onTap: () => setState(() => _mode = 'Auto (AI)'),
                   ),
                   const SizedBox(height: 24),
                   _SectionTitle(title: 'Template'),
@@ -125,6 +127,7 @@ class _ProjectSetupScreenState extends ConsumerState<ProjectSetupScreen> {
                           .read(editorProjectProvider.notifier)
                           .state = EditorProject.initial(
                         title: video.name,
+                        mode: _mode,
                         template: _template,
                         clipCount: _clipCount,
                         targetDuration: _duration,
@@ -133,7 +136,9 @@ class _ProjectSetupScreenState extends ConsumerState<ProjectSetupScreen> {
                       );
                       context.go('/editor');
                     },
-                    child: const Text('Mulai Edit'),
+                    child: Text(
+                      _mode == 'Manual' ? 'Mulai Edit' : 'Generate Clip',
+                    ),
                   ),
                 ],
               ),
@@ -263,7 +268,7 @@ class _ModeCard extends StatelessWidget {
           ),
           title: Text(title),
           subtitle: Text(subtitle),
-          trailing: enabled ? null : const Icon(Icons.lock_outline_rounded),
+          trailing: selected ? const Icon(Icons.check_rounded) : null,
         ),
       ),
     );

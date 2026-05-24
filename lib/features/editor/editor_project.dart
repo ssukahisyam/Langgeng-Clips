@@ -26,6 +26,7 @@ class EditorClip {
 class EditorProject {
   const EditorProject({
     required this.title,
+    required this.mode,
     required this.template,
     required this.clipCount,
     required this.targetDuration,
@@ -36,6 +37,7 @@ class EditorProject {
 
   factory EditorProject.initial({
     required String title,
+    String mode = 'Manual',
     required String template,
     required String clipCount,
     required String targetDuration,
@@ -44,6 +46,7 @@ class EditorProject {
     final safeDuration = durationMillis <= 0 ? 60000 : durationMillis;
     return EditorProject(
       title: title,
+      mode: mode,
       template: template,
       clipCount: clipCount,
       targetDuration: targetDuration,
@@ -61,6 +64,7 @@ class EditorProject {
   }
 
   final String title;
+  final String mode;
   final String template;
   final String clipCount;
   final String targetDuration;
@@ -77,6 +81,7 @@ class EditorProject {
 
   EditorProject copyWith({
     String? title,
+    String? mode,
     String? template,
     String? clipCount,
     String? targetDuration,
@@ -86,6 +91,7 @@ class EditorProject {
   }) {
     return EditorProject(
       title: title ?? this.title,
+      mode: mode ?? this.mode,
       template: template ?? this.template,
       clipCount: clipCount ?? this.clipCount,
       targetDuration: targetDuration ?? this.targetDuration,

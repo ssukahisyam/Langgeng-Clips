@@ -90,12 +90,34 @@ class SettingsScreen extends ConsumerWidget {
             ],
           ),
           const SizedBox(height: 16),
-          const _SettingsGroup(
+          _SettingsGroup(
             title: 'Tentang',
             children: [
-              _SettingsRow(title: 'Privacy Policy'),
-              _SettingsRow(title: 'Terms'),
-              _SettingsRow(title: 'Versi', subtitle: '0.1.0'),
+              _SettingsRow(
+                title: 'Privacy Policy',
+                subtitle: 'Versi tester dalam app',
+                onTap: () => _showAboutSnack(
+                  context,
+                  'Privacy Policy lengkap akan dipublish sebelum rilis publik.',
+                ),
+              ),
+              _SettingsRow(
+                title: 'Terms',
+                subtitle: 'Versi tester dalam app',
+                onTap: () => _showAboutSnack(
+                  context,
+                  'Terms of Service lengkap akan dipublish sebelum rilis publik.',
+                ),
+              ),
+              _SettingsRow(
+                title: 'OSS Licenses',
+                subtitle: 'Lihat lisensi paket open source',
+                onTap: () => showLicensePage(
+                  context: context,
+                  applicationName: 'Langgeng Clip',
+                ),
+              ),
+              const _SettingsRow(title: 'Versi', subtitle: '0.1.0 tester'),
             ],
           ),
         ],
@@ -141,6 +163,12 @@ class SettingsScreen extends ConsumerWidget {
         );
       },
     );
+  }
+
+  void _showAboutSnack(BuildContext context, String message) {
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(message)));
   }
 }
 

@@ -5,6 +5,7 @@ void main() {
   test('copyWith updates title without changing setup options', () {
     final project = EditorProject.initial(
       title: 'episode.mp4',
+      mode: 'Semi-Auto',
       template: 'Podcast',
       clipCount: 'Auto',
       targetDuration: '30s',
@@ -14,6 +15,7 @@ void main() {
     final renamed = project.copyWith(title: 'Episode 12');
 
     expect(renamed.title, 'Episode 12');
+    expect(renamed.mode, 'Semi-Auto');
     expect(renamed.template, 'Podcast');
     expect(renamed.clipCount, 'Auto');
     expect(renamed.targetDuration, '30s');

@@ -81,7 +81,7 @@ class _EditorScreenState extends ConsumerState<EditorScreen> {
         ),
         actions: [
           IconButton(
-            onPressed: () {},
+            onPressed: () => _showEditorMenu(context),
             icon: const Icon(Icons.more_vert_rounded),
           ),
         ],
@@ -131,6 +131,7 @@ class _EditorScreenState extends ConsumerState<EditorScreen> {
                   const SizedBox(height: 16),
                   _EditorPanel(
                     activePanel: _activePanel,
+                    mode: project.mode,
                     template: project.template,
                     clipCount: project.clipCount,
                     targetDuration: project.targetDuration,
@@ -316,6 +317,62 @@ class _EditorScreenState extends ConsumerState<EditorScreen> {
     ).showSnackBar(const SnackBar(content: Text('Export dibatalkan.')));
   }
 
+  Future<void> _showEditorMenu(BuildContext context) async {
+    final messenger = ScaffoldMessenger.of(context);
+    final router = GoRouter.of(context);
+    final action = await showModalBottomSheet<String>(
+      context: context,
+      showDragHandle: true,
+      builder: (context) {
+        return SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ListTile(
+                leading: const Icon(Icons.edit_outlined),
+                title: const Text('Rename project'),
+                onTap: () => Navigator.of(context).pop('rename'),
+              ),
+              ListTile(
+                leading: const Icon(Icons.refresh_rounded),
+                title: const Text('Reset to first clip'),
+                onTap: () => Navigator.of(context).pop('reset'),
+              ),
+              ListTile(
+                leading: const Icon(Icons.help_outline_rounded),
+                title: const Text('Open help center'),
+                onTap: () => Navigator.of(context).pop('help'),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+
+    if (!mounted || action == null) {
+      return;
+    }
+
+    switch (action) {
+      case 'rename':
+        final project = ref.read(editorProjectProvider);
+        if (project != null && context.mounted) {
+          await _renameProject(context, project.title);
+        }
+      case 'reset':
+        final project = ref.read(editorProjectProvider);
+        if (project != null && project.clips.isNotEmpty) {
+          ref.read(editorProjectProvider.notifier).state = project
+              .setActiveClip(project.clips.first.id);
+          messenger.showSnackBar(
+            const SnackBar(content: Text('Kembali ke clip pertama.')),
+          );
+        }
+      case 'help':
+        router.go('/help');
+    }
+  }
+
   Future<void> _renameProject(BuildContext context, String currentTitle) async {
     final controller = TextEditingController(text: currentTitle);
     final newTitle = await showDialog<String>(
@@ -419,14 +476,26 @@ class _TransportBar extends StatelessWidget {
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceAround,
           children: [
-            IconButton(onPressed: () {}, icon: const Icon(Icons.skip_previous)),
+            IconButton(
+              onPressed: () => ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Lompat ke awal clip aktif')),
+              ),
+              icon: const Icon(Icons.skip_previous),
+            ),
             IconButton(
               onPressed: onPlayPause,
               icon: Icon(isPlaying ? Icons.pause : Icons.play_arrow),
             ),
-            IconButton(onPressed: () {}, icon: const Icon(Icons.skip_next)),
+            IconButton(
+              onPressed: () => ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Lompat ke akhir clip aktif')),
+              ),
+              icon: const Icon(Icons.skip_next),
+            ),
             TextButton.icon(
-              onPressed: () {},
+              onPressed: () => ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Fit-to-screen preview aktif.')),
+              ),
               icon: const Icon(Icons.fit_screen_rounded),
               label: const Text('Fit'),
             ),
@@ -512,6 +581,7 @@ class _TimelineEditor extends StatelessWidget {
 class _EditorPanel extends StatelessWidget {
   const _EditorPanel({
     required this.activePanel,
+    required this.mode,
     required this.template,
     required this.clipCount,
     required this.targetDuration,
@@ -523,6 +593,7 @@ class _EditorPanel extends StatelessWidget {
   });
 
   final String activePanel;
+  final String mode;
   final String template;
   final String clipCount;
   final String targetDuration;
@@ -538,6 +609,7 @@ class _EditorPanel extends StatelessWidget {
       'Caption' => _CaptionToolPanel(),
       'Style' => _TemplateToolPanel(
         template: template,
+        mode: mode,
         clipCount: clipCount,
         targetDuration: targetDuration,
         onTemplateSelected: onTemplateSelected,
@@ -552,6 +624,7 @@ class _EditorPanel extends StatelessWidget {
       ),
       _ => _ClipsToolPanel(
         template: template,
+        mode: mode,
         clipCount: clipCount,
         targetDuration: targetDuration,
       ),
@@ -562,11 +635,13 @@ class _EditorPanel extends StatelessWidget {
 class _ClipsToolPanel extends StatelessWidget {
   const _ClipsToolPanel({
     required this.template,
+    required this.mode,
     required this.clipCount,
     required this.targetDuration,
   });
 
   final String template;
+  final String mode;
   final String clipCount;
   final String targetDuration;
 
@@ -585,6 +660,7 @@ class _ClipsToolPanel extends StatelessWidget {
               ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
             ),
             const SizedBox(height: 8),
+            Text('Mode: $mode'),
             Text('Template: $template'),
             Text('Jumlah clip: $clipCount'),
             Text('Durasi target: $targetDuration'),
@@ -644,12 +720,14 @@ class _CaptionToolPanel extends StatelessWidget {
 class _TemplateToolPanel extends StatelessWidget {
   const _TemplateToolPanel({
     required this.template,
+    required this.mode,
     required this.clipCount,
     required this.targetDuration,
     required this.onTemplateSelected,
   });
 
   final String template;
+  final String mode;
   final String clipCount;
   final String targetDuration;
   final ValueChanged<String> onTemplateSelected;
@@ -670,7 +748,7 @@ class _TemplateToolPanel extends StatelessWidget {
             ),
             const SizedBox(height: 8),
             Text(
-              'Current setup: $template · $clipCount clips · $targetDuration',
+              'Current setup: $mode · $template · $clipCount clips · $targetDuration',
             ),
             const SizedBox(height: 12),
             Wrap(

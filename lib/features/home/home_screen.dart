@@ -15,7 +15,9 @@ class HomeScreen extends StatelessWidget {
       currentIndex: 0,
       actions: [
         IconButton(
-          onPressed: () {},
+          onPressed: () => ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Belum ada notifikasi.')),
+          ),
           icon: const Icon(Icons.notifications_none_rounded),
         ),
       ],
@@ -82,13 +84,29 @@ class HomeScreen extends StatelessWidget {
             spacing: 8,
             runSpacing: 8,
             children: [
-              Chip(label: Text('Podcast')),
-              Chip(label: Text('Gaming')),
-              Chip(label: Text('Talking Head')),
-              Chip(label: Text('Tutorial')),
+              _TemplateChip(label: 'Podcast'),
+              _TemplateChip(label: 'Gaming'),
+              _TemplateChip(label: 'Talking Head'),
+              _TemplateChip(label: 'Tutorial'),
             ],
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _TemplateChip extends StatelessWidget {
+  const _TemplateChip({required this.label});
+
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    return ActionChip(
+      label: Text(label),
+      onPressed: () => ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Template $label dipilih sebagai default.')),
       ),
     );
   }
