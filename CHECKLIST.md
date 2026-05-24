@@ -350,7 +350,7 @@ Master task list end-to-end. Centang sambil jalan. Update minimal mingguan.
 - [ ] Golden frame compare untuk render output
 
 ### Documentation
-- [ ] ADR untuk keputusan besar (`docs/adr/NNNN-*.md`)
+- [x] ADR untuk keputusan besar (`docs/adr/NNNN-*.md`)
 - [x] Setup guide di CONTRIBUTING.md
 - [ ] Changelog auto-generate
 - [ ] In-code dartdoc untuk public API
