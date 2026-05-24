@@ -18,6 +18,7 @@ This project uses a simple Keep a Changelog-style format until release automatio
 
 ### Changed
 
+- Release minification ignores optional Play Core deferred-component classes for APK builds.
 - Release workflow now builds a signed APK and publishes it to GitHub Releases for tester installs.
 - Release workflow falls back to a temporary test keystore when signing secrets are not configured, keeping APK output in release mode.
 - Expanded QA run template with Phase 3 polish audit checks.

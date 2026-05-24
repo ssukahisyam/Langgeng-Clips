@@ -11,3 +11,7 @@
 # Future Media3/Pigeon integrations should be safe with these package-level rules.
 -keep class androidx.media3.** { *; }
 -keep class dev.flutter.pigeon.** { *; }
+
+# Flutter references Play Core deferred-component APIs even when this app does
+# not use deferred components. The classes are optional for this APK build.
+-dontwarn com.google.android.play.core.**
