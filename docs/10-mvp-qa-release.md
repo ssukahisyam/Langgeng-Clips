@@ -74,7 +74,8 @@ flutter build appbundle --release
 
 GitHub Actions workflow:
 
-- `.github/workflows/release-apk.yml` builds a signed release APK for tester installs.
+- `.github/workflows/release-apk.yml` builds a signed release APK for tester installs when signing secrets exist.
+- If signing secrets are incomplete, it builds a debug APK so internal testers can still install the app before Play Store signing is ready.
 - It runs manually via `workflow_dispatch` with a release tag input or on tags matching `v*-apk`.
 - It attaches `app-release.apk` directly to a GitHub Release. It does not use workflow artifacts.
 - Play Console AAB upload remains manual until the Play API service account is configured.
