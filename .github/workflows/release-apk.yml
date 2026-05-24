@@ -44,33 +44,38 @@ jobs:
             echo "SIGNING_READY=true" >> "$GITHUB_ENV"
           else
             echo "SIGNING_READY=false" >> "$GITHUB_ENV"
-            echo "Signing secrets are incomplete. Building a debug APK for tester install."
+            echo "Signing secrets are incomplete. Building a release APK with a temporary test keystore."
           fi
 
-      - name: Decode upload keystore
-        if: env.SIGNING_READY == 'true'
+      - name: Prepare signing keystore
         run: |
           mkdir -p "$RUNNER_TEMP/keystore"
-          echo "$LANGGENG_KEYSTORE_BASE64" | base64 --decode > "$RUNNER_TEMP/keystore/upload-keystore.jks"
+          if [ "$SIGNING_READY" = "true" ]; then
+            echo "$LANGGENG_KEYSTORE_BASE64" | base64 --decode > "$RUNNER_TEMP/keystore/upload-keystore.jks"
+            echo "LANGGENG_STOREFILE=$RUNNER_TEMP/keystore/upload-keystore.jks" >> "$GITHUB_ENV"
+          else
+            keytool -genkeypair \
+              -keystore "$RUNNER_TEMP/keystore/test-release.jks" \
+              -storepass android \
+              -keypass android \
+              -alias test \
+              -keyalg RSA \
+              -keysize 2048 \
+              -validity 30 \
+              -dname "CN=Langgeng Clip Test,O=Langgeng Clip,C=ID"
+            echo "LANGGENG_STOREFILE=$RUNNER_TEMP/keystore/test-release.jks" >> "$GITHUB_ENV"
+            echo "LANGGENG_STOREPASSWORD=android" >> "$GITHUB_ENV"
+            echo "LANGGENG_KEYALIAS=test" >> "$GITHUB_ENV"
+            echo "LANGGENG_KEYPASSWORD=android" >> "$GITHUB_ENV"
+          fi
 
-      - name: Build signed release APK
-        if: env.SIGNING_READY == 'true'
-        env:
-          LANGGENG_STOREFILE: ${{ runner.temp }}/keystore/upload-keystore.jks
+      - name: Build release APK
         run: flutter build apk --release
-
-      - name: Build debug APK
-        if: env.SIGNING_READY != 'true'
-        run: flutter build apk --debug
 
       - name: Prepare APK for release
         run: |
           mkdir -p dist
-          if [ "$SIGNING_READY" = "true" ]; then
-            cp build/app/outputs/flutter-apk/app-release.apk dist/langgeng-clip-release.apk
-          else
-            cp build/app/outputs/flutter-apk/app-debug.apk dist/langgeng-clip-debug.apk
-          fi
+          cp build/app/outputs/flutter-apk/app-release.apk dist/langgeng-clip-release.apk
 
       - name: Publish APK to GitHub Release
         uses: softprops/action-gh-release@v2
