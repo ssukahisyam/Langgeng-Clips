@@ -6,6 +6,7 @@ class AppPreferences {
 
   static const _hasCompletedOnboardingKey = 'has_completed_onboarding';
   static const _themeModeKey = 'theme_mode';
+  static const _languageCodeKey = 'language_code';
 
   final SharedPreferences _preferences;
 
@@ -28,5 +29,23 @@ class AppPreferences {
 
   Future<void> setThemeMode(ThemeMode value) {
     return _preferences.setString(_themeModeKey, value.name);
+  }
+
+  Locale? get locale {
+    final languageCode = _preferences.getString(_languageCodeKey);
+    return switch (languageCode) {
+      'id' => const Locale('id'),
+      'en' => const Locale('en'),
+      _ => null,
+    };
+  }
+
+  Future<void> setLocale(Locale? value) async {
+    if (value == null) {
+      await _preferences.remove(_languageCodeKey);
+      return;
+    }
+
+    await _preferences.setString(_languageCodeKey, value.languageCode);
   }
 }

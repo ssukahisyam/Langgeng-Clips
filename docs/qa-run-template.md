@@ -56,6 +56,19 @@ Allowed result values: `Pass`, `Fail`, `Blocked`, `Not run`.
 | Device logs | No native fatal exception during export | Not run |  |
 | App UI | All errors are user-readable | Not run |  |
 
+## Phase 3 Polish Audit
+
+| Area | Check | Result | Evidence | Notes |
+|---|---|---|---|---|
+| Performance | Memory stable during import, editor scrub, and export | Not run |  |  |
+| Performance | Timeline scrub and handle drag avoid sustained jank | Not run |  |  |
+| Performance | 30s 720p H.264 export duration recorded | Not run |  |  |
+| Performance | Cancel export leaves no corrupt Library item | Not run |  |  |
+| Accessibility | TalkBack happy path import -> edit -> export is possible | Not run |  |  |
+| Accessibility | Android font/display size 200% remains usable | Not run |  |  |
+| Accessibility | Controls expose meaningful labels or text | Not run |  |  |
+| Accessibility | Selected, locked, and error states do not rely on color only | Not run |  |  |
+
 ## Sign-Off
 
 | Gate | Result | Owner | Notes |

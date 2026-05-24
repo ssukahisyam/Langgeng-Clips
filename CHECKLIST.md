@@ -35,29 +35,29 @@ Master task list end-to-end. Centang sambil jalan. Update minimal mingguan.
 ### 0.3 Repo Setup
 - [x] Repo init di GitHub (ssukahisyam/Langgeng-Clips)
 - [x] Initial planning docs di branch `docs/initial-planning`
-- [ ] `.gitignore` Flutter + Android + IDE
+- [x] `.gitignore` Flutter + Android + IDE
 - [ ] Branch protection main: require PR review, no force push
 - [ ] Repo description + topics di GitHub
-- [ ] Issue templates (bug, feature, question)
-- [ ] PR template
-- [ ] CONTRIBUTING.md (kalau buka kontribusi)
-- [ ] CODE_OF_CONDUCT.md
-- [ ] SECURITY.md (cara report vulnerability)
+- [x] Issue templates (bug, feature, question)
+- [x] PR template
+- [x] CONTRIBUTING.md (kalau buka kontribusi)
+- [x] CODE_OF_CONDUCT.md
+- [x] SECURITY.md (cara report vulnerability)
 
 ### 0.4 Project Init
 - [x] `flutter create` dengan org `com.langgeng.clip`
-- [ ] Struktur folder sesuai `02-technical-architecture.md`
-- [ ] `pubspec.yaml` dengan dependency utama
+- [x] Struktur folder sesuai `02-technical-architecture.md`
+- [x] `pubspec.yaml` dengan dependency utama
 - [x] `analysis_options.yaml` dengan Flutter lint rules
-- [ ] `dart format` config (80 char)
+- [x] `dart format` config (80 char)
 - [ ] Android: `build.gradle` config (minSdk 26, targetSdk 34)
 - [ ] Android: ktlint + detekt setup
 - [ ] Pre-commit hook: dart format + lint
 - [x] Theme system (light/dark) + token implementation
 - [x] Riverpod + go_router skeleton
 - [ ] DI (get_it) skeleton
-- [ ] Pigeon spec awal (`pigeons/video_pipeline.dart`)
-- [ ] Localization setup (`flutter_localizations` + ARB files)
+- [x] Pigeon spec awal (`pigeons/video_pipeline.dart`)
+- [x] Localization setup (`flutter_localizations` + ARB files)
 
 ### 0.5 CI/CD Foundation
 - [x] GitHub Actions: lint job
@@ -83,7 +83,7 @@ Master task list end-to-end. Centang sambil jalan. Update minimal mingguan.
 - [x] PageView + dot indicator
 - [x] Skip + Next/Get Started button
 - [x] First-run detection logic
-- [ ] Localization ID + EN
+- [x] Localization ID + EN
 
 ---
 
@@ -95,7 +95,7 @@ Master task list end-to-end. Centang sambil jalan. Update minimal mingguan.
 - [x] `flutter_secure_storage` integrate
 - [ ] Settings screen full layout
 - [x] Theme toggle (System/Light/Dark) persist
-- [ ] Language toggle (ID/EN) persist
+- [x] Language toggle (ID/EN) persist
 - [ ] About section (Privacy, Terms, OSS License, Version)
 - [ ] OSS License auto-generate (`flutter_oss_licenses`)
 - [x] In-app guide "Cara dapat Groq API key"
@@ -176,7 +176,7 @@ Master task list end-to-end. Centang sambil jalan. Update minimal mingguan.
 ### 2.1 Transcription
 - [x] `TranscriptionProvider` interface
 - [x] `GroqWhisperProvider` impl
-- [ ] FFmpeg extract audio 16kHz mono WAV
+- [x] Android audio extract 16kHz mono WAV
 - [x] Audio chunking 10 menit + overlap 5 detik
 - [x] Upload chunk ke Groq Whisper API
 - [x] Merge word-level timestamps lintas chunk
@@ -278,7 +278,7 @@ Master task list end-to-end. Centang sambil jalan. Update minimal mingguan.
 - [x] Paywall flow
 - [x] Free trial 7 hari
 - [x] Restore purchase
-- [ ] Receipt validation client-side
+- [x] Receipt validation client-side
 - [ ] Receipt validation server-side (opsional)
 - [x] Cancel subscription flow
 
@@ -287,11 +287,11 @@ Master task list end-to-end. Centang sambil jalan. Update minimal mingguan.
 - [x] Watermark "Made with Langgeng Clip" auto di free tier
 - [x] Premium template lock di free tier
 - [x] Limit communication jelas sebelum user kena dinding
-- [ ] Promo first-week unlimited untuk user baru (opsional)
+- [x] Promo first-week unlimited untuk user baru (opsional)
 
 ### 3.4 Polish
-- [ ] Performance audit (memory, frame drop, render speed)
-- [ ] A11y audit (TalkBack, dynamic type 200%)
+- [x] Performance audit (memory, frame drop, render speed)
+- [x] A11y audit (TalkBack, dynamic type 200%)
 - [x] Empty states copy review (UX writer kalau ada)
 - [x] Error messages catalog finalisasi
 - [x] In-app onboarding tutorial post-import
@@ -350,15 +350,15 @@ Master task list end-to-end. Centang sambil jalan. Update minimal mingguan.
 - [ ] Golden frame compare untuk render output
 
 ### Documentation
-- [ ] ADR untuk keputusan besar (`docs/adr/NNNN-*.md`)
-- [ ] Setup guide di CONTRIBUTING.md
-- [ ] Changelog auto-generate
-- [ ] In-code dartdoc untuk public API
+- [x] ADR untuk keputusan besar (`docs/adr/NNNN-*.md`)
+- [x] Setup guide di CONTRIBUTING.md
+- [x] Changelog auto-generate
+- [x] In-code dartdoc untuk public API
 
 ### Security
 - [ ] Cert pinning Groq endpoint (Phase 2)
 - [ ] Penetration test sederhana sebelum production
-- [ ] Cek dump app data → API key tidak plaintext
+- [x] Cek dump app data → API key tidak plaintext
 - [ ] R8/ProGuard release build verified
 
 ### Marketing & Community

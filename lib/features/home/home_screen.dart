@@ -30,9 +30,9 @@ class HomeScreen extends StatelessWidget {
           Card(
             child: ListTile(
               leading: const Icon(Icons.workspace_premium_rounded),
-              title: const Text('Free tier: 3 export per hari'),
+              title: const Text('Promo: unlimited export minggu pertama'),
               subtitle: const Text(
-                'Upgrade Pro untuk unlimited export dan tanpa watermark.',
+                'Setelah promo, free tier tetap 3 export per hari.',
               ),
               trailing: const Icon(Icons.chevron_right_rounded),
               onTap: () => context.go('/pricing'),

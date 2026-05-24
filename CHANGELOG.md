@@ -1,0 +1,22 @@
+# Changelog
+
+All notable changes to Langgeng Clip are tracked here.
+
+This project uses a simple Keep a Changelog-style format until release automation is configured.
+
+## [Unreleased]
+
+### Added
+
+- Changelog automation helper for simple Added entries.
+- ID/EN localization scaffold with persisted language override.
+- Repo governance templates for issues, pull requests, contribution guidance, conduct, and security reporting.
+- Phase 3 first-week unlimited promo model and messaging.
+- Client-side receipt validation model for Pro subscription state.
+- Phase 3 performance and accessibility audit checklist.
+- ADR documentation with the initial rendering architecture decision.
+
+### Changed
+
+- Expanded QA run template with Phase 3 polish audit checks.
+- Expanded contributor setup instructions for local Flutter development.

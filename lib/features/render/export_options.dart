@@ -1,5 +1,6 @@
 import '../editor/editor_project.dart';
 
+/// User-selected export settings for one rendered clip.
 class ExportOptions {
   const ExportOptions({
     required this.resolution,
@@ -11,6 +12,7 @@ class ExportOptions {
   final String frameRate;
   final String codec;
 
+  /// Target encoded width for portrait 9:16 output.
   int get targetWidth {
     return switch (resolution) {
       '720p' => 720,
@@ -19,6 +21,7 @@ class ExportOptions {
     };
   }
 
+  /// Target encoded height for portrait 9:16 output.
   int get targetHeight {
     return switch (resolution) {
       '720p' => 1280,
@@ -31,6 +34,7 @@ class ExportOptions {
 
   bool get requiresReencode => cropToPortrait || codec != 'copy';
 
+  /// Approximate output size based on target resolution and clip duration.
   int estimateSizeBytes(EditorClip clip) {
     final bitrateMbps = switch (resolution) {
       '720p' => 5,
@@ -41,6 +45,7 @@ class ExportOptions {
     return ((bitrateMbps * 1000000 / 8) * seconds).round();
   }
 
+  /// Human-readable size estimate shown in the export UI.
   String estimateSizeLabel(EditorClip clip) {
     final bytes = estimateSizeBytes(clip);
     final mb = bytes / (1024 * 1024);

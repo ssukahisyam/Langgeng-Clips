@@ -23,6 +23,12 @@ class SettingsScreen extends ConsumerWidget {
       ThemeMode.light => 'Light',
       ThemeMode.dark => 'Dark',
     };
+    final locale = ref.watch(localeControllerProvider).valueOrNull;
+    final languageLabel = switch (locale?.languageCode) {
+      'id' => 'Indonesia',
+      'en' => 'English',
+      _ => 'System',
+    };
 
     return AppScaffold(
       title: 'Settings',
@@ -49,7 +55,11 @@ class SettingsScreen extends ConsumerWidget {
                 subtitle: themeLabel,
                 onTap: () => _showThemeModeSheet(context, ref),
               ),
-              const _SettingsRow(title: 'Bahasa', subtitle: 'Indonesia'),
+              _SettingsRow(
+                title: 'Bahasa',
+                subtitle: languageLabel,
+                onTap: () => _showLanguageSheet(context, ref),
+              ),
             ],
           ),
           const SizedBox(height: 16),
@@ -106,6 +116,26 @@ class SettingsScreen extends ConsumerWidget {
               _ThemeModeTile(title: 'Light', value: ThemeMode.light),
               _ThemeModeTile(title: 'Dark', value: ThemeMode.dark),
               const SizedBox(height: 8),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  void _showLanguageSheet(BuildContext context, WidgetRef ref) {
+    showModalBottomSheet<void>(
+      context: context,
+      showDragHandle: true,
+      builder: (context) {
+        return const SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              _LanguageTile(title: 'System', value: null),
+              _LanguageTile(title: 'Indonesia', value: Locale('id')),
+              _LanguageTile(title: 'English', value: Locale('en')),
+              SizedBox(height: 8),
             ],
           ),
         );
@@ -176,6 +206,30 @@ class _ThemeModeTile extends ConsumerWidget {
         await ref
             .read(themeModeControllerProvider.notifier)
             .setThemeMode(value);
+        if (context.mounted) {
+          Navigator.of(context).pop();
+        }
+      },
+    );
+  }
+}
+
+class _LanguageTile extends ConsumerWidget {
+  const _LanguageTile({required this.title, required this.value});
+
+  final String title;
+  final Locale? value;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final current = ref.watch(localeControllerProvider).valueOrNull;
+    final isSelected = current?.languageCode == value?.languageCode;
+
+    return ListTile(
+      title: Text(title),
+      trailing: isSelected ? const Icon(Icons.check_rounded) : null,
+      onTap: () async {
+        await ref.read(localeControllerProvider.notifier).setLocale(value);
         if (context.mounted) {
           Navigator.of(context).pop();
         }
