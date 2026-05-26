@@ -28,6 +28,7 @@ import com.langgeng.langgeng_clip.render.Media3RenderCancelledException
 import com.langgeng.langgeng_clip.render.Media3CaptionSegment
 import com.langgeng.langgeng_clip.render.Media3RenderComposer
 import com.langgeng.langgeng_clip.render.Media3RenderRequest
+import com.langgeng.langgeng_clip.render.Media3WatermarkConfig
 import java.io.File
 import java.io.ByteArrayOutputStream
 import java.io.FileInputStream
@@ -539,6 +540,17 @@ class MainActivity : FlutterActivity() {
                 targetWidth = request.targetWidth.toInt(),
                 targetHeight = request.targetHeight.toInt(),
                 cropToPortrait = request.cropToPortrait,
+                watermark = request.watermark?.let {
+                    Media3WatermarkConfig(
+                        text = it.text,
+                        imagePath = it.imagePath,
+                        anchor = it.anchor,
+                        customX = it.customX?.toFloat(),
+                        customY = it.customY?.toFloat(),
+                        opacity = it.opacity.toFloat(),
+                        scale = it.scale.toFloat(),
+                    )
+                },
                 captionSegments = request.captionSegments
                     ?.filterNotNull()
                     ?.map {

@@ -145,6 +145,12 @@ Acceptance criteria:
 
 ## Phase 4: Auto AI Highlight
 
+Implementation status: completed for the current PR scope. Auto AI is gated by
+Groq API key, reuses transcript generation/cache, scores transcript ranges with
+Groq LLM, refines sentence boundaries, caches scoring results, persists
+candidates, and lets users apply AI candidates to the active clip. Runtime Groq
+and device validation remains deferred to final QA.
+
 Goal: user bisa memilih Auto AI, aplikasi transcribe video, score highlight
 dengan LLM, lalu menampilkan kandidat yang bisa dipilih.
 
@@ -167,6 +173,11 @@ Acceptance criteria:
 - Failure API tidak membuat project corrupt.
 
 ## Phase 5: Templates And Watermark Integration
+
+Implementation status: in progress. Editor watermark config is now passed through
+the Pigeon render request into native Media3 export instead of using a static
+watermark string. Remaining work: template-to-export style mapping and runtime
+device validation.
 
 Goal: template dan watermark yang dipilih user benar-benar memengaruhi preview
 dan export.

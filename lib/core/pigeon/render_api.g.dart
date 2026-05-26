@@ -28,6 +28,7 @@ class RenderRequest {
     required this.cropToPortrait,
     required this.requiresReencode,
     this.captionSegments,
+    this.watermark,
   });
 
   String sourcePath;
@@ -52,6 +53,8 @@ class RenderRequest {
 
   List<RenderCaptionSegment?>? captionSegments;
 
+  RenderWatermarkConfig? watermark;
+
   Object encode() {
     return <Object?>[
       sourcePath,
@@ -65,6 +68,7 @@ class RenderRequest {
       cropToPortrait,
       requiresReencode,
       captionSegments,
+      watermark,
     ];
   }
 
@@ -83,6 +87,50 @@ class RenderRequest {
       requiresReencode: result[9]! as bool,
       captionSegments: (result[10] as List<Object?>?)
           ?.cast<RenderCaptionSegment?>(),
+      watermark: result[11] as RenderWatermarkConfig?,
+    );
+  }
+}
+
+class RenderWatermarkConfig {
+  RenderWatermarkConfig({
+    this.text,
+    this.imagePath,
+    required this.anchor,
+    this.customX,
+    this.customY,
+    required this.opacity,
+    required this.scale,
+  });
+
+  String? text;
+
+  String? imagePath;
+
+  String anchor;
+
+  double? customX;
+
+  double? customY;
+
+  double opacity;
+
+  double scale;
+
+  Object encode() {
+    return <Object?>[text, imagePath, anchor, customX, customY, opacity, scale];
+  }
+
+  static RenderWatermarkConfig decode(Object result) {
+    result as List<Object?>;
+    return RenderWatermarkConfig(
+      text: result[0] as String?,
+      imagePath: result[1] as String?,
+      anchor: result[2]! as String,
+      customX: result[3] as double?,
+      customY: result[4] as double?,
+      opacity: result[5]! as double,
+      scale: result[6]! as double,
     );
   }
 }
@@ -185,11 +233,14 @@ class _PigeonCodec extends StandardMessageCodec {
     } else if (value is RenderRequest) {
       buffer.putUint8(129);
       writeValue(buffer, value.encode());
-    } else if (value is RenderCaptionSegment) {
+    } else if (value is RenderWatermarkConfig) {
       buffer.putUint8(130);
       writeValue(buffer, value.encode());
-    } else if (value is RenderResult) {
+    } else if (value is RenderCaptionSegment) {
       buffer.putUint8(131);
+      writeValue(buffer, value.encode());
+    } else if (value is RenderResult) {
+      buffer.putUint8(132);
       writeValue(buffer, value.encode());
     } else {
       super.writeValue(buffer, value);
@@ -202,8 +253,10 @@ class _PigeonCodec extends StandardMessageCodec {
       case 129:
         return RenderRequest.decode(readValue(buffer)!);
       case 130:
-        return RenderCaptionSegment.decode(readValue(buffer)!);
+        return RenderWatermarkConfig.decode(readValue(buffer)!);
       case 131:
+        return RenderCaptionSegment.decode(readValue(buffer)!);
+      case 132:
         return RenderResult.decode(readValue(buffer)!);
       default:
         return super.readValueOfType(type, buffer);

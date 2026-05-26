@@ -254,6 +254,7 @@ class _EditorScreenState extends ConsumerState<EditorScreen> {
                               project.activeClip,
                               options,
                               ref.read(captionDocumentProvider).items,
+                              _watermarkConfig,
                             ),
                           ),
                     child: _isExporting
@@ -371,6 +372,7 @@ class _EditorScreenState extends ConsumerState<EditorScreen> {
     EditorClip clip,
     ExportOptions options,
     List<CaptionItem> captionItems,
+    WatermarkConfig watermarkConfig,
   ) async {
     setState(() {
       _isExporting = true;
@@ -387,6 +389,7 @@ class _EditorScreenState extends ConsumerState<EditorScreen> {
             endMillis: clip.endMillis,
             options: options,
             captionItems: captionItems,
+            watermarkConfig: watermarkConfig,
           );
       final project = ref.read(editorProjectProvider);
       if (project != null) {

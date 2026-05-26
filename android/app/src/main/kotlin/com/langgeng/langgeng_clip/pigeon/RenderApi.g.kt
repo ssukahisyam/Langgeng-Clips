@@ -58,7 +58,8 @@ data class RenderRequest (
   val targetHeight: Long,
   val cropToPortrait: Boolean,
   val requiresReencode: Boolean,
-  val captionSegments: List<RenderCaptionSegment?>? = null
+  val captionSegments: List<RenderCaptionSegment?>? = null,
+  val watermark: RenderWatermarkConfig? = null
 )
  {
   companion object {
@@ -74,7 +75,8 @@ data class RenderRequest (
       val cropToPortrait = pigeonVar_list[8] as Boolean
       val requiresReencode = pigeonVar_list[9] as Boolean
       val captionSegments = pigeonVar_list[10] as List<RenderCaptionSegment?>?
-      return RenderRequest(sourcePath, startMillis, endMillis, resolution, frameRate, codec, targetWidth, targetHeight, cropToPortrait, requiresReencode, captionSegments)
+      val watermark = pigeonVar_list[11] as RenderWatermarkConfig?
+      return RenderRequest(sourcePath, startMillis, endMillis, resolution, frameRate, codec, targetWidth, targetHeight, cropToPortrait, requiresReencode, captionSegments, watermark)
     }
   }
   fun toList(): List<Any?> {
@@ -90,6 +92,43 @@ data class RenderRequest (
       cropToPortrait,
       requiresReencode,
       captionSegments,
+      watermark,
+    )
+  }
+}
+
+/** Generated class from Pigeon that represents data sent in messages. */
+data class RenderWatermarkConfig (
+  val text: String? = null,
+  val imagePath: String? = null,
+  val anchor: String,
+  val customX: Double? = null,
+  val customY: Double? = null,
+  val opacity: Double,
+  val scale: Double
+)
+ {
+  companion object {
+    fun fromList(pigeonVar_list: List<Any?>): RenderWatermarkConfig {
+      val text = pigeonVar_list[0] as String?
+      val imagePath = pigeonVar_list[1] as String?
+      val anchor = pigeonVar_list[2] as String
+      val customX = pigeonVar_list[3] as Double?
+      val customY = pigeonVar_list[4] as Double?
+      val opacity = pigeonVar_list[5] as Double
+      val scale = pigeonVar_list[6] as Double
+      return RenderWatermarkConfig(text, imagePath, anchor, customX, customY, opacity, scale)
+    }
+  }
+  fun toList(): List<Any?> {
+    return listOf(
+      text,
+      imagePath,
+      anchor,
+      customX,
+      customY,
+      opacity,
+      scale,
     )
   }
 }
@@ -169,10 +208,15 @@ private open class RenderApiPigeonCodec : StandardMessageCodec() {
       }
       130.toByte() -> {
         return (readValue(buffer) as? List<Any?>)?.let {
-          RenderCaptionSegment.fromList(it)
+          RenderWatermarkConfig.fromList(it)
         }
       }
       131.toByte() -> {
+        return (readValue(buffer) as? List<Any?>)?.let {
+          RenderCaptionSegment.fromList(it)
+        }
+      }
+      132.toByte() -> {
         return (readValue(buffer) as? List<Any?>)?.let {
           RenderResult.fromList(it)
         }
@@ -186,12 +230,16 @@ private open class RenderApiPigeonCodec : StandardMessageCodec() {
         stream.write(129)
         writeValue(stream, value.toList())
       }
-      is RenderCaptionSegment -> {
+      is RenderWatermarkConfig -> {
         stream.write(130)
         writeValue(stream, value.toList())
       }
-      is RenderResult -> {
+      is RenderCaptionSegment -> {
         stream.write(131)
+        writeValue(stream, value.toList())
+      }
+      is RenderResult -> {
+        stream.write(132)
         writeValue(stream, value.toList())
       }
       else -> super.writeValue(stream, value)

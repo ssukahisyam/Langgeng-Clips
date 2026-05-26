@@ -228,6 +228,11 @@ phase selesai.
 - [x] Tuning threshold parameter
 
 ### 2.4 Auto Highlight (AI)
+Status PR: implementation Auto AI sudah tersambung dari editor ke transcript
+cache/generation, Groq highlight scoring, sentence-boundary refinement, cache
+hasil scoring, candidate persistence, dan apply kandidat ke clip aktif. Validasi
+runtime Groq/device dilakukan setelah semua phase selesai.
+
 - [x] Groq LLM client (Llama 3.3 / DeepSeek)
 - [x] Prompt engineering iterasi 1
 - [x] Output schema: ranges with score & reason
@@ -256,7 +261,7 @@ phase selesai.
 - [x] Position drag custom
 - [x] Opacity slider
 - [x] Scale slider
-- [x] Native overlay implementation
+- [x] Native overlay implementation memakai config editor
 - [x] Preview di editor
 
 ### 2.7 Subject Tracking
