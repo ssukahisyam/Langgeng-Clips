@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class FeedbackScreen extends StatefulWidget {
   const FeedbackScreen({super.key});
@@ -40,20 +41,37 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
             ),
             const SizedBox(height: 16),
             FilledButton(
-              onPressed: () {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text(
-                      'Feedback form tersimpan lokal untuk wiring backend nanti.',
-                    ),
-                  ),
-                );
-              },
+              onPressed: _submitFeedback,
               child: const Text('Submit feedback'),
             ),
           ],
         ),
       ),
     );
+  }
+
+  Future<void> _submitFeedback() async {
+    final text = _controller.text.trim();
+    if (text.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Feedback tidak boleh kosong.')),
+      );
+      return;
+    }
+
+    final preferences = await SharedPreferences.getInstance();
+    final items = preferences.getStringList('feedback_drafts_v1') ?? const [];
+    await preferences.setStringList('feedback_drafts_v1', [
+      ...items,
+      '${DateTime.now().toIso8601String()}|$text',
+    ]);
+    _controller.clear();
+    if (!mounted) {
+      return;
+    }
+
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(const SnackBar(content: Text('Feedback tersimpan lokal.')));
   }
 }

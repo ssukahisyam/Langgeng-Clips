@@ -8,6 +8,7 @@ import '../editor/editor_project_store.dart';
 import '../import/import_sheet.dart';
 import '../import/selected_video_controller.dart';
 import '../monetization/ad_placeholder.dart';
+import '../project_setup/project_setup_screen.dart';
 import '../../shared/widgets/app_scaffold.dart';
 
 class HomeScreen extends ConsumerWidget {
@@ -143,18 +144,19 @@ class _ActiveDraftCard extends ConsumerWidget {
   }
 }
 
-class _TemplateChip extends StatelessWidget {
+class _TemplateChip extends ConsumerWidget {
   const _TemplateChip({required this.label});
 
   final String label;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return ActionChip(
       label: Text(label),
-      onPressed: () => ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Template $label dipilih sebagai default.')),
-      ),
+      onPressed: () {
+        ref.read(quickTemplateProvider.notifier).state = label;
+        showImportSheet(context);
+      },
     );
   }
 }

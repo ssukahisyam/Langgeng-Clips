@@ -9,6 +9,8 @@ import '../import/selected_video_controller.dart';
 import 'video_metadata.dart';
 import 'video_metadata_probe.dart';
 
+final quickTemplateProvider = StateProvider<String?>((ref) => null);
+
 class ProjectSetupScreen extends ConsumerStatefulWidget {
   const ProjectSetupScreen({super.key});
 
@@ -24,6 +26,16 @@ class _ProjectSetupScreenState extends ConsumerState<ProjectSetupScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final quickTemplate = ref.watch(quickTemplateProvider);
+    if (quickTemplate != null && quickTemplate != _template) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          setState(() => _template = quickTemplate);
+          ref.read(quickTemplateProvider.notifier).state = null;
+        }
+      });
+    }
+
     final video = ref.watch(selectedVideoProvider);
     final metadata = video == null || video.path.isEmpty
         ? null
