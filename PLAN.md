@@ -85,6 +85,12 @@ Acceptance criteria:
 
 ## Phase 2: Caption And Transcription Flow
 
+Implementation status: completed for the current PR scope. Caption generation is
+available from the editor, gated by Groq API key, supports language override,
+uses transcript cache/resume checkpoints, persists caption documents in the
+active session, and passes caption segments into export. Remaining validation is
+runtime-only: real Groq key, native audio extraction, and Android device export.
+
 Goal: user bisa generate subtitle dari video, edit caption, preview hasil, dan
 export clip dengan caption.
 

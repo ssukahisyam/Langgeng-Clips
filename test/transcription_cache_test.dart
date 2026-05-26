@@ -53,18 +53,24 @@ void main() {
     expect(cached?.words.last.endMillis, 1500);
   });
 
-  test('resume store tracks completed chunk indexes', () async {
+  test('resume store tracks completed chunk transcripts', () async {
     final store = TranscriptionResumeStore(
       preferences: await SharedPreferences.getInstance(),
     );
+    const transcript = Transcript(
+      text: 'chunk text',
+      words: [TranscriptWord(text: 'chunk', startMillis: 0, endMillis: 500)],
+    );
 
-    await store.markCompleted('source-hash', 2);
+    await store.markCompleted('source-hash', 2, transcript: transcript);
     await store.markCompleted('source-hash', 0);
     await store.markCompleted('source-hash', 2);
     final checkpoint = store.read('source-hash');
 
     expect(checkpoint?.sourceSha256, 'source-hash');
     expect(checkpoint?.completedChunkIndexes, {0, 2});
+    expect(checkpoint?.chunkTranscripts[2]?.text, 'chunk text');
+    expect(checkpoint?.chunkTranscripts[2]?.words.single.endMillis, 500);
     expect(checkpoint?.toJson()['completedChunkIndexes'], [0, 2]);
   });
 }

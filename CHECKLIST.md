@@ -179,6 +179,11 @@ device/release yang perlu Android SDK, device fisik, dan Play Console.
 
 ## Phase 2 — V1.0 (6-8 minggu)
 
+Status PR: implementation caption/transcription end-to-end sudah tersambung untuk
+flow editor -> generate subtitle -> Groq Whisper/cache/resume -> caption editor
+-> auto-save caption -> export caption segments. Sisa Phase 2 adalah validasi
+runtime dengan Groq key nyata, audio extraction native, dan device QA.
+
 ### 2.1 Transcription
 - [x] `TranscriptionProvider` interface
 - [x] `GroqWhisperProvider` impl
@@ -188,7 +193,7 @@ device/release yang perlu Android SDK, device fisik, dan Play Console.
 - [x] Merge word-level timestamps lintas chunk
 - [x] Cache transcript by source SHA256
 - [x] Retry exponential backoff
-- [x] Resume from last successful chunk
+- [x] Resume from last successful chunk + cached chunk transcript
 - [x] Multi-language detection
 - [x] Bahasa override manual
 - [x] Progress UI saat transcribe

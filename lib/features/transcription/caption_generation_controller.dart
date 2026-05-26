@@ -94,8 +94,18 @@ class CaptionGenerationController
 
       final extractor = ref.read(audioExtractorProvider);
       final provider = await ref.read(transcriptionProvider.future);
+      final resumeStore = await ref.read(
+        transcriptionResumeStoreProvider.future,
+      );
+      final checkpoint = resumeStore.read(sourceSha256);
       final transcripts = <Transcript>[];
       for (final chunk in chunks) {
+        final resumedTranscript = checkpoint?.chunkTranscripts[chunk.index];
+        if (resumedTranscript != null) {
+          transcripts.add(resumedTranscript);
+          continue;
+        }
+
         state = AsyncValue.data(
           TranscriptionProgressState(
             completedChunks: transcripts.length,
@@ -120,10 +130,16 @@ class CaptionGenerationController
           ),
         );
         transcripts.add(transcript);
+        await resumeStore.markCompleted(
+          sourceSha256,
+          chunk.index,
+          transcript: transcript,
+        );
       }
 
       final transcript = Transcript.mergeChunks(transcripts);
       await cache.write(sourceSha256, transcript);
+      await resumeStore.clear(sourceSha256);
       _applyTranscript(transcript);
       state = AsyncValue.data(
         TranscriptionProgressState(
