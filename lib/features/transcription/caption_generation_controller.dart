@@ -8,6 +8,7 @@ import '../editor/editor_project_controller.dart';
 import '../editor/editor_project_store.dart';
 import '../import/selected_video.dart';
 import '../import/selected_video_controller.dart';
+import '../onboarding/groq_api_key_controller.dart';
 import '../subtitle/caption_document.dart';
 import 'audio_chunker.dart';
 import 'audio_extractor.dart';
@@ -74,6 +75,13 @@ class CaptionGenerationController
       final chunks = chunker.plan(project.durationMillis);
       if (chunks.isEmpty) {
         throw const TranscriptionException('Durasi video tidak valid.');
+      }
+
+      final apiKeyState = await ref.read(groqApiKeyControllerProvider.future);
+      if (!apiKeyState.hasKey) {
+        throw const TranscriptionException(
+          'Groq API key belum tersedia. Tambahkan API key untuk generate subtitle.',
+        );
       }
 
       state = AsyncValue.data(

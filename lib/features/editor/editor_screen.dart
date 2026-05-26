@@ -8,6 +8,7 @@ import 'package:video_player/video_player.dart';
 
 import '../import/selected_video_controller.dart';
 import '../library/export_history.dart';
+import '../onboarding/groq_api_key_controller.dart';
 import '../render/export_options.dart';
 import '../render/export_sheet.dart';
 import '../render/trim_exporter.dart';
@@ -1099,6 +1100,8 @@ class _CaptionToolPanel extends ConsumerWidget {
     final video = ref.watch(selectedVideoProvider);
     final project = ref.watch(editorProjectProvider);
     final generationState = ref.watch(captionGenerationControllerProvider);
+    final apiKeyState = ref.watch(groqApiKeyControllerProvider).valueOrNull;
+    final hasApiKey = apiKeyState?.hasKey ?? false;
     final progress =
         generationState.valueOrNull ??
         const TranscriptionProgressState(
@@ -1130,6 +1133,13 @@ class _CaptionToolPanel extends ConsumerWidget {
                 style: TextStyle(color: Theme.of(context).colorScheme.error),
               ),
             ],
+            if (!hasApiKey) ...[
+              const SizedBox(height: 8),
+              Text(
+                'Groq API key diperlukan untuk generate subtitle baru.',
+                style: TextStyle(color: Theme.of(context).colorScheme.primary),
+              ),
+            ],
             const SizedBox(height: 12),
             DropdownButtonFormField<TranscriptionLanguage>(
               initialValue: language,
@@ -1150,20 +1160,32 @@ class _CaptionToolPanel extends ConsumerWidget {
             FilledButton.icon(
               onPressed: isGenerating || video == null || project == null
                   ? null
-                  : () => ref
+                  : hasApiKey
+                  ? () => ref
                         .read(captionGenerationControllerProvider.notifier)
                         .generate(
                           video: video,
                           project: project,
                           settings: TranscriptionSettings(language: language),
-                        ),
+                        )
+                  : () => context.go('/setup/api-key'),
               icon: isGenerating
                   ? const SizedBox.square(
                       dimension: 18,
                       child: CircularProgressIndicator(strokeWidth: 2),
                     )
-                  : const Icon(Icons.auto_awesome_rounded),
-              label: Text(isGenerating ? 'Generating...' : 'Generate subtitle'),
+                  : Icon(
+                      hasApiKey
+                          ? Icons.auto_awesome_rounded
+                          : Icons.key_rounded,
+                    ),
+              label: Text(
+                isGenerating
+                    ? 'Generating...'
+                    : hasApiKey
+                    ? 'Generate subtitle'
+                    : 'Setup API key',
+              ),
             ),
             const SizedBox(height: 8),
             FilledButton.icon(
