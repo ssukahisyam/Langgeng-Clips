@@ -98,6 +98,7 @@ class ImportSheet extends ConsumerWidget {
     ref.read(selectedVideoProvider.notifier).state = selectedVideo;
     final store = await ref.read(editorProjectStoreProvider.future);
     await store.clearActiveSession();
+    ref.invalidate(activeEditorSessionSummaryProvider);
 
     navigator.pop();
     if (!context.mounted) {

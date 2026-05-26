@@ -383,6 +383,10 @@ class _EditorScreenState extends ConsumerState<EditorScreen> {
                 ? 'Export selesai dan tersimpan di Gallery.'
                 : 'Export selesai: ${exportResult.cachePath}',
           ),
+          action: SnackBarAction(
+            label: 'Library',
+            onPressed: () => context.go('/library'),
+          ),
         ),
       );
       setState(() => _exportProgress = 1);

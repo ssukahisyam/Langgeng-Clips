@@ -26,4 +26,5 @@ Future<void> saveActiveEditorSession(WidgetRef ref) async {
 
   final store = await ref.read(editorProjectStoreProvider.future);
   await store.saveActiveSession(EditorSession(video: video, project: project));
+  ref.invalidate(activeEditorSessionSummaryProvider);
 }

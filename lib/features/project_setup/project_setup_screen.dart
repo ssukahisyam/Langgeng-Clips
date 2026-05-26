@@ -140,6 +140,7 @@ class _ProjectSetupScreenState extends ConsumerState<ProjectSetupScreen> {
                       await store.saveActiveSession(
                         EditorSession(video: video, project: project),
                       );
+                      ref.invalidate(activeEditorSessionSummaryProvider);
                       if (!context.mounted) {
                         return;
                       }
