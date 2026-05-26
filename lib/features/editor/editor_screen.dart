@@ -12,6 +12,8 @@ import '../onboarding/groq_api_key_controller.dart';
 import '../render/export_options.dart';
 import '../render/export_sheet.dart';
 import '../render/trim_exporter.dart';
+import '../semi_auto/semi_auto_candidate.dart';
+import '../semi_auto/semi_auto_generation_controller.dart';
 import '../subject_tracking/subject_tracking.dart';
 import '../subject_tracking/subject_tracking_panel.dart';
 import '../subtitle/caption_document.dart';
@@ -1257,7 +1259,7 @@ class _TemplateToolPanel extends StatelessWidget {
   }
 }
 
-class _AudioToolPanel extends StatelessWidget {
+class _AudioToolPanel extends ConsumerWidget {
   const _AudioToolPanel({
     required this.removeFillerWords,
     required this.onRemoveFillerWordsChanged,
@@ -1267,7 +1269,14 @@ class _AudioToolPanel extends StatelessWidget {
   final ValueChanged<bool> onRemoveFillerWordsChanged;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final video = ref.watch(selectedVideoProvider);
+    final project = ref.watch(editorProjectProvider);
+    final generationState = ref.watch(semiAutoGenerationControllerProvider);
+    final candidates = ref.watch(semiAutoCandidatesProvider);
+    final isGenerating = generationState.isLoading;
+    final error = generationState.error;
+
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(16),
@@ -1282,8 +1291,39 @@ class _AudioToolPanel extends StatelessWidget {
             ),
             const SizedBox(height: 8),
             const Text(
-              'Auto highlight scoring, filler-word toggle, dan semi-auto candidate model sudah siap. Deteksi audio/scene native masih pending.',
+              'Generate kandidat Semi-Auto dari audio peak, silence, dan scene change.',
             ),
+            if (error != null) ...[
+              const SizedBox(height: 8),
+              Text(
+                error.toString(),
+                style: TextStyle(color: Theme.of(context).colorScheme.error),
+              ),
+            ],
+            const SizedBox(height: 12),
+            FilledButton.icon(
+              onPressed: isGenerating || video == null || project == null
+                  ? null
+                  : () => ref
+                        .read(semiAutoGenerationControllerProvider.notifier)
+                        .generate(video: video, project: project),
+              icon: isGenerating
+                  ? const SizedBox.square(
+                      dimension: 18,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : const Icon(Icons.auto_fix_high_rounded),
+              label: Text(
+                isGenerating
+                    ? 'Generating candidates...'
+                    : 'Generate Semi-Auto',
+              ),
+            ),
+            if (candidates.isNotEmpty) ...[
+              const SizedBox(height: 12),
+              for (final candidate in candidates)
+                _SemiAutoCandidateTile(candidate: candidate),
+            ],
             const SizedBox(height: 12),
             const SubjectTrackingPanel(config: SubjectTrackingConfig()),
             const SizedBox(height: 12),
@@ -1308,6 +1348,48 @@ class _AudioToolPanel extends StatelessWidget {
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+class _SemiAutoCandidateTile extends ConsumerWidget {
+  const _SemiAutoCandidateTile({required this.candidate});
+
+  final SemiAutoCandidate candidate;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    return ListTile(
+      contentPadding: EdgeInsets.zero,
+      title: Text(candidate.reason),
+      subtitle: Text(
+        '${formatMillis(candidate.startMillis)} - '
+        '${formatMillis(candidate.endMillis)} · '
+        '${(candidate.confidence * 100).round()}%',
+      ),
+      trailing: TextButton(
+        onPressed: () async {
+          final project = ref.read(editorProjectProvider);
+          if (project == null) {
+            return;
+          }
+
+          ref.read(editorProjectProvider.notifier).state = project
+              .updateActiveClipRange(
+                startMillis: candidate.startMillis,
+                endMillis: candidate.endMillis,
+              );
+          await saveActiveEditorSession(ref);
+          if (context.mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Kandidat diterapkan ke clip aktif.'),
+              ),
+            );
+          }
+        },
+        child: const Text('Apply'),
       ),
     );
   }

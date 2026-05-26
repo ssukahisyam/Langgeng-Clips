@@ -5,6 +5,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../core/preferences/preferences_providers.dart';
 import '../import/selected_video.dart';
+import '../semi_auto/semi_auto_candidate.dart';
 import '../subtitle/caption_document.dart';
 import 'editor_project.dart';
 
@@ -56,6 +57,7 @@ class EditorSession {
     required this.video,
     required this.project,
     this.captionDocument,
+    this.semiAutoCandidates = const [],
   });
 
   factory EditorSession.fromJson(Map<String, dynamic> json) {
@@ -67,18 +69,29 @@ class EditorSession {
               json['captionDocument'] as Map<String, dynamic>,
             )
           : null,
+      semiAutoCandidates: json['semiAutoCandidates'] is List
+          ? (json['semiAutoCandidates'] as List)
+                .whereType<Map<String, dynamic>>()
+                .map(SemiAutoCandidate.fromJson)
+                .toList(growable: false)
+          : const [],
     );
   }
 
   final SelectedVideo video;
   final EditorProject project;
   final CaptionDocument? captionDocument;
+  final List<SemiAutoCandidate> semiAutoCandidates;
 
   Map<String, dynamic> toJson() {
     return {
       'video': video.toJson(),
       'project': project.toJson(),
       if (captionDocument != null) 'captionDocument': captionDocument!.toJson(),
+      if (semiAutoCandidates.isNotEmpty)
+        'semiAutoCandidates': semiAutoCandidates
+            .map((candidate) => candidate.toJson())
+            .toList(),
     };
   }
 }
