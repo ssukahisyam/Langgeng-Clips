@@ -33,6 +33,7 @@ class _EditorScreenState extends ConsumerState<EditorScreen> {
   bool _isPlaying = false;
   bool _isExporting = false;
   bool _removeFillerWords = false;
+  int _playheadMillis = 0;
   double _exportProgress = 0;
   WatermarkConfig _watermarkConfig = const WatermarkConfig(
     text: '@LanggengClip',
@@ -59,9 +60,16 @@ class _EditorScreenState extends ConsumerState<EditorScreen> {
 
   @override
   Widget build(BuildContext context) {
-    ref.watch(activeEditorSessionLoaderProvider);
+    final sessionLoader = ref.watch(activeEditorSessionLoaderProvider);
     final video = ref.watch(selectedVideoProvider);
     final project = ref.watch(editorProjectProvider);
+
+    if (sessionLoader.isLoading && (video == null || project == null)) {
+      return Scaffold(
+        appBar: AppBar(title: const Text('Editor')),
+        body: const Center(child: CircularProgressIndicator()),
+      );
+    }
 
     if (video == null || project == null) {
       return Scaffold(
@@ -94,19 +102,35 @@ class _EditorScreenState extends ConsumerState<EditorScreen> {
               child: ListView(
                 padding: const EdgeInsets.all(16),
                 children: [
-                  _PreviewPanel(fileName: video.name),
+                  _PreviewPanel(
+                    fileName: video.name,
+                    fileAvailable: video.existsOnDevice,
+                    isPlaying: _isPlaying,
+                    playheadLabel: formatMillis(
+                      project.clampPlayheadMillis(_playheadMillis),
+                    ),
+                    activeClipLabel:
+                        '${formatMillis(project.activeClip.startMillis)} - '
+                        '${formatMillis(project.activeClip.endMillis)}',
+                  ),
                   const SizedBox(height: 12),
                   const PostImportTutorialCard(),
                   const SizedBox(height: 12),
                   _TransportBar(
                     isPlaying: _isPlaying,
                     onPlayPause: () => setState(() => _isPlaying = !_isPlaying),
+                    onSkipPrevious: _skipToActiveClipStart,
+                    onSkipNext: _skipToActiveClipEnd,
                     onCut: _addClipFromActiveRange,
                   ),
                   const SizedBox(height: 16),
                   _TimelineEditor(
                     project: project,
                     onRangeChanged: _updateActiveClipRange,
+                    playheadMillis: project.clampPlayheadMillis(
+                      _playheadMillis,
+                    ),
+                    onPlayheadChanged: _updatePlayhead,
                     onSelectClip: _selectClip,
                   ),
                   const SizedBox(height: 16),
@@ -166,7 +190,7 @@ class _EditorScreenState extends ConsumerState<EditorScreen> {
                     const SizedBox(height: 8),
                   ],
                   FilledButton(
-                    onPressed: _isExporting
+                    onPressed: _isExporting || !video.existsOnDevice
                         ? null
                         : () => showExportSheet(
                             context: context,
@@ -180,7 +204,11 @@ class _EditorScreenState extends ConsumerState<EditorScreen> {
                           ),
                     child: _isExporting
                         ? const Text('Exporting...')
-                        : const Text('Export active clip'),
+                        : Text(
+                            video.existsOnDevice
+                                ? 'Export active clip'
+                                : 'Source file missing',
+                          ),
                   ),
                 ],
               ),
@@ -197,12 +225,50 @@ class _EditorScreenState extends ConsumerState<EditorScreen> {
       return;
     }
 
-    ref.read(editorProjectProvider.notifier).state = project
-        .updateActiveClipRange(
-          startMillis: values.start.round(),
-          endMillis: values.end.round(),
-        );
+    final updatedProject = project.updateActiveClipRange(
+      startMillis: values.start.round(),
+      endMillis: values.end.round(),
+    );
+    ref.read(editorProjectProvider.notifier).state = updatedProject;
+    setState(() {
+      _playheadMillis = updatedProject.clampPlayheadMillis(_playheadMillis);
+    });
     unawaited(saveActiveEditorSession(ref));
+  }
+
+  void _updatePlayhead(double value) {
+    final project = ref.read(editorProjectProvider);
+    if (project == null) {
+      return;
+    }
+
+    setState(
+      () => _playheadMillis = project.clampPlayheadMillis(value.round()),
+    );
+  }
+
+  void _skipToActiveClipStart() {
+    final project = ref.read(editorProjectProvider);
+    if (project == null) {
+      return;
+    }
+
+    setState(() {
+      _isPlaying = false;
+      _playheadMillis = project.skipToActiveClipStart();
+    });
+  }
+
+  void _skipToActiveClipEnd() {
+    final project = ref.read(editorProjectProvider);
+    if (project == null) {
+      return;
+    }
+
+    setState(() {
+      _isPlaying = false;
+      _playheadMillis = project.skipToActiveClipEnd();
+    });
   }
 
   void _addClipFromActiveRange() {
@@ -222,7 +288,12 @@ class _EditorScreenState extends ConsumerState<EditorScreen> {
       return;
     }
 
-    ref.read(editorProjectProvider.notifier).state = project.setActiveClip(id);
+    final updatedProject = project.setActiveClip(id);
+    ref.read(editorProjectProvider.notifier).state = updatedProject;
+    setState(() {
+      _isPlaying = false;
+      _playheadMillis = updatedProject.activeClip.startMillis;
+    });
     unawaited(saveActiveEditorSession(ref));
   }
 
@@ -426,9 +497,19 @@ class _EditorScreenState extends ConsumerState<EditorScreen> {
 }
 
 class _PreviewPanel extends StatelessWidget {
-  const _PreviewPanel({required this.fileName});
+  const _PreviewPanel({
+    required this.fileName,
+    required this.fileAvailable,
+    required this.isPlaying,
+    required this.playheadLabel,
+    required this.activeClipLabel,
+  });
 
   final String fileName;
+  final bool fileAvailable;
+  final bool isPlaying;
+  final String playheadLabel;
+  final String activeClipLabel;
 
   @override
   Widget build(BuildContext context) {
@@ -443,7 +524,12 @@ class _PreviewPanel extends StatelessWidget {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Icon(Icons.play_circle_outline_rounded, size: 64),
+              Icon(
+                isPlaying
+                    ? Icons.pause_circle_outline_rounded
+                    : Icons.play_circle_outline_rounded,
+                size: 64,
+              ),
               const SizedBox(height: 12),
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 24),
@@ -455,7 +541,13 @@ class _PreviewPanel extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 6),
-              const Text('Preview 9:16 placeholder'),
+              Text(
+                fileAvailable
+                    ? 'Manual preview · $playheadLabel'
+                    : 'Source file tidak tersedia',
+              ),
+              const SizedBox(height: 4),
+              Text('Clip aktif: $activeClipLabel'),
             ],
           ),
         ),
@@ -468,11 +560,15 @@ class _TransportBar extends StatelessWidget {
   const _TransportBar({
     required this.isPlaying,
     required this.onPlayPause,
+    required this.onSkipPrevious,
+    required this.onSkipNext,
     required this.onCut,
   });
 
   final bool isPlaying;
   final VoidCallback onPlayPause;
+  final VoidCallback onSkipPrevious;
+  final VoidCallback onSkipNext;
   final VoidCallback onCut;
 
   @override
@@ -484,9 +580,7 @@ class _TransportBar extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.spaceAround,
           children: [
             IconButton(
-              onPressed: () => ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Lompat ke awal clip aktif')),
-              ),
+              onPressed: onSkipPrevious,
               icon: const Icon(Icons.skip_previous),
             ),
             IconButton(
@@ -494,9 +588,7 @@ class _TransportBar extends StatelessWidget {
               icon: Icon(isPlaying ? Icons.pause : Icons.play_arrow),
             ),
             IconButton(
-              onPressed: () => ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Lompat ke akhir clip aktif')),
-              ),
+              onPressed: onSkipNext,
               icon: const Icon(Icons.skip_next),
             ),
             TextButton.icon(
@@ -521,12 +613,16 @@ class _TransportBar extends StatelessWidget {
 class _TimelineEditor extends StatelessWidget {
   const _TimelineEditor({
     required this.project,
+    required this.playheadMillis,
     required this.onRangeChanged,
+    required this.onPlayheadChanged,
     required this.onSelectClip,
   });
 
   final EditorProject project;
+  final int playheadMillis;
   final ValueChanged<RangeValues> onRangeChanged;
+  final ValueChanged<double> onPlayheadChanged;
   final ValueChanged<String> onSelectClip;
 
   @override
@@ -562,6 +658,22 @@ class _TimelineEditor extends StatelessWidget {
                 formatMillis(activeClip.endMillis),
               ),
               onChanged: onRangeChanged,
+            ),
+            Row(
+              children: [
+                const Icon(Icons.my_location_rounded, size: 18),
+                const SizedBox(width: 8),
+                Text('Playhead: ${formatMillis(playheadMillis)}'),
+              ],
+            ),
+            Slider(
+              min: activeClip.startMillis.toDouble(),
+              max: activeClip.endMillis.toDouble(),
+              value: playheadMillis
+                  .clamp(activeClip.startMillis, activeClip.endMillis)
+                  .toDouble(),
+              label: formatMillis(playheadMillis),
+              onChanged: onPlayheadChanged,
             ),
             const SizedBox(height: 12),
             Wrap(

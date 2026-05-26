@@ -185,6 +185,14 @@ class EditorProject {
     return copyWith(activeClipId: id);
   }
 
+  int clampPlayheadMillis(int millis) {
+    return millis.clamp(activeClip.startMillis, activeClip.endMillis);
+  }
+
+  int skipToActiveClipStart() => activeClip.startMillis;
+
+  int skipToActiveClipEnd() => activeClip.endMillis;
+
   EditorProject applyTemplate(String templateName) {
     return copyWith(template: templateName);
   }
