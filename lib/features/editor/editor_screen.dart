@@ -18,6 +18,7 @@ import '../templates/template_presets.dart';
 import '../transcription/transcription_progress.dart';
 import '../transcription/transcription_progress_card.dart';
 import '../transcription/caption_generation_controller.dart';
+import '../transcription/transcription_language.dart';
 import '../watermark/watermark_config.dart';
 import '../watermark/watermark_preview.dart';
 import 'editor_project.dart';
@@ -37,6 +38,7 @@ class _EditorScreenState extends ConsumerState<EditorScreen> {
   bool _isExporting = false;
   bool _removeFillerWords = false;
   int _playheadMillis = 0;
+  TranscriptionLanguage _captionLanguage = TranscriptionLanguage.auto;
   double _exportProgress = 0;
   WatermarkConfig _watermarkConfig = const WatermarkConfig(
     text: '@LanggengClip',
@@ -180,8 +182,12 @@ class _EditorScreenState extends ConsumerState<EditorScreen> {
                     clipCount: project.clipCount,
                     targetDuration: project.targetDuration,
                     removeFillerWords: _removeFillerWords,
+                    captionLanguage: _captionLanguage,
                     watermarkConfig: _watermarkConfig,
                     onTemplateSelected: _applyTemplate,
+                    onCaptionLanguageChanged: (value) {
+                      setState(() => _captionLanguage = value);
+                    },
                     onRemoveFillerWordsChanged: (value) {
                       setState(() => _removeFillerWords = value);
                     },
@@ -983,8 +989,10 @@ class _EditorPanel extends StatelessWidget {
     required this.clipCount,
     required this.targetDuration,
     required this.removeFillerWords,
+    required this.captionLanguage,
     required this.watermarkConfig,
     required this.onTemplateSelected,
+    required this.onCaptionLanguageChanged,
     required this.onRemoveFillerWordsChanged,
     required this.onWatermarkChanged,
   });
@@ -995,15 +1003,20 @@ class _EditorPanel extends StatelessWidget {
   final String clipCount;
   final String targetDuration;
   final bool removeFillerWords;
+  final TranscriptionLanguage captionLanguage;
   final WatermarkConfig watermarkConfig;
   final ValueChanged<String> onTemplateSelected;
+  final ValueChanged<TranscriptionLanguage> onCaptionLanguageChanged;
   final ValueChanged<bool> onRemoveFillerWordsChanged;
   final ValueChanged<WatermarkConfig> onWatermarkChanged;
 
   @override
   Widget build(BuildContext context) {
     return switch (activePanel) {
-      'Caption' => _CaptionToolPanel(),
+      'Caption' => _CaptionToolPanel(
+        language: captionLanguage,
+        onLanguageChanged: onCaptionLanguageChanged,
+      ),
       'Style' => _TemplateToolPanel(
         template: template,
         mode: mode,
@@ -1073,7 +1086,13 @@ class _ClipsToolPanel extends StatelessWidget {
 }
 
 class _CaptionToolPanel extends ConsumerWidget {
-  const _CaptionToolPanel();
+  const _CaptionToolPanel({
+    required this.language,
+    required this.onLanguageChanged,
+  });
+
+  final TranscriptionLanguage language;
+  final ValueChanged<TranscriptionLanguage> onLanguageChanged;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -1112,12 +1131,32 @@ class _CaptionToolPanel extends ConsumerWidget {
               ),
             ],
             const SizedBox(height: 12),
+            DropdownButtonFormField<TranscriptionLanguage>(
+              initialValue: language,
+              decoration: const InputDecoration(labelText: 'Language'),
+              items: [
+                for (final option in TranscriptionLanguage.supported)
+                  DropdownMenuItem(value: option, child: Text(option.label)),
+              ],
+              onChanged: isGenerating
+                  ? null
+                  : (value) {
+                      if (value != null) {
+                        onLanguageChanged(value);
+                      }
+                    },
+            ),
+            const SizedBox(height: 12),
             FilledButton.icon(
               onPressed: isGenerating || video == null || project == null
                   ? null
                   : () => ref
                         .read(captionGenerationControllerProvider.notifier)
-                        .generate(video: video, project: project),
+                        .generate(
+                          video: video,
+                          project: project,
+                          settings: TranscriptionSettings(language: language),
+                        ),
               icon: isGenerating
                   ? const SizedBox.square(
                       dimension: 18,
