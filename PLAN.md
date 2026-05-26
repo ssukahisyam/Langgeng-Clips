@@ -50,6 +50,12 @@ berfungsi end-to-end di Android.
 
 ## Phase 1: Manual MVP End-To-End
 
+Implementation status: completed for the current PR scope. Manual MVP now has
+persistent active sessions, Home/Library draft resume, local file preview,
+playhead/timeline sync, export history refresh, and Library shortcut after
+export. Android build/device QA remains blocked in this environment until the
+Android SDK and real devices are available.
+
 Goal: user bisa import video lokal, setup project manual, preview video, pilih
 range, export clip 9:16, melihat hasil di library, dan membuka ulang project.
 

@@ -89,6 +89,11 @@ Master task list end-to-end. Centang sambil jalan. Update minimal mingguan.
 
 ## Phase 1 — MVP (4-6 minggu)
 
+Status PR: implementation MVP manual end-to-end sudah dikerjakan untuk flow
+import lokal -> setup project -> resume draft -> preview file lokal -> atur range
+clip -> export -> Library refresh. Sisa Phase 1 di checklist ini adalah hardening
+device/release yang perlu Android SDK, device fisik, dan Play Console.
+
 ### 1.1 API Key & Settings
 - [x] API Key Setup screen UI
 - [x] Validate Groq key endpoint integration
@@ -107,9 +112,9 @@ Master task list end-to-end. Centang sambil jalan. Update minimal mingguan.
 - [x] Native: probe metadata via MediaMetadataRetriever
 - [ ] Probe coverage: durasi, resolusi, codec, rotation, FPS, audio tracks
 - [ ] Probe coverage: VFR detection
-- [ ] Storage: copy/reference source ke app dir
-- [ ] Sqflite schema: project, source, clip
-- [ ] Sqflite repo + DAO
+- [x] Storage: reference source path + active editor session persist
+- [ ] Sqflite schema: project, source, clip (hardening multi-project)
+- [ ] Sqflite repo + DAO (hardening multi-project)
 - [ ] Empty state semua layar
 - [ ] Loading state probe video
 
@@ -120,14 +125,15 @@ Master task list end-to-end. Centang sambil jalan. Update minimal mingguan.
 - [x] Stepper jumlah clip
 - [x] Segmented durasi target
 - [x] Editor scaffold: top bar, preview, transport, timeline, tab bar
-- [ ] ExoPlayer integrate via Pigeon (preview)
+- [x] Local file video preview via `video_player`
+- [ ] ExoPlayer integrate via Pigeon (native preview hardening)
 - [ ] Timeline: waveform render
 - [x] Timeline: scrubber + playhead
 - [x] Timeline: clip range handles (drag start/end)
 - [ ] Timeline: pinch zoom
 - [x] Manual: split clip
 - [x] Manual: multi-clip support
-- [~] Auto-save state project tiap perubahan penting
+- [x] Auto-save state project tiap perubahan penting
 - [x] Project rename via top bar tap
 
 ### 1.4 Render Pipeline
