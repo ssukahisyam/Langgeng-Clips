@@ -49,9 +49,6 @@ class _EditorScreenState extends ConsumerState<EditorScreen> {
   TranscriptionLanguage _captionLanguage = TranscriptionLanguage.auto;
   String _semiAutoSensitivity = 'Medium';
   double _exportProgress = 0;
-  WatermarkConfig _watermarkConfig = const WatermarkConfig(
-    text: '@LanggengClip',
-  );
   StreamSubscription<double>? _exportProgressSubscription;
 
   @override
@@ -77,6 +74,7 @@ class _EditorScreenState extends ConsumerState<EditorScreen> {
     final sessionLoader = ref.watch(activeEditorSessionLoaderProvider);
     final video = ref.watch(selectedVideoProvider);
     final project = ref.watch(editorProjectProvider);
+    final watermarkConfig = ref.watch(watermarkConfigProvider);
 
     if (sessionLoader.isLoading && (video == null || project == null)) {
       return Scaffold(
@@ -210,7 +208,7 @@ class _EditorScreenState extends ConsumerState<EditorScreen> {
                     removeFillerWords: _removeFillerWords,
                     semiAutoSensitivity: _semiAutoSensitivity,
                     captionLanguage: _captionLanguage,
-                    watermarkConfig: _watermarkConfig,
+                    watermarkConfig: watermarkConfig,
                     onTemplateSelected: _applyTemplate,
                     onCaptionLanguageChanged: (value) {
                       setState(() => _captionLanguage = value);
@@ -222,7 +220,8 @@ class _EditorScreenState extends ConsumerState<EditorScreen> {
                       setState(() => _removeFillerWords = value);
                     },
                     onWatermarkChanged: (value) {
-                      setState(() => _watermarkConfig = value);
+                      ref.read(watermarkConfigProvider.notifier).state = value;
+                      unawaited(saveActiveEditorSession(ref));
                     },
                   ),
                 ],
@@ -255,7 +254,7 @@ class _EditorScreenState extends ConsumerState<EditorScreen> {
                               project.activeClip,
                               options,
                               ref.read(captionDocumentProvider).items,
-                              _watermarkConfig,
+                              watermarkConfig,
                             ),
                           ),
                     child: _isExporting
@@ -375,9 +374,10 @@ class _EditorScreenState extends ConsumerState<EditorScreen> {
     ref.read(editorProjectProvider.notifier).state = project.applyTemplate(
       templateName,
     );
-    setState(() {
-      _watermarkConfig = _watermarkForTemplate(templateName, template);
-    });
+    ref.read(watermarkConfigProvider.notifier).state = _watermarkForTemplate(
+      templateName,
+      template,
+    );
     unawaited(saveActiveEditorSession(ref));
     ScaffoldMessenger.of(
       context,

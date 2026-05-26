@@ -4,6 +4,7 @@ import '../import/selected_video_controller.dart';
 import '../auto_highlight/highlight_candidate.dart';
 import '../semi_auto/semi_auto_candidate.dart';
 import '../subtitle/caption_document.dart';
+import '../watermark/watermark_config.dart';
 import 'editor_project.dart';
 import 'editor_project_store.dart';
 
@@ -26,6 +27,10 @@ final activeEditorSessionLoaderProvider = FutureProvider<void>((ref) async {
       session.semiAutoCandidates;
   ref.read(autoHighlightCandidatesProvider.notifier).state =
       session.autoHighlightCandidates;
+  final watermarkConfig = session.watermarkConfig;
+  if (watermarkConfig != null) {
+    ref.read(watermarkConfigProvider.notifier).state = watermarkConfig;
+  }
 });
 
 Future<void> saveActiveEditorSession(WidgetRef ref) async {
@@ -43,6 +48,7 @@ Future<void> saveActiveEditorSession(WidgetRef ref) async {
       captionDocument: ref.read(captionDocumentProvider),
       semiAutoCandidates: ref.read(semiAutoCandidatesProvider),
       autoHighlightCandidates: ref.read(autoHighlightCandidatesProvider),
+      watermarkConfig: ref.read(watermarkConfigProvider),
     ),
   );
   ref.invalidate(activeEditorSessionSummaryProvider);

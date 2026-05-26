@@ -246,6 +246,10 @@ runtime Groq/device dilakukan setelah semua phase selesai.
 - [x] Filler word removal (toggle, default off)
 
 ### 2.5 Templates
+Status PR: templates sekarang menerapkan caption style dan watermark default ke
+state editor/export, bukan hanya nama template. Validasi visual runtime dilakukan
+di final device QA.
+
 - [x] Template definition format (JSON)
 - [x] Preset Podcast (talking head, subtitle large, watermark optional)
 - [x] Preset Gaming (pip kamera + game, dynamic caption)
@@ -255,6 +259,9 @@ runtime Groq/device dilakukan setelah semua phase selesai.
 - [x] Preview template visual
 
 ### 2.6 Watermark
+Status PR: watermark config editor sudah persist/restore di active session dan
+dikirim ke native Media3 export melalui Pigeon render request.
+
 - [x] Watermark module: text input
 - [x] Watermark module: image picker
 - [x] Position 9-anchor

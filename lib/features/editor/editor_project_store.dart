@@ -8,6 +8,7 @@ import '../auto_highlight/highlight_candidate.dart';
 import '../import/selected_video.dart';
 import '../semi_auto/semi_auto_candidate.dart';
 import '../subtitle/caption_document.dart';
+import '../watermark/watermark_config.dart';
 import 'editor_project.dart';
 
 final editorProjectStoreProvider = FutureProvider<EditorProjectStore>((
@@ -60,6 +61,7 @@ class EditorSession {
     this.captionDocument,
     this.semiAutoCandidates = const [],
     this.autoHighlightCandidates = const [],
+    this.watermarkConfig,
   });
 
   factory EditorSession.fromJson(Map<String, dynamic> json) {
@@ -83,6 +85,11 @@ class EditorSession {
                 .map(HighlightCandidate.fromJson)
                 .toList(growable: false)
           : const [],
+      watermarkConfig: json['watermarkConfig'] is Map<String, dynamic>
+          ? WatermarkConfig.fromJson(
+              json['watermarkConfig'] as Map<String, dynamic>,
+            )
+          : null,
     );
   }
 
@@ -91,6 +98,7 @@ class EditorSession {
   final CaptionDocument? captionDocument;
   final List<SemiAutoCandidate> semiAutoCandidates;
   final List<HighlightCandidate> autoHighlightCandidates;
+  final WatermarkConfig? watermarkConfig;
 
   Map<String, dynamic> toJson() {
     return {
@@ -105,6 +113,7 @@ class EditorSession {
         'autoHighlightCandidates': autoHighlightCandidates
             .map((candidate) => candidate.toJson())
             .toList(),
+      if (watermarkConfig != null) 'watermarkConfig': watermarkConfig!.toJson(),
     };
   }
 }

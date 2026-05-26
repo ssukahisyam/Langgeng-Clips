@@ -1,3 +1,9 @@
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+final watermarkConfigProvider = StateProvider<WatermarkConfig>((ref) {
+  return const WatermarkConfig(text: '@LanggengClip');
+});
+
 enum WatermarkAnchor {
   topLeft,
   topCenter,

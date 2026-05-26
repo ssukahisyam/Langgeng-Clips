@@ -174,10 +174,11 @@ Acceptance criteria:
 
 ## Phase 5: Templates And Watermark Integration
 
-Implementation status: in progress. Editor watermark config is now passed through
-the Pigeon render request into native Media3 export instead of using a static
-watermark string. Remaining work: template-to-export style mapping and runtime
-device validation.
+Implementation status: completed for the current PR scope. Editor watermark
+config is persisted/restored with the active session, passed through the Pigeon
+render request into native Media3 export, and templates apply caption/watermark
+visual defaults instead of only changing the template name. Remaining work is
+runtime device validation.
 
 Goal: template dan watermark yang dipilih user benar-benar memengaruhi preview
 dan export.
