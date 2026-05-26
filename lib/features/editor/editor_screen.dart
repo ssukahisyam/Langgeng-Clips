@@ -40,6 +40,7 @@ class _EditorScreenState extends ConsumerState<EditorScreen> {
   bool _isPlaying = false;
   bool _isExporting = false;
   bool _removeFillerWords = false;
+  bool _fitPreviewToScreen = false;
   int _playheadMillis = 0;
   TranscriptionLanguage _captionLanguage = TranscriptionLanguage.auto;
   String _semiAutoSensitivity = 'Medium';
@@ -116,6 +117,7 @@ class _EditorScreenState extends ConsumerState<EditorScreen> {
                     filePath: video.path,
                     fileAvailable: video.existsOnDevice,
                     isPlaying: _isPlaying,
+                    fitToScreen: _fitPreviewToScreen,
                     playheadMillis: project.clampPlayheadMillis(
                       _playheadMillis,
                     ),
@@ -146,6 +148,12 @@ class _EditorScreenState extends ConsumerState<EditorScreen> {
                     onPlayPause: () => setState(() => _isPlaying = !_isPlaying),
                     onSkipPrevious: _skipToActiveClipStart,
                     onSkipNext: _skipToActiveClipEnd,
+                    isFitToScreen: _fitPreviewToScreen,
+                    onToggleFit: () {
+                      setState(
+                        () => _fitPreviewToScreen = !_fitPreviewToScreen,
+                      );
+                    },
                     onCut: _addClipFromActiveRange,
                   ),
                   const SizedBox(height: 16),
@@ -539,6 +547,7 @@ class _PreviewPanel extends StatefulWidget {
     required this.filePath,
     required this.fileAvailable,
     required this.isPlaying,
+    required this.fitToScreen,
     required this.playheadMillis,
     required this.playheadLabel,
     required this.activeClipLabel,
@@ -552,6 +561,7 @@ class _PreviewPanel extends StatefulWidget {
   final String filePath;
   final bool fileAvailable;
   final bool isPlaying;
+  final bool fitToScreen;
   final int playheadMillis;
   final String playheadLabel;
   final String activeClipLabel;
@@ -757,7 +767,7 @@ class _PreviewPanelState extends State<_PreviewPanel> {
     }
 
     return FittedBox(
-      fit: BoxFit.cover,
+      fit: widget.fitToScreen ? BoxFit.contain : BoxFit.cover,
       child: SizedBox(
         width: controller.value.size.width,
         height: controller.value.size.height,
@@ -854,6 +864,8 @@ class _TransportBar extends StatelessWidget {
     required this.onPlayPause,
     required this.onSkipPrevious,
     required this.onSkipNext,
+    required this.isFitToScreen,
+    required this.onToggleFit,
     required this.onCut,
   });
 
@@ -861,6 +873,8 @@ class _TransportBar extends StatelessWidget {
   final VoidCallback onPlayPause;
   final VoidCallback onSkipPrevious;
   final VoidCallback onSkipNext;
+  final bool isFitToScreen;
+  final VoidCallback onToggleFit;
   final VoidCallback onCut;
 
   @override
@@ -884,11 +898,9 @@ class _TransportBar extends StatelessWidget {
               icon: const Icon(Icons.skip_next),
             ),
             TextButton.icon(
-              onPressed: () => ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Fit-to-screen preview aktif.')),
-              ),
+              onPressed: onToggleFit,
               icon: const Icon(Icons.fit_screen_rounded),
-              label: const Text('Fit'),
+              label: Text(isFitToScreen ? 'Fill' : 'Fit'),
             ),
             TextButton.icon(
               onPressed: onCut,
@@ -1378,13 +1390,9 @@ class _AudioToolPanel extends ConsumerWidget {
             ),
             const SizedBox(height: 12),
             FilledButton.icon(
-              onPressed: () {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('AI highlight engine ready.')),
-                );
-              },
+              onPressed: null,
               icon: const Icon(Icons.auto_graph_rounded),
-              label: const Text('Preview AI candidates'),
+              label: const Text('AI candidates available in Phase 4'),
             ),
           ],
         ),
@@ -1536,7 +1544,7 @@ class _WatermarkToolPanel extends StatelessWidget {
               onChanged: (value) => onChanged(config.copyWith(scale: value)),
             ),
             const Text(
-              'Text/image config, anchors, drag coordinates, opacity, scale, dan preview sudah siap. Native overlay render masih pending.',
+              'Watermark preview aktif di editor. Integrasi native export dijadwalkan di Phase 5.',
             ),
           ],
         ),

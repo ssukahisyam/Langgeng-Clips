@@ -65,7 +65,7 @@ class _ProjectSetupScreenState extends ConsumerState<ProjectSetupScreen> {
                     subtitle:
                         'Generate kandidat highlight dari transcript dan AI.',
                     selected: _mode == 'Auto (AI)',
-                    enabled: true,
+                    enabled: false,
                     onTap: () => setState(() => _mode = 'Auto (AI)'),
                   ),
                   const SizedBox(height: 24),
@@ -147,7 +147,9 @@ class _ProjectSetupScreenState extends ConsumerState<ProjectSetupScreen> {
                       context.go('/editor');
                     },
                     child: Text(
-                      _mode == 'Manual' ? 'Mulai Edit' : 'Generate Clip',
+                      _mode == 'Manual'
+                          ? 'Mulai Edit'
+                          : 'Buka Kandidat Semi-Auto',
                     ),
                   ),
                 ],
