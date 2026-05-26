@@ -41,6 +41,7 @@ class _EditorScreenState extends ConsumerState<EditorScreen> {
   bool _isExporting = false;
   bool _removeFillerWords = false;
   bool _fitPreviewToScreen = false;
+  bool _didOpenModePanel = false;
   int _playheadMillis = 0;
   TranscriptionLanguage _captionLanguage = TranscriptionLanguage.auto;
   String _semiAutoSensitivity = 'Medium';
@@ -86,6 +87,15 @@ class _EditorScreenState extends ConsumerState<EditorScreen> {
         appBar: AppBar(title: const Text('Editor')),
         body: _MissingEditorState(onBackHome: () => context.go('/home')),
       );
+    }
+
+    if (!_didOpenModePanel && project.mode == 'Semi-Auto') {
+      _didOpenModePanel = true;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted && _activePanel == 'Clips') {
+          setState(() => _activePanel = 'Audio');
+        }
+      });
     }
 
     return Scaffold(
@@ -1375,6 +1385,11 @@ class _AudioToolPanel extends ConsumerWidget {
               const SizedBox(height: 12),
               for (final candidate in candidates)
                 _SemiAutoCandidateTile(candidate: candidate),
+            ] else ...[
+              const SizedBox(height: 12),
+              const Text(
+                'Belum ada kandidat. Pilih sensitivitas, lalu tekan Generate Semi-Auto.',
+              ),
             ],
             const SizedBox(height: 12),
             const SubjectTrackingPanel(config: SubjectTrackingConfig()),

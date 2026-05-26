@@ -215,6 +215,11 @@ runtime dengan Groq key nyata, audio extraction native, dan device QA.
 - [x] Live preview real-time
 
 ### 2.3 Semi-Auto Mode
+Status PR: implementation Semi-Auto sudah tersambung dari editor Audio panel ke
+audio extraction, audio level analysis, scene detection, candidate persistence,
+dan apply kandidat ke clip aktif. Validasi native/device dilakukan setelah semua
+phase selesai.
+
 - [x] Audio peak detection (PCM WAV window RMS/peak)
 - [x] Scene change detection
 - [x] Silence detection (untuk podcast)

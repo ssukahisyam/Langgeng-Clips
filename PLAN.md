@@ -117,6 +117,12 @@ Acceptance criteria:
 
 ## Phase 3: Semi-Auto Mode
 
+Implementation status: completed for the current PR scope. Semi-Auto candidates
+can be generated from audio peaks, silence breaks, and scene changes, tuned by
+sensitivity, persisted with the active session, restored, and applied to the
+active clip. Runtime validation of native audio extraction/scene detection is
+deferred to final device QA.
+
 Goal: user bisa memilih Semi-Auto, aplikasi membuat kandidat clip dari audio dan
 scene analysis, lalu user memilih kandidat untuk diedit/export.
 
