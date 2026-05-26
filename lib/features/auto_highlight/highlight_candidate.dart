@@ -1,3 +1,9 @@
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+final autoHighlightCandidatesProvider = StateProvider<List<HighlightCandidate>>(
+  (ref) => const [],
+);
+
 class HighlightCandidate {
   const HighlightCandidate({
     required this.startMillis,

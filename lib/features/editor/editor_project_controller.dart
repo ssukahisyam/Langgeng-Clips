@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../import/selected_video_controller.dart';
+import '../auto_highlight/highlight_candidate.dart';
 import '../semi_auto/semi_auto_candidate.dart';
 import '../subtitle/caption_document.dart';
 import 'editor_project.dart';
@@ -23,6 +24,8 @@ final activeEditorSessionLoaderProvider = FutureProvider<void>((ref) async {
   }
   ref.read(semiAutoCandidatesProvider.notifier).state =
       session.semiAutoCandidates;
+  ref.read(autoHighlightCandidatesProvider.notifier).state =
+      session.autoHighlightCandidates;
 });
 
 Future<void> saveActiveEditorSession(WidgetRef ref) async {
@@ -39,6 +42,7 @@ Future<void> saveActiveEditorSession(WidgetRef ref) async {
       project: project,
       captionDocument: ref.read(captionDocumentProvider),
       semiAutoCandidates: ref.read(semiAutoCandidatesProvider),
+      autoHighlightCandidates: ref.read(autoHighlightCandidatesProvider),
     ),
   );
   ref.invalidate(activeEditorSessionSummaryProvider);

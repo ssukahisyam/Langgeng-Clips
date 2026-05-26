@@ -6,6 +6,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:video_player/video_player.dart';
 
+import '../auto_highlight/auto_highlight_controller.dart';
+import '../auto_highlight/highlight_candidate.dart';
 import '../import/selected_video_controller.dart';
 import '../library/export_history.dart';
 import '../onboarding/groq_api_key_controller.dart';
@@ -89,7 +91,8 @@ class _EditorScreenState extends ConsumerState<EditorScreen> {
       );
     }
 
-    if (!_didOpenModePanel && project.mode == 'Semi-Auto') {
+    if (!_didOpenModePanel &&
+        (project.mode == 'Semi-Auto' || project.mode == 'Auto (AI)')) {
       _didOpenModePanel = true;
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted && _activePanel == 'Clips') {
@@ -1314,8 +1317,12 @@ class _AudioToolPanel extends ConsumerWidget {
     final project = ref.watch(editorProjectProvider);
     final generationState = ref.watch(semiAutoGenerationControllerProvider);
     final candidates = ref.watch(semiAutoCandidatesProvider);
+    final autoState = ref.watch(autoHighlightControllerProvider);
+    final autoCandidates = ref.watch(autoHighlightCandidatesProvider);
     final isGenerating = generationState.isLoading;
+    final isGeneratingAuto = autoState.isLoading;
     final error = generationState.error;
+    final autoError = autoState.error;
 
     return Card(
       child: Padding(
@@ -1405,10 +1412,34 @@ class _AudioToolPanel extends ConsumerWidget {
             ),
             const SizedBox(height: 12),
             FilledButton.icon(
-              onPressed: null,
+              onPressed: isGeneratingAuto || video == null || project == null
+                  ? null
+                  : () => ref
+                        .read(autoHighlightControllerProvider.notifier)
+                        .generate(video: video, project: project),
               icon: const Icon(Icons.auto_graph_rounded),
-              label: const Text('AI candidates available in Phase 4'),
+              label: Text(
+                isGeneratingAuto
+                    ? 'Generating AI candidates...'
+                    : 'Generate AI candidates',
+              ),
             ),
+            if (autoError != null) ...[
+              const SizedBox(height: 8),
+              Text(
+                autoError.toString(),
+                style: TextStyle(color: Theme.of(context).colorScheme.error),
+              ),
+            ],
+            if (autoCandidates.isNotEmpty) ...[
+              const SizedBox(height: 12),
+              Text(
+                'AI candidates',
+                style: Theme.of(context).textTheme.titleSmall,
+              ),
+              for (final candidate in autoCandidates)
+                _AutoHighlightCandidateTile(candidate: candidate),
+            ],
           ],
         ),
       ),
@@ -1429,6 +1460,48 @@ class _AudioToolPanel extends ConsumerWidget {
       ),
       _ => const SemiAutoTuning(),
     };
+  }
+}
+
+class _AutoHighlightCandidateTile extends ConsumerWidget {
+  const _AutoHighlightCandidateTile({required this.candidate});
+
+  final HighlightCandidate candidate;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    return ListTile(
+      contentPadding: EdgeInsets.zero,
+      title: Text(candidate.reason),
+      subtitle: Text(
+        '${formatMillis(candidate.startMillis)} - '
+        '${formatMillis(candidate.endMillis)} · '
+        '${(candidate.score * 100).round()}%',
+      ),
+      trailing: TextButton(
+        onPressed: () async {
+          final project = ref.read(editorProjectProvider);
+          if (project == null) {
+            return;
+          }
+
+          ref.read(editorProjectProvider.notifier).state = project
+              .updateActiveClipRange(
+                startMillis: candidate.startMillis,
+                endMillis: candidate.endMillis,
+              );
+          await saveActiveEditorSession(ref);
+          if (context.mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Kandidat AI diterapkan ke clip aktif.'),
+              ),
+            );
+          }
+        },
+        child: const Text('Apply'),
+      ),
+    );
   }
 }
 
