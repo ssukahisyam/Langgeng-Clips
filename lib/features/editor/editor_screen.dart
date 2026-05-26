@@ -42,6 +42,7 @@ class _EditorScreenState extends ConsumerState<EditorScreen> {
   bool _removeFillerWords = false;
   int _playheadMillis = 0;
   TranscriptionLanguage _captionLanguage = TranscriptionLanguage.auto;
+  String _semiAutoSensitivity = 'Medium';
   double _exportProgress = 0;
   WatermarkConfig _watermarkConfig = const WatermarkConfig(
     text: '@LanggengClip',
@@ -185,11 +186,15 @@ class _EditorScreenState extends ConsumerState<EditorScreen> {
                     clipCount: project.clipCount,
                     targetDuration: project.targetDuration,
                     removeFillerWords: _removeFillerWords,
+                    semiAutoSensitivity: _semiAutoSensitivity,
                     captionLanguage: _captionLanguage,
                     watermarkConfig: _watermarkConfig,
                     onTemplateSelected: _applyTemplate,
                     onCaptionLanguageChanged: (value) {
                       setState(() => _captionLanguage = value);
+                    },
+                    onSemiAutoSensitivityChanged: (value) {
+                      setState(() => _semiAutoSensitivity = value);
                     },
                     onRemoveFillerWordsChanged: (value) {
                       setState(() => _removeFillerWords = value);
@@ -992,10 +997,12 @@ class _EditorPanel extends StatelessWidget {
     required this.clipCount,
     required this.targetDuration,
     required this.removeFillerWords,
+    required this.semiAutoSensitivity,
     required this.captionLanguage,
     required this.watermarkConfig,
     required this.onTemplateSelected,
     required this.onCaptionLanguageChanged,
+    required this.onSemiAutoSensitivityChanged,
     required this.onRemoveFillerWordsChanged,
     required this.onWatermarkChanged,
   });
@@ -1006,10 +1013,12 @@ class _EditorPanel extends StatelessWidget {
   final String clipCount;
   final String targetDuration;
   final bool removeFillerWords;
+  final String semiAutoSensitivity;
   final TranscriptionLanguage captionLanguage;
   final WatermarkConfig watermarkConfig;
   final ValueChanged<String> onTemplateSelected;
   final ValueChanged<TranscriptionLanguage> onCaptionLanguageChanged;
+  final ValueChanged<String> onSemiAutoSensitivityChanged;
   final ValueChanged<bool> onRemoveFillerWordsChanged;
   final ValueChanged<WatermarkConfig> onWatermarkChanged;
 
@@ -1032,6 +1041,9 @@ class _EditorPanel extends StatelessWidget {
         onChanged: onWatermarkChanged,
       ),
       'Audio' => _AudioToolPanel(
+        mode: mode,
+        semiAutoSensitivity: semiAutoSensitivity,
+        onSemiAutoSensitivityChanged: onSemiAutoSensitivityChanged,
         removeFillerWords: removeFillerWords,
         onRemoveFillerWordsChanged: onRemoveFillerWordsChanged,
       ),
@@ -1261,10 +1273,16 @@ class _TemplateToolPanel extends StatelessWidget {
 
 class _AudioToolPanel extends ConsumerWidget {
   const _AudioToolPanel({
+    required this.mode,
+    required this.semiAutoSensitivity,
+    required this.onSemiAutoSensitivityChanged,
     required this.removeFillerWords,
     required this.onRemoveFillerWordsChanged,
   });
 
+  final String mode;
+  final String semiAutoSensitivity;
+  final ValueChanged<String> onSemiAutoSensitivityChanged;
   final bool removeFillerWords;
   final ValueChanged<bool> onRemoveFillerWordsChanged;
 
@@ -1293,6 +1311,12 @@ class _AudioToolPanel extends ConsumerWidget {
             const Text(
               'Generate kandidat Semi-Auto dari audio peak, silence, dan scene change.',
             ),
+            if (mode != 'Semi-Auto') ...[
+              const SizedBox(height: 8),
+              Text(
+                'Project ini mode $mode. Kandidat Semi-Auto tetap bisa dipakai sebagai bantuan manual.',
+              ),
+            ],
             if (error != null) ...[
               const SizedBox(height: 8),
               Text(
@@ -1301,12 +1325,28 @@ class _AudioToolPanel extends ConsumerWidget {
               ),
             ],
             const SizedBox(height: 12),
+            SegmentedButton<String>(
+              segments: const [
+                ButtonSegment(value: 'Low', label: Text('Low')),
+                ButtonSegment(value: 'Medium', label: Text('Medium')),
+                ButtonSegment(value: 'High', label: Text('High')),
+              ],
+              selected: {semiAutoSensitivity},
+              onSelectionChanged: isGenerating
+                  ? null
+                  : (value) => onSemiAutoSensitivityChanged(value.single),
+            ),
+            const SizedBox(height: 12),
             FilledButton.icon(
               onPressed: isGenerating || video == null || project == null
                   ? null
                   : () => ref
                         .read(semiAutoGenerationControllerProvider.notifier)
-                        .generate(video: video, project: project),
+                        .generate(
+                          video: video,
+                          project: project,
+                          tuning: _semiAutoTuningFor(semiAutoSensitivity),
+                        ),
               icon: isGenerating
                   ? const SizedBox.square(
                       dimension: 18,
@@ -1350,6 +1390,22 @@ class _AudioToolPanel extends ConsumerWidget {
         ),
       ),
     );
+  }
+
+  SemiAutoTuning _semiAutoTuningFor(String sensitivity) {
+    return switch (sensitivity) {
+      'Low' => const SemiAutoTuning(
+        audioPeakThreshold: -12,
+        silenceThreshold: -48,
+        sceneChangeThreshold: 0.5,
+      ),
+      'High' => const SemiAutoTuning(
+        audioPeakThreshold: -24,
+        silenceThreshold: -36,
+        sceneChangeThreshold: 0.25,
+      ),
+      _ => const SemiAutoTuning(),
+    };
   }
 }
 
