@@ -113,13 +113,6 @@ class HomeScreen extends ConsumerWidget {
   }
 }
 
-final activeEditorSessionSummaryProvider = FutureProvider<EditorSession?>((
-  ref,
-) async {
-  final store = await ref.watch(editorProjectStoreProvider.future);
-  return store.readActiveSession();
-});
-
 class _ActiveDraftCard extends ConsumerWidget {
   const _ActiveDraftCard({required this.session});
 

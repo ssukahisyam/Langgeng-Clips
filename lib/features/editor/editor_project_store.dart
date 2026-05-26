@@ -14,6 +14,13 @@ final editorProjectStoreProvider = FutureProvider<EditorProjectStore>((
   return EditorProjectStore(preferences);
 });
 
+final activeEditorSessionSummaryProvider = FutureProvider<EditorSession?>((
+  ref,
+) async {
+  final store = await ref.watch(editorProjectStoreProvider.future);
+  return store.readActiveSession();
+});
+
 class EditorProjectStore {
   EditorProjectStore(this._preferences);
 
