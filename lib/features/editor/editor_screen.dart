@@ -19,6 +19,7 @@ import '../semi_auto/semi_auto_generation_controller.dart';
 import '../subject_tracking/subject_tracking.dart';
 import '../subject_tracking/subject_tracking_panel.dart';
 import '../subtitle/caption_document.dart';
+import '../templates/clip_template.dart';
 import '../templates/template_presets.dart';
 import '../transcription/transcription_progress.dart';
 import '../transcription/transcription_progress_card.dart';
@@ -357,14 +358,78 @@ class _EditorScreenState extends ConsumerState<EditorScreen> {
     if (project == null) {
       return;
     }
+    final template = TemplatePresets.all.firstWhere(
+      (preset) => preset.name == templateName,
+      orElse: () => TemplatePresets.podcast,
+    );
+    final currentCaptionDocument = ref.read(captionDocumentProvider);
+    final nextCaptionStyle = currentCaptionDocument.style.copyWith(
+      size: _captionSizeForTemplate(template.captionStyle.size),
+      highlightColor: _parseHexColor(template.captionStyle.highlightColor),
+      position: _captionPositionForTemplate(template.layout.captionPosition),
+      animation: _captionAnimationForTemplate(template.captionStyle.animation),
+    );
+    ref.read(captionDocumentProvider.notifier).state = currentCaptionDocument
+        .updateStyle(nextCaptionStyle);
 
     ref.read(editorProjectProvider.notifier).state = project.applyTemplate(
       templateName,
     );
+    setState(() {
+      _watermarkConfig = _watermarkForTemplate(templateName, template);
+    });
     unawaited(saveActiveEditorSession(ref));
     ScaffoldMessenger.of(
       context,
     ).showSnackBar(SnackBar(content: Text('$templateName template applied.')));
+  }
+
+  double _captionSizeForTemplate(String size) {
+    return switch (size) {
+      'large' => 52,
+      'small' => 34,
+      _ => 42,
+    };
+  }
+
+  int _parseHexColor(String value) {
+    final normalized = value.replaceFirst('#', '').trim();
+    if (normalized.length != 6) {
+      return 0xFF4F46E5;
+    }
+    return int.tryParse('FF$normalized', radix: 16) ?? 0xFF4F46E5;
+  }
+
+  CaptionPosition _captionPositionForTemplate(String position) {
+    return switch (position) {
+      'top_center' => CaptionPosition.topCenter,
+      'center' => CaptionPosition.center,
+      _ => CaptionPosition.bottomCenter,
+    };
+  }
+
+  CaptionAnimation _captionAnimationForTemplate(String animation) {
+    return switch (animation) {
+      'karaoke' => CaptionAnimation.karaoke,
+      'typewriter' => CaptionAnimation.typewriter,
+      _ => CaptionAnimation.none,
+    };
+  }
+
+  WatermarkConfig _watermarkForTemplate(
+    String templateName,
+    ClipTemplate template,
+  ) {
+    if (template.watermarkEnabledByDefault) {
+      return WatermarkConfig(
+        text: 'Langgeng Clip',
+        anchor: WatermarkAnchor.bottomRight,
+        opacity: 0.72,
+        scale: templateName == 'Tutorial' ? 0.85 : 1,
+      );
+    }
+
+    return const WatermarkConfig(text: null, opacity: 0.75, scale: 1);
   }
 
   Future<void> _exportActiveClipWithOptions(
