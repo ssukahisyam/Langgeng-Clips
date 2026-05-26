@@ -1,7 +1,10 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../editor/editor_project.dart';
+import '../editor/editor_project_controller.dart';
 import 'caption_document.dart';
 import 'caption_preview.dart';
 
@@ -11,6 +14,8 @@ class CaptionEditorScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final document = ref.watch(captionDocumentProvider);
+    final project = ref.watch(editorProjectProvider);
+    final maxDurationMillis = project?.durationMillis ?? 10000;
     return Scaffold(
       appBar: AppBar(title: const Text('Caption Editor')),
       body: ListView(
@@ -18,9 +23,11 @@ class CaptionEditorScreen extends ConsumerWidget {
         children: [
           _CaptionStyleCard(
             style: document.style,
-            onChanged: (style) =>
-                ref.read(captionDocumentProvider.notifier).state = document
-                    .updateStyle(style),
+            onChanged: (style) {
+              ref.read(captionDocumentProvider.notifier).state = document
+                  .updateStyle(style);
+              unawaited(saveActiveEditorSession(ref));
+            },
           ),
           const SizedBox(height: 16),
           CaptionPreview(document: document),
@@ -28,9 +35,11 @@ class CaptionEditorScreen extends ConsumerWidget {
           for (final item in document.items) ...[
             _CaptionItemCard(
               item: item,
+              maxDurationMillis: maxDurationMillis,
               onChanged: (text) {
                 ref.read(captionDocumentProvider.notifier).state = document
                     .updateText(id: item.id, text: text);
+                unawaited(saveActiveEditorSession(ref));
               },
               onTimingChanged: (values) {
                 ref.read(captionDocumentProvider.notifier).state = document
@@ -39,6 +48,7 @@ class CaptionEditorScreen extends ConsumerWidget {
                       startMillis: values.start.round(),
                       endMillis: values.end.round(),
                     );
+                unawaited(saveActiveEditorSession(ref));
               },
             ),
             const SizedBox(height: 12),
@@ -185,11 +195,13 @@ class _CaptionStyleCard extends StatelessWidget {
 class _CaptionItemCard extends StatelessWidget {
   const _CaptionItemCard({
     required this.item,
+    required this.maxDurationMillis,
     required this.onChanged,
     required this.onTimingChanged,
   });
 
   final CaptionItem item;
+  final int maxDurationMillis;
   final ValueChanged<String> onChanged;
   final ValueChanged<RangeValues> onTimingChanged;
 
@@ -211,10 +223,16 @@ class _CaptionItemCard extends StatelessWidget {
             ),
             RangeSlider(
               min: 0,
-              max: 10000,
+              max: maxDurationMillis.toDouble(),
               values: RangeValues(
-                item.startMillis.toDouble().clamp(0, 10000),
-                item.endMillis.toDouble().clamp(0, 10000),
+                item.startMillis
+                    .toDouble()
+                    .clamp(0, maxDurationMillis)
+                    .toDouble(),
+                item.endMillis
+                    .toDouble()
+                    .clamp(0, maxDurationMillis)
+                    .toDouble(),
               ),
               labels: RangeLabels(
                 formatMillis(item.startMillis),

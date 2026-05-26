@@ -75,7 +75,7 @@ class ExportDetailScreen extends ConsumerWidget {
                     ),
                     const SizedBox(height: 8),
                     FilledButton.tonalIcon(
-                      onPressed: () => _share(item),
+                      onPressed: () => _share(context, item),
                       icon: const Icon(Icons.share_rounded),
                       label: const Text('Share clip'),
                     ),
@@ -120,13 +120,27 @@ class ExportDetailScreen extends ConsumerWidget {
         '${value.minute.toString().padLeft(2, '0')}';
   }
 
-  Future<void> _share(ExportHistoryItem item) async {
-    final uri = item.galleryUri;
-    if (uri == null || uri.isEmpty) {
-      throw const ExportActionException('Export belum tersimpan di Gallery.');
-    }
+  Future<void> _share(BuildContext context, ExportHistoryItem item) async {
+    try {
+      final uri = item.galleryUri;
+      if (uri == null || uri.isEmpty) {
+        throw const ExportActionException('Export belum tersimpan di Gallery.');
+      }
 
-    await const ExportActions().share(uri: uri, title: item.title);
+      await const ExportActions().share(uri: uri, title: item.title);
+    } on ExportActionException catch (_) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Export belum tersimpan di Gallery.')),
+        );
+      }
+    } on Object {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Gagal membuka share sheet.')),
+        );
+      }
+    }
   }
 
   Future<void> _rename(

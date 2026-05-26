@@ -69,4 +69,53 @@ void main() {
 
     expect(project.applyTemplate('Gaming').template, 'Gaming');
   });
+
+  test('serializes project with clips and active clip', () {
+    final project =
+        EditorProject.initial(
+              title: 'episode.mp4',
+              template: 'Podcast',
+              clipCount: 'Auto',
+              targetDuration: '30s',
+              durationMillis: 60000,
+            )
+            .updateActiveClipRange(startMillis: 5000, endMillis: 15000)
+            .addClipFromActiveRange();
+
+    final restored = EditorProject.fromJson(project.toJson());
+
+    expect(restored.title, project.title);
+    expect(restored.template, project.template);
+    expect(restored.clips, hasLength(2));
+    expect(restored.activeClipId, 'clip-2');
+    expect(restored.activeClip.startMillis, 5000);
+    expect(restored.activeClip.endMillis, 15000);
+  });
+
+  test('clamps playhead to active clip range', () {
+    final project = EditorProject.initial(
+      title: 'episode.mp4',
+      template: 'Podcast',
+      clipCount: 'Auto',
+      targetDuration: '30s',
+      durationMillis: 60000,
+    ).updateActiveClipRange(startMillis: 10000, endMillis: 20000);
+
+    expect(project.clampPlayheadMillis(5000), 10000);
+    expect(project.clampPlayheadMillis(15000), 15000);
+    expect(project.clampPlayheadMillis(25000), 20000);
+  });
+
+  test('skips to active clip boundaries', () {
+    final project = EditorProject.initial(
+      title: 'episode.mp4',
+      template: 'Podcast',
+      clipCount: 'Auto',
+      targetDuration: '30s',
+      durationMillis: 60000,
+    ).updateActiveClipRange(startMillis: 10000, endMillis: 20000);
+
+    expect(project.skipToActiveClipStart(), 10000);
+    expect(project.skipToActiveClipEnd(), 20000);
+  });
 }

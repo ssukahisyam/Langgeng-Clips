@@ -89,6 +89,11 @@ Master task list end-to-end. Centang sambil jalan. Update minimal mingguan.
 
 ## Phase 1 — MVP (4-6 minggu)
 
+Status PR: implementation MVP manual end-to-end sudah dikerjakan untuk flow
+import lokal -> setup project -> resume draft -> preview file lokal -> atur range
+clip -> export -> Library refresh. Sisa Phase 1 di checklist ini adalah hardening
+device/release yang perlu Android SDK, device fisik, dan Play Console.
+
 ### 1.1 API Key & Settings
 - [x] API Key Setup screen UI
 - [x] Validate Groq key endpoint integration
@@ -107,9 +112,9 @@ Master task list end-to-end. Centang sambil jalan. Update minimal mingguan.
 - [x] Native: probe metadata via MediaMetadataRetriever
 - [ ] Probe coverage: durasi, resolusi, codec, rotation, FPS, audio tracks
 - [ ] Probe coverage: VFR detection
-- [ ] Storage: copy/reference source ke app dir
-- [ ] Sqflite schema: project, source, clip
-- [ ] Sqflite repo + DAO
+- [x] Storage: reference source path + active editor session persist
+- [ ] Sqflite schema: project, source, clip (hardening multi-project)
+- [ ] Sqflite repo + DAO (hardening multi-project)
 - [ ] Empty state semua layar
 - [ ] Loading state probe video
 
@@ -120,14 +125,15 @@ Master task list end-to-end. Centang sambil jalan. Update minimal mingguan.
 - [x] Stepper jumlah clip
 - [x] Segmented durasi target
 - [x] Editor scaffold: top bar, preview, transport, timeline, tab bar
-- [ ] ExoPlayer integrate via Pigeon (preview)
+- [x] Local file video preview via `video_player`
+- [ ] ExoPlayer integrate via Pigeon (native preview hardening)
 - [ ] Timeline: waveform render
 - [x] Timeline: scrubber + playhead
 - [x] Timeline: clip range handles (drag start/end)
 - [ ] Timeline: pinch zoom
 - [x] Manual: split clip
 - [x] Manual: multi-clip support
-- [ ] Auto-save state project tiap 30s
+- [x] Auto-save state project tiap perubahan penting
 - [x] Project rename via top bar tap
 
 ### 1.4 Render Pipeline
@@ -173,6 +179,11 @@ Master task list end-to-end. Centang sambil jalan. Update minimal mingguan.
 
 ## Phase 2 — V1.0 (6-8 minggu)
 
+Status PR: implementation caption/transcription end-to-end sudah tersambung untuk
+flow editor -> generate subtitle -> Groq Whisper/cache/resume -> caption editor
+-> auto-save caption -> export caption segments. Sisa Phase 2 adalah validasi
+runtime dengan Groq key nyata, audio extraction native, dan device QA.
+
 ### 2.1 Transcription
 - [x] `TranscriptionProvider` interface
 - [x] `GroqWhisperProvider` impl
@@ -182,7 +193,7 @@ Master task list end-to-end. Centang sambil jalan. Update minimal mingguan.
 - [x] Merge word-level timestamps lintas chunk
 - [x] Cache transcript by source SHA256
 - [x] Retry exponential backoff
-- [x] Resume from last successful chunk
+- [x] Resume from last successful chunk + cached chunk transcript
 - [x] Multi-language detection
 - [x] Bahasa override manual
 - [x] Progress UI saat transcribe
@@ -204,6 +215,11 @@ Master task list end-to-end. Centang sambil jalan. Update minimal mingguan.
 - [x] Live preview real-time
 
 ### 2.3 Semi-Auto Mode
+Status PR: implementation Semi-Auto sudah tersambung dari editor Audio panel ke
+audio extraction, audio level analysis, scene detection, candidate persistence,
+dan apply kandidat ke clip aktif. Validasi native/device dilakukan setelah semua
+phase selesai.
+
 - [x] Audio peak detection (PCM WAV window RMS/peak)
 - [x] Scene change detection
 - [x] Silence detection (untuk podcast)
@@ -212,6 +228,11 @@ Master task list end-to-end. Centang sambil jalan. Update minimal mingguan.
 - [x] Tuning threshold parameter
 
 ### 2.4 Auto Highlight (AI)
+Status PR: implementation Auto AI sudah tersambung dari editor ke transcript
+cache/generation, Groq highlight scoring, sentence-boundary refinement, cache
+hasil scoring, candidate persistence, dan apply kandidat ke clip aktif. Validasi
+runtime Groq/device dilakukan setelah semua phase selesai.
+
 - [x] Groq LLM client (Llama 3.3 / DeepSeek)
 - [x] Prompt engineering iterasi 1
 - [x] Output schema: ranges with score & reason
@@ -225,6 +246,10 @@ Master task list end-to-end. Centang sambil jalan. Update minimal mingguan.
 - [x] Filler word removal (toggle, default off)
 
 ### 2.5 Templates
+Status PR: templates sekarang menerapkan caption style dan watermark default ke
+state editor/export, bukan hanya nama template. Validasi visual runtime dilakukan
+di final device QA.
+
 - [x] Template definition format (JSON)
 - [x] Preset Podcast (talking head, subtitle large, watermark optional)
 - [x] Preset Gaming (pip kamera + game, dynamic caption)
@@ -234,13 +259,16 @@ Master task list end-to-end. Centang sambil jalan. Update minimal mingguan.
 - [x] Preview template visual
 
 ### 2.6 Watermark
+Status PR: watermark config editor sudah persist/restore di active session dan
+dikirim ke native Media3 export melalui Pigeon render request.
+
 - [x] Watermark module: text input
 - [x] Watermark module: image picker
 - [x] Position 9-anchor
 - [x] Position drag custom
 - [x] Opacity slider
 - [x] Scale slider
-- [x] Native overlay implementation
+- [x] Native overlay implementation memakai config editor
 - [x] Preview di editor
 
 ### 2.7 Subject Tracking

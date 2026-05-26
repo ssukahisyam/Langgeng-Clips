@@ -2,10 +2,13 @@ import 'dart:convert';
 
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'transcription_provider.dart';
+
 class TranscriptionResumeCheckpoint {
   const TranscriptionResumeCheckpoint({
     required this.sourceSha256,
     required this.completedChunkIndexes,
+    this.chunkTranscripts = const {},
   });
 
   factory TranscriptionResumeCheckpoint.fromJson(Map<String, dynamic> json) {
@@ -15,22 +18,55 @@ class TranscriptionResumeCheckpoint {
       completedChunkIndexes: indexes is List
           ? indexes.whereType<num>().map((index) => index.toInt()).toSet()
           : const <int>{},
+      chunkTranscripts: _transcriptsFromJson(json['chunkTranscripts']),
     );
   }
 
   final String sourceSha256;
   final Set<int> completedChunkIndexes;
+  final Map<int, Transcript> chunkTranscripts;
 
-  TranscriptionResumeCheckpoint markCompleted(int chunkIndex) {
+  TranscriptionResumeCheckpoint markCompleted(
+    int chunkIndex, {
+    Transcript? transcript,
+  }) {
+    final nextChunkTranscripts = {...chunkTranscripts};
+    if (transcript != null) {
+      nextChunkTranscripts[chunkIndex] = transcript;
+    }
+
     return TranscriptionResumeCheckpoint(
       sourceSha256: sourceSha256,
       completedChunkIndexes: {...completedChunkIndexes, chunkIndex},
+      chunkTranscripts: nextChunkTranscripts,
     );
   }
 
   Map<String, dynamic> toJson() {
     final indexes = completedChunkIndexes.toList()..sort();
-    return {'sourceSha256': sourceSha256, 'completedChunkIndexes': indexes};
+    return {
+      'sourceSha256': sourceSha256,
+      'completedChunkIndexes': indexes,
+      'chunkTranscripts': {
+        for (final entry in chunkTranscripts.entries)
+          entry.key.toString(): entry.value.toJson(),
+      },
+    };
+  }
+
+  static Map<int, Transcript> _transcriptsFromJson(Object? value) {
+    if (value is! Map<String, dynamic>) {
+      return const {};
+    }
+
+    return {
+      for (final entry in value.entries)
+        if (int.tryParse(entry.key) != null &&
+            entry.value is Map<String, dynamic>)
+          int.parse(entry.key): Transcript.fromJson(
+            entry.value as Map<String, dynamic>,
+          ),
+    };
   }
 }
 
@@ -58,7 +94,11 @@ class TranscriptionResumeStore {
     }
   }
 
-  Future<void> markCompleted(String sourceSha256, int chunkIndex) async {
+  Future<void> markCompleted(
+    String sourceSha256,
+    int chunkIndex, {
+    Transcript? transcript,
+  }) async {
     final current =
         read(sourceSha256) ??
         TranscriptionResumeCheckpoint(
@@ -67,7 +107,9 @@ class TranscriptionResumeStore {
         );
     await _preferences.setString(
       _key(sourceSha256),
-      jsonEncode(current.markCompleted(chunkIndex).toJson()),
+      jsonEncode(
+        current.markCompleted(chunkIndex, transcript: transcript).toJson(),
+      ),
     );
   }
 

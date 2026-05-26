@@ -4,6 +4,9 @@ import 'package:go_router/go_router.dart';
 
 import '../../shared/widgets/app_scaffold.dart';
 import '../editor/editor_project.dart';
+import '../editor/editor_project_controller.dart';
+import '../editor/editor_project_store.dart';
+import '../import/selected_video_controller.dart';
 import '../monetization/ad_placeholder.dart';
 import 'export_history.dart';
 
@@ -31,6 +34,7 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
   @override
   Widget build(BuildContext context) {
     final history = ref.watch(exportHistoryItemsProvider);
+    final activeSession = ref.watch(activeEditorSessionSummaryProvider);
 
     return AppScaffold(
       title: 'Library',
@@ -44,6 +48,7 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
       child: history.when(
         data: (items) {
           final filtered = _applyFilter(items);
+          final draft = activeSession.valueOrNull;
           return Column(
             children: [
               const Padding(
@@ -94,15 +99,24 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
                 ),
               ),
               Expanded(
-                child: filtered.isEmpty
+                child: _isLibraryEmpty(filtered, draft)
                     ? _EmptyLibraryState(isSearching: _query.trim().isNotEmpty)
                     : ListView.separated(
                         padding: const EdgeInsets.all(16),
-                        itemCount: filtered.length,
+                        itemCount: _itemCount(filtered, draft),
                         separatorBuilder: (context, index) =>
                             const SizedBox(height: 8),
                         itemBuilder: (context, index) {
-                          return _ExportHistoryTile(item: filtered[index]);
+                          if (_showsDraft(draft) && index == 0) {
+                            return _DraftProjectTile(session: draft!);
+                          }
+
+                          final exportIndex = _showsDraft(draft)
+                              ? index - 1
+                              : index;
+                          return _ExportHistoryTile(
+                            item: filtered[exportIndex],
+                          );
                         },
                       ),
               ),
@@ -136,6 +150,20 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
         .toList(growable: false);
   }
 
+  bool _showsDraft(EditorSession? draft) {
+    return draft != null &&
+        _query.trim().isEmpty &&
+        (_filter == LibraryFilter.all || _filter == LibraryFilter.drafts);
+  }
+
+  bool _isLibraryEmpty(List<ExportHistoryItem> exports, EditorSession? draft) {
+    return exports.isEmpty && !_showsDraft(draft);
+  }
+
+  int _itemCount(List<ExportHistoryItem> exports, EditorSession? draft) {
+    return exports.length + (_showsDraft(draft) ? 1 : 0);
+  }
+
   void _toggleSearch() {
     setState(() {
       _isSearching = !_isSearching;
@@ -144,6 +172,37 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
         _query = '';
       }
     });
+  }
+}
+
+class _DraftProjectTile extends ConsumerWidget {
+  const _DraftProjectTile({required this.session});
+
+  final EditorSession session;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final project = session.project;
+    return Card(
+      child: ListTile(
+        onTap: () {
+          ref.read(selectedVideoProvider.notifier).state = session.video;
+          ref.read(editorProjectProvider.notifier).state = project;
+          context.go('/editor');
+        },
+        leading: const Icon(Icons.edit_note_rounded),
+        title: Text(
+          project.title,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+        ),
+        subtitle: Text(
+          'Draft · ${project.clips.length} clip · '
+          '${formatMillis(project.activeClip.durationMillis)} aktif',
+        ),
+        trailing: const Icon(Icons.chevron_right_rounded),
+      ),
+    );
   }
 }
 

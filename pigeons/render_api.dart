@@ -21,6 +21,7 @@ class RenderRequest {
     required this.cropToPortrait,
     required this.requiresReencode,
     this.captionSegments,
+    this.watermark,
   });
 
   final String sourcePath;
@@ -34,6 +35,27 @@ class RenderRequest {
   final bool cropToPortrait;
   final bool requiresReencode;
   final List<RenderCaptionSegment?>? captionSegments;
+  final RenderWatermarkConfig? watermark;
+}
+
+class RenderWatermarkConfig {
+  RenderWatermarkConfig({
+    this.text,
+    this.imagePath,
+    required this.anchor,
+    this.customX,
+    this.customY,
+    required this.opacity,
+    required this.scale,
+  });
+
+  final String? text;
+  final String? imagePath;
+  final String anchor;
+  final double? customX;
+  final double? customY;
+  final double opacity;
+  final double scale;
 }
 
 class RenderCaptionSegment {

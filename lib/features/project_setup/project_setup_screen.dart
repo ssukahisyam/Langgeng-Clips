@@ -4,9 +4,12 @@ import 'package:go_router/go_router.dart';
 
 import '../editor/editor_project.dart';
 import '../editor/editor_project_controller.dart';
+import '../editor/editor_project_store.dart';
 import '../import/selected_video_controller.dart';
 import 'video_metadata.dart';
 import 'video_metadata_probe.dart';
+
+final quickTemplateProvider = StateProvider<String?>((ref) => null);
 
 class ProjectSetupScreen extends ConsumerStatefulWidget {
   const ProjectSetupScreen({super.key});
@@ -23,6 +26,16 @@ class _ProjectSetupScreenState extends ConsumerState<ProjectSetupScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final quickTemplate = ref.watch(quickTemplateProvider);
+    if (quickTemplate != null && quickTemplate != _template) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          setState(() => _template = quickTemplate);
+          ref.read(quickTemplateProvider.notifier).state = null;
+        }
+      });
+    }
+
     final video = ref.watch(selectedVideoProvider);
     final metadata = video == null || video.path.isEmpty
         ? null
@@ -122,10 +135,8 @@ class _ProjectSetupScreenState extends ConsumerState<ProjectSetupScreen> {
                   ),
                   const SizedBox(height: 32),
                   FilledButton(
-                    onPressed: () {
-                      ref
-                          .read(editorProjectProvider.notifier)
-                          .state = EditorProject.initial(
+                    onPressed: () async {
+                      final project = EditorProject.initial(
                         title: video.name,
                         mode: _mode,
                         template: _template,
@@ -134,10 +145,25 @@ class _ProjectSetupScreenState extends ConsumerState<ProjectSetupScreen> {
                         durationMillis:
                             metadata?.valueOrNull?.durationMillis ?? 60000,
                       );
+                      ref.read(editorProjectProvider.notifier).state = project;
+                      final store = await ref.read(
+                        editorProjectStoreProvider.future,
+                      );
+                      await store.saveActiveSession(
+                        EditorSession(video: video, project: project),
+                      );
+                      ref.invalidate(activeEditorSessionSummaryProvider);
+                      if (!context.mounted) {
+                        return;
+                      }
                       context.go('/editor');
                     },
                     child: Text(
-                      _mode == 'Manual' ? 'Mulai Edit' : 'Generate Clip',
+                      _mode == 'Manual'
+                          ? 'Mulai Edit'
+                          : _mode == 'Semi-Auto'
+                          ? 'Buka Kandidat Semi-Auto'
+                          : 'Buka Auto AI',
                     ),
                   ),
                 ],

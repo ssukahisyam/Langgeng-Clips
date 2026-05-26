@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 
 import 'selected_video.dart';
 import 'selected_video_controller.dart';
+import '../editor/editor_project_store.dart';
 
 Future<void> showImportSheet(BuildContext context) {
   return showModalBottomSheet<void>(
@@ -46,22 +47,13 @@ class ImportSheet extends ConsumerWidget {
                   _ImportSourceRow(
                     icon: Icons.smart_display_outlined,
                     title: 'YouTube URL',
-                    subtitle:
-                        'Tester preview, share intent native masih disiapkan',
-                    onTap: () => _showComingSoon(
-                      context,
-                      'Import YouTube URL akan aktif setelah share-intent siap.',
-                    ),
+                    subtitle: 'Belum aktif: menunggu share-intent dan policy',
                   ),
                   const Divider(height: 1),
                   _ImportSourceRow(
                     icon: Icons.cloud_outlined,
                     title: 'Google Drive',
-                    subtitle: 'Tester preview, OAuth Drive belum diaktifkan',
-                    onTap: () => _showComingSoon(
-                      context,
-                      'Import Google Drive akan aktif setelah OAuth siap.',
-                    ),
+                    subtitle: 'Belum aktif: OAuth Drive belum diaktifkan',
                   ),
                 ],
               ),
@@ -93,8 +85,11 @@ class ImportSheet extends ConsumerWidget {
     }
 
     final file = result.files.single;
-    ref.read(selectedVideoProvider.notifier).state =
-        SelectedVideo.fromPlatformFile(file);
+    final selectedVideo = SelectedVideo.fromPlatformFile(file);
+    ref.read(selectedVideoProvider.notifier).state = selectedVideo;
+    final store = await ref.read(editorProjectStoreProvider.future);
+    await store.clearActiveSession();
+    ref.invalidate(activeEditorSessionSummaryProvider);
 
     navigator.pop();
     if (!context.mounted) {
@@ -105,12 +100,6 @@ class ImportSheet extends ConsumerWidget {
     scaffoldMessenger.showSnackBar(
       SnackBar(content: Text('Dipilih: ${file.name}')),
     );
-  }
-
-  void _showComingSoon(BuildContext context, String message) {
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(SnackBar(content: Text(message)));
   }
 }
 

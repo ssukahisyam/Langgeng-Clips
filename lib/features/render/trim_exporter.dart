@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/pigeon/render_api.g.dart' as pigeon;
 import '../subtitle/caption_document.dart';
+import '../watermark/watermark_config.dart';
 import 'export_options.dart';
 
 final trimExporterProvider = Provider<TrimExporter>(
@@ -67,6 +68,7 @@ class TrimExporter {
     required int endMillis,
     required ExportOptions options,
     List<CaptionItem> captionItems = const [],
+    WatermarkConfig? watermarkConfig,
   }) async {
     if (sourcePath.trim().isEmpty) {
       throw const TrimExportException(
@@ -99,6 +101,7 @@ class TrimExporter {
             startMillis: startMillis,
             endMillis: endMillis,
           ),
+          watermark: _watermarkForExport(watermarkConfig),
         ),
       );
       return TrimExportResult.fromPigeon(result);
@@ -134,6 +137,22 @@ class TrimExporter {
         )
         .where((caption) => caption.endMillis > caption.startMillis)
         .toList();
+  }
+
+  pigeon.RenderWatermarkConfig? _watermarkForExport(WatermarkConfig? config) {
+    if (config == null || !config.hasContent) {
+      return null;
+    }
+
+    return pigeon.RenderWatermarkConfig(
+      text: config.text,
+      imagePath: config.imagePath,
+      anchor: config.anchor.name,
+      customX: config.customX,
+      customY: config.customY,
+      opacity: config.opacity,
+      scale: config.scale,
+    );
   }
 }
 

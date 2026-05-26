@@ -21,6 +21,24 @@ class EditorClip {
       endMillis: endMillis ?? this.endMillis,
     );
   }
+
+  factory EditorClip.fromJson(Map<String, dynamic> json) {
+    return EditorClip(
+      id: json['id'] as String,
+      name: json['name'] as String,
+      startMillis: json['startMillis'] as int,
+      endMillis: json['endMillis'] as int,
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'name': name,
+      'startMillis': startMillis,
+      'endMillis': endMillis,
+    };
+  }
 }
 
 class EditorProject {
@@ -60,6 +78,33 @@ class EditorProject {
         ),
       ],
       activeClipId: 'clip-1',
+    );
+  }
+
+  factory EditorProject.fromJson(Map<String, dynamic> json) {
+    final clips = (json['clips'] as List<dynamic>)
+        .cast<Map<String, dynamic>>()
+        .map(EditorClip.fromJson)
+        .toList(growable: false);
+
+    return EditorProject(
+      title: json['title'] as String,
+      mode: json['mode'] as String,
+      template: json['template'] as String,
+      clipCount: json['clipCount'] as String,
+      targetDuration: json['targetDuration'] as String,
+      durationMillis: json['durationMillis'] as int,
+      clips: clips.isEmpty
+          ? EditorProject.initial(
+              title: json['title'] as String,
+              mode: json['mode'] as String,
+              template: json['template'] as String,
+              clipCount: json['clipCount'] as String,
+              targetDuration: json['targetDuration'] as String,
+              durationMillis: json['durationMillis'] as int,
+            ).clips
+          : clips,
+      activeClipId: json['activeClipId'] as String,
     );
   }
 
@@ -140,8 +185,29 @@ class EditorProject {
     return copyWith(activeClipId: id);
   }
 
+  int clampPlayheadMillis(int millis) {
+    return millis.clamp(activeClip.startMillis, activeClip.endMillis);
+  }
+
+  int skipToActiveClipStart() => activeClip.startMillis;
+
+  int skipToActiveClipEnd() => activeClip.endMillis;
+
   EditorProject applyTemplate(String templateName) {
     return copyWith(template: templateName);
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'title': title,
+      'mode': mode,
+      'template': template,
+      'clipCount': clipCount,
+      'targetDuration': targetDuration,
+      'durationMillis': durationMillis,
+      'clips': clips.map((clip) => clip.toJson()).toList(),
+      'activeClipId': activeClipId,
+    };
   }
 }
 

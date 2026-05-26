@@ -1,15 +1,23 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../editor/editor_project.dart';
+import '../editor/editor_project_controller.dart';
+import '../editor/editor_project_store.dart';
 import '../import/import_sheet.dart';
+import '../import/selected_video_controller.dart';
 import '../monetization/ad_placeholder.dart';
+import '../project_setup/project_setup_screen.dart';
 import '../../shared/widgets/app_scaffold.dart';
 
-class HomeScreen extends StatelessWidget {
+class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final activeSession = ref.watch(activeEditorSessionSummaryProvider);
+
     return AppScaffold(
       title: 'Halo, Creator',
       currentIndex: 0,
@@ -43,6 +51,16 @@ class HomeScreen extends StatelessWidget {
           const SizedBox(height: 12),
           const AdPlaceholder(label: 'Banner ad placeholder · Home'),
           const SizedBox(height: 12),
+          activeSession.when(
+            data: (session) => session == null
+                ? const SizedBox.shrink()
+                : Padding(
+                    padding: const EdgeInsets.only(bottom: 12),
+                    child: _ActiveDraftCard(session: session),
+                  ),
+            error: (_, _) => const SizedBox.shrink(),
+            loading: () => const SizedBox.shrink(),
+          ),
           Card(
             child: Padding(
               padding: const EdgeInsets.all(20),
@@ -96,18 +114,49 @@ class HomeScreen extends StatelessWidget {
   }
 }
 
-class _TemplateChip extends StatelessWidget {
+class _ActiveDraftCard extends ConsumerWidget {
+  const _ActiveDraftCard({required this.session});
+
+  final EditorSession session;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final project = session.project;
+    return Card(
+      child: ListTile(
+        leading: const Icon(Icons.edit_note_rounded),
+        title: Text(
+          project.title,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+        ),
+        subtitle: Text(
+          '${project.clips.length} clip · ${formatMillis(project.activeClip.durationMillis)} aktif',
+        ),
+        trailing: const Icon(Icons.chevron_right_rounded),
+        onTap: () {
+          ref.read(selectedVideoProvider.notifier).state = session.video;
+          ref.read(editorProjectProvider.notifier).state = project;
+          context.go('/editor');
+        },
+      ),
+    );
+  }
+}
+
+class _TemplateChip extends ConsumerWidget {
   const _TemplateChip({required this.label});
 
   final String label;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return ActionChip(
       label: Text(label),
-      onPressed: () => ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Template $label dipilih sebagai default.')),
-      ),
+      onPressed: () {
+        ref.read(quickTemplateProvider.notifier).state = label;
+        showImportSheet(context);
+      },
     );
   }
 }

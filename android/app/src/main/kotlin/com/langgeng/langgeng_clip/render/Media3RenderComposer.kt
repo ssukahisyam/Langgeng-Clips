@@ -2,6 +2,7 @@ package com.langgeng.langgeng_clip.render
 
 import android.content.Context
 import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Paint
@@ -117,17 +118,7 @@ class Media3RenderComposer(private val context: Context) {
             OverlayEffect(
                 ImmutableList.copyOf(
                     buildList {
-                        add(
-                            BitmapOverlay.createStaticBitmapOverlay(
-                                createWatermarkBitmap("Made with Langgeng Clip"),
-                                OverlaySettings.Builder()
-                                    .setBackgroundFrameAnchor(0f, -0.82f)
-                                    .setOverlayFrameAnchor(0f, -1f)
-                                    .setScale(0.82f, 0.16f)
-                                    .setAlphaScale(0.92f)
-                                    .build(),
-                            ),
-                        )
+                        watermark?.let { add(createWatermarkOverlay(it)) }
                         if (captionSegments.isNotEmpty()) {
                             add(createCaptionOverlay(captionSegments))
                         }
@@ -157,6 +148,37 @@ class Media3RenderComposer(private val context: Context) {
                     .setAlphaScale(1f)
                     .build()
             }
+        }
+    }
+
+    private fun createWatermarkOverlay(config: Media3WatermarkConfig): BitmapOverlay {
+        val imageBitmap = config.imagePath
+            ?.takeIf { it.isNotBlank() }
+            ?.let { BitmapFactory.decodeFile(it) }
+        val bitmap = imageBitmap ?: createWatermarkBitmap(config.text?.takeIf { it.isNotBlank() } ?: "Langgeng Clip")
+        val anchors = overlayAnchors(config.anchor)
+        return BitmapOverlay.createStaticBitmapOverlay(
+            bitmap,
+            OverlaySettings.Builder()
+                .setBackgroundFrameAnchor(anchors.first, anchors.second)
+                .setOverlayFrameAnchor(anchors.first, anchors.second)
+                .setScale(0.82f * config.scale, 0.16f * config.scale)
+                .setAlphaScale(config.opacity)
+                .build(),
+        )
+    }
+
+    private fun overlayAnchors(anchor: String): Pair<Float, Float> {
+        return when (anchor) {
+            "topLeft" -> -1f to 1f
+            "topCenter" -> 0f to 1f
+            "topRight" -> 1f to 1f
+            "centerLeft" -> -1f to 0f
+            "center" -> 0f to 0f
+            "centerRight" -> 1f to 0f
+            "bottomLeft" -> -1f to -1f
+            "bottomCenter" -> 0f to -1f
+            else -> 1f to -1f
         }
     }
 
@@ -230,6 +252,7 @@ data class Media3RenderRequest(
     val targetWidth: Int,
     val targetHeight: Int,
     val cropToPortrait: Boolean,
+    val watermark: Media3WatermarkConfig?,
     val captionSegments: List<Media3CaptionSegment>,
 ) {
     val requiresReencode: Boolean
@@ -240,6 +263,16 @@ data class Media3CaptionSegment(
     val text: String,
     val startMillis: Int,
     val endMillis: Int,
+)
+
+data class Media3WatermarkConfig(
+    val text: String?,
+    val imagePath: String?,
+    val anchor: String,
+    val customX: Float?,
+    val customY: Float?,
+    val opacity: Float,
+    val scale: Float,
 )
 
 class Media3RenderCancelledException : Exception("Export dibatalkan.")
