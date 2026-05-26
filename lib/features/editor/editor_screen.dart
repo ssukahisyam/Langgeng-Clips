@@ -17,6 +17,7 @@ import '../subtitle/caption_document.dart';
 import '../templates/template_presets.dart';
 import '../transcription/transcription_progress.dart';
 import '../transcription/transcription_progress_card.dart';
+import '../transcription/caption_generation_controller.dart';
 import '../watermark/watermark_config.dart';
 import '../watermark/watermark_preview.dart';
 import 'editor_project.dart';
@@ -1071,11 +1072,24 @@ class _ClipsToolPanel extends StatelessWidget {
   }
 }
 
-class _CaptionToolPanel extends StatelessWidget {
+class _CaptionToolPanel extends ConsumerWidget {
   const _CaptionToolPanel();
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final video = ref.watch(selectedVideoProvider);
+    final project = ref.watch(editorProjectProvider);
+    final generationState = ref.watch(captionGenerationControllerProvider);
+    final progress =
+        generationState.valueOrNull ??
+        const TranscriptionProgressState(
+          completedChunks: 0,
+          totalChunks: 0,
+          currentLabel: 'Transcription belum dijalankan',
+        );
+    final error = generationState.error;
+    final isGenerating = generationState.isLoading;
+
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(16),
@@ -1089,14 +1103,30 @@ class _CaptionToolPanel extends StatelessWidget {
               ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
             ),
             const SizedBox(height: 12),
-            const TranscriptionProgressCard(
-              state: TranscriptionProgressState(
-                completedChunks: 0,
-                totalChunks: 0,
-                currentLabel: 'Transcription belum dijalankan',
+            TranscriptionProgressCard(state: progress),
+            if (error != null) ...[
+              const SizedBox(height: 8),
+              Text(
+                error.toString(),
+                style: TextStyle(color: Theme.of(context).colorScheme.error),
               ),
-            ),
+            ],
             const SizedBox(height: 12),
+            FilledButton.icon(
+              onPressed: isGenerating || video == null || project == null
+                  ? null
+                  : () => ref
+                        .read(captionGenerationControllerProvider.notifier)
+                        .generate(video: video, project: project),
+              icon: isGenerating
+                  ? const SizedBox.square(
+                      dimension: 18,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : const Icon(Icons.auto_awesome_rounded),
+              label: Text(isGenerating ? 'Generating...' : 'Generate subtitle'),
+            ),
+            const SizedBox(height: 8),
             FilledButton.icon(
               onPressed: () => context.go('/editor/captions'),
               icon: const Icon(Icons.closed_caption_rounded),
@@ -1104,7 +1134,7 @@ class _CaptionToolPanel extends StatelessWidget {
             ),
             const SizedBox(height: 8),
             const Text(
-              'Transcribe pipeline sudah disiapkan; audio extraction native masih menunggu backend final.',
+              'Subtitle akan memakai cache transcript jika video pernah diproses.',
             ),
           ],
         ),

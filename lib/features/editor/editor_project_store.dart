@@ -5,6 +5,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../core/preferences/preferences_providers.dart';
 import '../import/selected_video.dart';
+import '../subtitle/caption_document.dart';
 import 'editor_project.dart';
 
 final editorProjectStoreProvider = FutureProvider<EditorProjectStore>((
@@ -51,19 +52,33 @@ class EditorProjectStore {
 }
 
 class EditorSession {
-  const EditorSession({required this.video, required this.project});
+  const EditorSession({
+    required this.video,
+    required this.project,
+    this.captionDocument,
+  });
 
   factory EditorSession.fromJson(Map<String, dynamic> json) {
     return EditorSession(
       video: SelectedVideo.fromJson(json['video'] as Map<String, dynamic>),
       project: EditorProject.fromJson(json['project'] as Map<String, dynamic>),
+      captionDocument: json['captionDocument'] is Map<String, dynamic>
+          ? CaptionDocument.fromJson(
+              json['captionDocument'] as Map<String, dynamic>,
+            )
+          : null,
     );
   }
 
   final SelectedVideo video;
   final EditorProject project;
+  final CaptionDocument? captionDocument;
 
   Map<String, dynamic> toJson() {
-    return {'video': video.toJson(), 'project': project.toJson()};
+    return {
+      'video': video.toJson(),
+      'project': project.toJson(),
+      if (captionDocument != null) 'captionDocument': captionDocument!.toJson(),
+    };
   }
 }

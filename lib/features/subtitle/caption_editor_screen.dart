@@ -1,7 +1,10 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../editor/editor_project.dart';
+import '../editor/editor_project_controller.dart';
 import 'caption_document.dart';
 import 'caption_preview.dart';
 
@@ -18,9 +21,11 @@ class CaptionEditorScreen extends ConsumerWidget {
         children: [
           _CaptionStyleCard(
             style: document.style,
-            onChanged: (style) =>
-                ref.read(captionDocumentProvider.notifier).state = document
-                    .updateStyle(style),
+            onChanged: (style) {
+              ref.read(captionDocumentProvider.notifier).state = document
+                  .updateStyle(style);
+              unawaited(saveActiveEditorSession(ref));
+            },
           ),
           const SizedBox(height: 16),
           CaptionPreview(document: document),
@@ -31,6 +36,7 @@ class CaptionEditorScreen extends ConsumerWidget {
               onChanged: (text) {
                 ref.read(captionDocumentProvider.notifier).state = document
                     .updateText(id: item.id, text: text);
+                unawaited(saveActiveEditorSession(ref));
               },
               onTimingChanged: (values) {
                 ref.read(captionDocumentProvider.notifier).state = document
@@ -39,6 +45,7 @@ class CaptionEditorScreen extends ConsumerWidget {
                       startMillis: values.start.round(),
                       endMillis: values.end.round(),
                     );
+                unawaited(saveActiveEditorSession(ref));
               },
             ),
             const SizedBox(height: 12),

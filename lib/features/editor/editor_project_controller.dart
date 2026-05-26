@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../import/selected_video_controller.dart';
+import '../subtitle/caption_document.dart';
 import 'editor_project.dart';
 import 'editor_project_store.dart';
 
@@ -15,6 +16,10 @@ final activeEditorSessionLoaderProvider = FutureProvider<void>((ref) async {
 
   ref.read(selectedVideoProvider.notifier).state = session.video;
   ref.read(editorProjectProvider.notifier).state = session.project;
+  final captionDocument = session.captionDocument;
+  if (captionDocument != null) {
+    ref.read(captionDocumentProvider.notifier).state = captionDocument;
+  }
 });
 
 Future<void> saveActiveEditorSession(WidgetRef ref) async {
@@ -25,6 +30,12 @@ Future<void> saveActiveEditorSession(WidgetRef ref) async {
   }
 
   final store = await ref.read(editorProjectStoreProvider.future);
-  await store.saveActiveSession(EditorSession(video: video, project: project));
+  await store.saveActiveSession(
+    EditorSession(
+      video: video,
+      project: project,
+      captionDocument: ref.read(captionDocumentProvider),
+    ),
+  );
   ref.invalidate(activeEditorSessionSummaryProvider);
 }
