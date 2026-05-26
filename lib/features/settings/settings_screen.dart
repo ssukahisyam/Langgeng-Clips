@@ -4,6 +4,9 @@ import 'package:go_router/go_router.dart';
 
 import '../../core/preferences/preferences_providers.dart';
 import '../../shared/widgets/app_scaffold.dart';
+import '../editor/editor_project_controller.dart';
+import '../editor/editor_project_store.dart';
+import '../library/export_history.dart';
 import '../onboarding/groq_api_key_controller.dart';
 
 class SettingsScreen extends ConsumerWidget {
@@ -120,6 +123,18 @@ class SettingsScreen extends ConsumerWidget {
               const _SettingsRow(title: 'Versi', subtitle: '0.1.0 tester'),
             ],
           ),
+          const SizedBox(height: 16),
+          _SettingsGroup(
+            title: 'Data lokal',
+            children: [
+              _SettingsRow(
+                title: 'Delete local data',
+                subtitle:
+                    'Hapus draft, export history, cache transcript, feedback, dan settings lokal',
+                onTap: () => _deleteLocalData(context, ref),
+              ),
+            ],
+          ),
         ],
       ),
     );
@@ -169,6 +184,47 @@ class SettingsScreen extends ConsumerWidget {
     ScaffoldMessenger.of(
       context,
     ).showSnackBar(SnackBar(content: Text(message)));
+  }
+
+  Future<void> _deleteLocalData(BuildContext context, WidgetRef ref) async {
+    final shouldDelete = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Delete local data?'),
+        content: const Text(
+          'Semua draft, export history, transcript cache, feedback lokal, API key, tema, dan bahasa akan dihapus dari device ini.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: const Text('Delete'),
+          ),
+        ],
+      ),
+    );
+    if (shouldDelete != true) {
+      return;
+    }
+
+    final preferences = await ref.read(sharedPreferencesProvider.future);
+    await preferences.clear();
+    ref
+      ..invalidate(activeEditorSessionSummaryProvider)
+      ..invalidate(activeEditorSessionLoaderProvider)
+      ..invalidate(exportHistoryItemsProvider)
+      ..invalidate(groqApiKeyControllerProvider)
+      ..invalidate(themeModeControllerProvider)
+      ..invalidate(localeControllerProvider);
+
+    if (context.mounted) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Local data deleted.')));
+    }
   }
 }
 

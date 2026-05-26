@@ -1,7 +1,9 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:video_player/video_player.dart';
 
-import '../editor/editor_project.dart';
 import 'export_history.dart';
 
 class ExportViewerScreen extends ConsumerWidget {
@@ -28,74 +30,7 @@ class ExportViewerScreen extends ConsumerWidget {
                   style: TextStyle(color: Colors.white),
                 ),
               )
-            : SafeArea(
-                child: Center(
-                  child: AspectRatio(
-                    aspectRatio: 9 / 16,
-                    child: Container(
-                      margin: const EdgeInsets.all(20),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFF141414),
-                        borderRadius: BorderRadius.circular(24),
-                        border: Border.all(color: const Color(0xFF262626)),
-                      ),
-                      child: Padding(
-                        padding: const EdgeInsets.all(24),
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            const Icon(
-                              Icons.play_circle_outline_rounded,
-                              color: Colors.white,
-                              size: 80,
-                            ),
-                            const SizedBox(height: 20),
-                            Text(
-                              item.title,
-                              textAlign: TextAlign.center,
-                              style: Theme.of(context).textTheme.titleLarge
-                                  ?.copyWith(
-                                    color: Colors.white,
-                                    fontWeight: FontWeight.w700,
-                                  ),
-                            ),
-                            const SizedBox(height: 8),
-                            Text(
-                              formatMillis(item.durationMillis),
-                              style: const TextStyle(color: Colors.white70),
-                            ),
-                            if (item.resolution != null ||
-                                item.codec != null) ...[
-                              const SizedBox(height: 8),
-                              Text(
-                                [
-                                  item.resolution,
-                                  item.targetWidth == null ||
-                                          item.targetHeight == null
-                                      ? null
-                                      : '${item.targetWidth}x${item.targetHeight}',
-                                  item.frameRate == null
-                                      ? null
-                                      : '${item.frameRate}fps',
-                                  item.codec,
-                                ].whereType<String>().join(' · '),
-                                style: const TextStyle(color: Colors.white54),
-                                textAlign: TextAlign.center,
-                              ),
-                            ],
-                            const SizedBox(height: 16),
-                            const Text(
-                              'Video playback akan ditambahkan setelah native preview player.',
-                              textAlign: TextAlign.center,
-                              style: TextStyle(color: Colors.white54),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-              ),
+            : ExportVideoViewer(item: item),
         error: (_, _) => const Center(
           child: Text(
             'Gagal memuat export.',
@@ -103,6 +38,118 @@ class ExportViewerScreen extends ConsumerWidget {
           ),
         ),
         loading: () => const Center(child: CircularProgressIndicator()),
+      ),
+    );
+  }
+}
+
+class ExportVideoViewer extends StatefulWidget {
+  const ExportVideoViewer({required this.item, super.key});
+
+  final ExportHistoryItem item;
+
+  @override
+  State<ExportVideoViewer> createState() => _ExportVideoViewerState();
+}
+
+class _ExportVideoViewerState extends State<ExportVideoViewer> {
+  VideoPlayerController? _controller;
+  bool _isInitializing = true;
+  String? _error;
+
+  @override
+  void initState() {
+    super.initState();
+    _initialize();
+  }
+
+  @override
+  void dispose() {
+    _controller?.dispose();
+    super.dispose();
+  }
+
+  Future<void> _initialize() async {
+    final file = File(widget.item.cachePath);
+    if (!file.existsSync()) {
+      setState(() {
+        _isInitializing = false;
+        _error = 'File export tidak ditemukan di cache.';
+      });
+      return;
+    }
+
+    final controller = VideoPlayerController.file(file);
+    _controller = controller;
+    try {
+      await controller.initialize();
+      if (!mounted) {
+        return;
+      }
+      setState(() => _isInitializing = false);
+    } catch (_) {
+      if (!mounted) {
+        return;
+      }
+      setState(() {
+        _isInitializing = false;
+        _error = 'Video export gagal dimuat.';
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (_isInitializing) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
+    final error = _error;
+    final controller = _controller;
+    if (error != null ||
+        controller == null ||
+        !controller.value.isInitialized) {
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Text(
+            error ?? 'Video export belum siap.',
+            style: const TextStyle(color: Colors.white),
+            textAlign: TextAlign.center,
+          ),
+        ),
+      );
+    }
+
+    return SafeArea(
+      child: Center(
+        child: AspectRatio(
+          aspectRatio: controller.value.aspectRatio,
+          child: Stack(
+            alignment: Alignment.center,
+            children: [
+              VideoPlayer(controller),
+              Positioned(
+                bottom: 24,
+                child: FilledButton.icon(
+                  onPressed: () {
+                    setState(() {
+                      controller.value.isPlaying
+                          ? controller.pause()
+                          : controller.play();
+                    });
+                  },
+                  icon: Icon(
+                    controller.value.isPlaying
+                        ? Icons.pause_rounded
+                        : Icons.play_arrow_rounded,
+                  ),
+                  label: Text(controller.value.isPlaying ? 'Pause' : 'Play'),
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }

@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'dart:convert';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -57,7 +58,16 @@ class ExportHistoryRepository {
   }
 
   Future<void> delete(String id) async {
-    final items = readAll().where((item) => item.id != id).toList();
+    final currentItems = readAll();
+    final removed = currentItems.where((item) => item.id == id).firstOrNull;
+    final items = currentItems.where((item) => item.id != id).toList();
+    if (removed != null &&
+        items.every((item) => item.cachePath != removed.cachePath)) {
+      final file = File(removed.cachePath);
+      if (file.existsSync()) {
+        await file.delete();
+      }
+    }
     await _writeAll(items);
   }
 
@@ -75,13 +85,30 @@ class ExportHistoryRepository {
       return;
     }
 
+    final duplicatedCachePath = await _duplicateCacheFile(source.cachePath);
     await add(
       source.copyWith(
         id: DateTime.now().microsecondsSinceEpoch.toString(),
         title: '${source.title} (copy)',
+        cachePath: duplicatedCachePath,
         createdAtMillis: DateTime.now().millisecondsSinceEpoch,
       ),
     );
+  }
+
+  Future<String> _duplicateCacheFile(String cachePath) async {
+    final file = File(cachePath);
+    if (!file.existsSync()) {
+      return cachePath;
+    }
+
+    final dotIndex = cachePath.lastIndexOf('.');
+    final timestamp = DateTime.now().microsecondsSinceEpoch;
+    final copyPath = dotIndex <= 0
+        ? '$cachePath.copy-$timestamp'
+        : '${cachePath.substring(0, dotIndex)}.copy-$timestamp${cachePath.substring(dotIndex)}';
+    await file.copy(copyPath);
+    return copyPath;
   }
 
   Future<void> _writeAll(List<ExportHistoryItem> items) async {
