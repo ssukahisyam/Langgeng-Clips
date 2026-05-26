@@ -1,8 +1,10 @@
 import 'dart:async';
+import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:video_player/video_player.dart';
 
 import '../import/selected_video_controller.dart';
 import '../library/export_history.dart';
@@ -104,14 +106,30 @@ class _EditorScreenState extends ConsumerState<EditorScreen> {
                 children: [
                   _PreviewPanel(
                     fileName: video.name,
+                    filePath: video.path,
                     fileAvailable: video.existsOnDevice,
                     isPlaying: _isPlaying,
+                    playheadMillis: project.clampPlayheadMillis(
+                      _playheadMillis,
+                    ),
                     playheadLabel: formatMillis(
                       project.clampPlayheadMillis(_playheadMillis),
                     ),
                     activeClipLabel:
                         '${formatMillis(project.activeClip.startMillis)} - '
                         '${formatMillis(project.activeClip.endMillis)}',
+                    clipStartMillis: project.activeClip.startMillis,
+                    clipEndMillis: project.activeClip.endMillis,
+                    onPlayheadChanged: (value) {
+                      if (mounted) {
+                        setState(() => _playheadMillis = value);
+                      }
+                    },
+                    onPlaybackEnded: () {
+                      if (mounted) {
+                        setState(() => _isPlaying = false);
+                      }
+                    },
                   ),
                   const SizedBox(height: 12),
                   const PostImportTutorialCard(),
@@ -496,20 +514,169 @@ class _EditorScreenState extends ConsumerState<EditorScreen> {
   }
 }
 
-class _PreviewPanel extends StatelessWidget {
+class _PreviewPanel extends StatefulWidget {
   const _PreviewPanel({
     required this.fileName,
+    required this.filePath,
     required this.fileAvailable,
     required this.isPlaying,
+    required this.playheadMillis,
     required this.playheadLabel,
     required this.activeClipLabel,
+    required this.clipStartMillis,
+    required this.clipEndMillis,
+    required this.onPlayheadChanged,
+    required this.onPlaybackEnded,
   });
 
   final String fileName;
+  final String filePath;
   final bool fileAvailable;
   final bool isPlaying;
+  final int playheadMillis;
   final String playheadLabel;
   final String activeClipLabel;
+  final int clipStartMillis;
+  final int clipEndMillis;
+  final ValueChanged<int> onPlayheadChanged;
+  final VoidCallback onPlaybackEnded;
+
+  @override
+  State<_PreviewPanel> createState() => _PreviewPanelState();
+}
+
+class _PreviewPanelState extends State<_PreviewPanel> {
+  VideoPlayerController? _controller;
+  bool _isInitializing = false;
+  String? _errorMessage;
+
+  @override
+  void initState() {
+    super.initState();
+    _initializeControllerIfNeeded();
+  }
+
+  @override
+  void didUpdateWidget(_PreviewPanel oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.filePath != widget.filePath ||
+        oldWidget.fileAvailable != widget.fileAvailable) {
+      _disposeController();
+      _initializeControllerIfNeeded();
+      return;
+    }
+
+    _syncPlaybackState();
+    _syncPlayhead(oldWidget.playheadMillis);
+  }
+
+  @override
+  void dispose() {
+    _disposeController();
+    super.dispose();
+  }
+
+  Future<void> _initializeControllerIfNeeded() async {
+    if (!widget.fileAvailable || widget.filePath.isEmpty) {
+      return;
+    }
+
+    setState(() {
+      _isInitializing = true;
+      _errorMessage = null;
+    });
+
+    final controller = VideoPlayerController.file(File(widget.filePath));
+    _controller = controller;
+    controller.addListener(_handleControllerTick);
+
+    try {
+      await controller.initialize();
+      await controller.setLooping(false);
+      await controller.seekTo(Duration(milliseconds: widget.playheadMillis));
+      if (!mounted || _controller != controller) {
+        return;
+      }
+
+      setState(() => _isInitializing = false);
+      _syncPlaybackState();
+    } catch (_) {
+      if (!mounted || _controller != controller) {
+        return;
+      }
+
+      setState(() {
+        _isInitializing = false;
+        _errorMessage = 'Preview video gagal dimuat.';
+      });
+    }
+  }
+
+  void _handleControllerTick() {
+    final controller = _controller;
+    if (controller == null || !controller.value.isInitialized) {
+      return;
+    }
+
+    final positionMillis = controller.value.position.inMilliseconds;
+    if (positionMillis >= widget.clipEndMillis && controller.value.isPlaying) {
+      controller.pause();
+      controller.seekTo(Duration(milliseconds: widget.clipEndMillis));
+      widget.onPlaybackEnded();
+      widget.onPlayheadChanged(widget.clipEndMillis);
+      return;
+    }
+
+    if ((positionMillis - widget.playheadMillis).abs() >= 250) {
+      widget.onPlayheadChanged(
+        positionMillis.clamp(widget.clipStartMillis, widget.clipEndMillis),
+      );
+    }
+  }
+
+  void _syncPlaybackState() {
+    final controller = _controller;
+    if (controller == null || !controller.value.isInitialized) {
+      return;
+    }
+
+    if (widget.isPlaying && !controller.value.isPlaying) {
+      if (controller.value.position.inMilliseconds >= widget.clipEndMillis) {
+        controller.seekTo(Duration(milliseconds: widget.clipStartMillis));
+      }
+      unawaited(controller.play());
+      return;
+    }
+
+    if (!widget.isPlaying && controller.value.isPlaying) {
+      unawaited(controller.pause());
+    }
+  }
+
+  void _syncPlayhead(int oldPlayheadMillis) {
+    final controller = _controller;
+    if (controller == null || !controller.value.isInitialized) {
+      return;
+    }
+
+    if (widget.playheadMillis == oldPlayheadMillis) {
+      return;
+    }
+
+    final controllerMillis = controller.value.position.inMilliseconds;
+    if ((controllerMillis - widget.playheadMillis).abs() >= 250) {
+      unawaited(
+        controller.seekTo(Duration(milliseconds: widget.playheadMillis)),
+      );
+    }
+  }
+
+  void _disposeController() {
+    final controller = _controller;
+    _controller = null;
+    controller?.removeListener(_handleControllerTick);
+    unawaited(controller?.dispose() ?? Future<void>.value());
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -521,35 +688,141 @@ class _PreviewPanel extends StatelessWidget {
             color: Theme.of(context).colorScheme.surfaceContainerHighest,
             borderRadius: BorderRadius.circular(20),
           ),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
+          clipBehavior: Clip.antiAlias,
+          child: Stack(
+            fit: StackFit.expand,
             children: [
-              Icon(
-                isPlaying
-                    ? Icons.pause_circle_outline_rounded
-                    : Icons.play_circle_outline_rounded,
-                size: 64,
-              ),
-              const SizedBox(height: 12),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 24),
-                child: Text(
-                  fileName,
-                  textAlign: TextAlign.center,
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
+              _buildVideoSurface(context),
+              Positioned(
+                left: 12,
+                right: 12,
+                bottom: 12,
+                child: _PreviewStatusOverlay(
+                  fileName: widget.fileName,
+                  fileAvailable: widget.fileAvailable,
+                  isPlaying: widget.isPlaying,
+                  playheadLabel: widget.playheadLabel,
+                  activeClipLabel: widget.activeClipLabel,
+                  errorMessage: _errorMessage,
                 ),
               ),
-              const SizedBox(height: 6),
-              Text(
-                fileAvailable
-                    ? 'Manual preview · $playheadLabel'
-                    : 'Source file tidak tersedia',
-              ),
-              const SizedBox(height: 4),
-              Text('Clip aktif: $activeClipLabel'),
             ],
           ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildVideoSurface(BuildContext context) {
+    final controller = _controller;
+    if (!widget.fileAvailable) {
+      return const _PreviewPlaceholder(
+        icon: Icons.video_file_outlined,
+        label: 'Source file tidak tersedia',
+      );
+    }
+
+    if (_isInitializing) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
+    if (_errorMessage != null || controller == null) {
+      return const _PreviewPlaceholder(
+        icon: Icons.error_outline_rounded,
+        label: 'Preview video gagal dimuat',
+      );
+    }
+
+    if (!controller.value.isInitialized) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
+    return FittedBox(
+      fit: BoxFit.cover,
+      child: SizedBox(
+        width: controller.value.size.width,
+        height: controller.value.size.height,
+        child: VideoPlayer(controller),
+      ),
+    );
+  }
+}
+
+class _PreviewPlaceholder extends StatelessWidget {
+  const _PreviewPlaceholder({required this.icon, required this.label});
+
+  final IconData icon;
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        Icon(icon, size: 64),
+        const SizedBox(height: 12),
+        Text(label, textAlign: TextAlign.center),
+      ],
+    );
+  }
+}
+
+class _PreviewStatusOverlay extends StatelessWidget {
+  const _PreviewStatusOverlay({
+    required this.fileName,
+    required this.fileAvailable,
+    required this.isPlaying,
+    required this.playheadLabel,
+    required this.activeClipLabel,
+    this.errorMessage,
+  });
+
+  final String fileName;
+  final bool fileAvailable;
+  final bool isPlaying;
+  final String playheadLabel;
+  final String activeClipLabel;
+  final String? errorMessage;
+
+  @override
+  Widget build(BuildContext context) {
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: Colors.black.withValues(alpha: 0.62),
+        borderRadius: BorderRadius.circular(14),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(12),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(
+                  isPlaying ? Icons.pause_rounded : Icons.play_arrow_rounded,
+                  color: Colors.white,
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    fileName,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(color: Colors.white),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 4),
+            Text(
+              errorMessage ??
+                  (fileAvailable
+                      ? 'Preview $playheadLabel · Clip $activeClipLabel'
+                      : 'Source file tidak tersedia'),
+              style: const TextStyle(color: Colors.white70),
+            ),
+          ],
         ),
       ),
     );
