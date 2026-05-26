@@ -2,7 +2,8 @@
 
 Aplikasi Android untuk mengubah video panjang menjadi short-form clip (9:16) secara otomatis dengan bantuan AI. Dibangun dengan Flutter untuk UI dan Media3 native untuk pipeline rendering.
 
-> Status: **Pre-development**. Sedang di fase planning & desain. Belum ada kode produksi.
+> Status: **MVP development**. Kode Flutter dan native Android sudah tersedia,
+> tetapi beberapa flow masih berupa skeleton atau belum tersambung end-to-end.
 
 ## Tujuan
 
@@ -10,15 +11,16 @@ Aplikasi Android untuk mengubah video panjang menjadi short-form clip (9:16) sec
 - Hemat waktu editing: auto-subtitle, auto-highlight, auto-crop 9:16.
 - Jalan di Android, output langsung siap upload ke TikTok, Reels, dan YouTube Shorts.
 
-## Highlight Fitur (Rencana)
+## Highlight Fitur
 
-- 3 mode clipping: **Manual**, **Semi-Auto** (silence/scene detection), **Auto (AI highlight)**.
-- Sumber video: file lokal, Google Drive, share intent (URL handling sesuai policy).
-- Transkrip & highlight via **Groq** (`whisper-large-v3-turbo` + LLM scoring) dengan **BYOK** (Bring Your Own Key).
-- Auto-subtitle multi-bahasa, word-level timestamp, gaya karaoke/typewriter.
-- Template siap pakai: Podcast, Gaming, Talking Head, Tutorial.
-- Watermark text/image dengan kontrol posisi & opacity.
-- Tema dark/light minimalist clean.
+- Manual editor flow dengan import file lokal, project setup, timeline range,
+  multi-clip, dan export native.
+- Transkrip dan highlight via **Groq** (`whisper-large-v3-turbo` + LLM scoring)
+  dengan **BYOK** (Bring Your Own Key).
+- Auto-subtitle, caption editor, template, watermark, semi-auto, dan auto AI
+  sudah memiliki modul awal, tetapi masih perlu integrasi runtime penuh.
+- Tema dark/light, localization ID/EN, onboarding, settings dasar, library,
+  observability, dan monetization placeholder.
 
 ## Tech Stack
 
@@ -46,7 +48,8 @@ Semua dokumen perencanaan ada di folder [`docs/`](./docs):
 
 ## Status Pengerjaan
 
-Lihat [`CHECKLIST.md`](./CHECKLIST.md) untuk progress per fase.
+Lihat [`CHECKLIST.md`](./CHECKLIST.md) untuk progress per fase dan
+[`PLAN.md`](./PLAN.md) untuk rencana membuat aplikasi berfungsi end-to-end.
 
 ## License
 

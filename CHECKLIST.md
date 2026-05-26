@@ -127,7 +127,7 @@ Master task list end-to-end. Centang sambil jalan. Update minimal mingguan.
 - [ ] Timeline: pinch zoom
 - [x] Manual: split clip
 - [x] Manual: multi-clip support
-- [ ] Auto-save state project tiap 30s
+- [~] Auto-save state project tiap perubahan penting
 - [x] Project rename via top bar tap
 
 ### 1.4 Render Pipeline

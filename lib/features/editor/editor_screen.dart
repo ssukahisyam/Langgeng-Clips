@@ -59,6 +59,7 @@ class _EditorScreenState extends ConsumerState<EditorScreen> {
 
   @override
   Widget build(BuildContext context) {
+    ref.watch(activeEditorSessionLoaderProvider);
     final video = ref.watch(selectedVideoProvider);
     final project = ref.watch(editorProjectProvider);
 
@@ -201,6 +202,7 @@ class _EditorScreenState extends ConsumerState<EditorScreen> {
           startMillis: values.start.round(),
           endMillis: values.end.round(),
         );
+    unawaited(saveActiveEditorSession(ref));
   }
 
   void _addClipFromActiveRange() {
@@ -211,6 +213,7 @@ class _EditorScreenState extends ConsumerState<EditorScreen> {
 
     ref.read(editorProjectProvider.notifier).state = project
         .addClipFromActiveRange();
+    unawaited(saveActiveEditorSession(ref));
   }
 
   void _selectClip(String id) {
@@ -220,6 +223,7 @@ class _EditorScreenState extends ConsumerState<EditorScreen> {
     }
 
     ref.read(editorProjectProvider.notifier).state = project.setActiveClip(id);
+    unawaited(saveActiveEditorSession(ref));
   }
 
   void _applyTemplate(String templateName) {
@@ -231,6 +235,7 @@ class _EditorScreenState extends ConsumerState<EditorScreen> {
     ref.read(editorProjectProvider.notifier).state = project.applyTemplate(
       templateName,
     );
+    unawaited(saveActiveEditorSession(ref));
     ScaffoldMessenger.of(
       context,
     ).showSnackBar(SnackBar(content: Text('$templateName template applied.')));
@@ -364,6 +369,7 @@ class _EditorScreenState extends ConsumerState<EditorScreen> {
         if (project != null && project.clips.isNotEmpty) {
           ref.read(editorProjectProvider.notifier).state = project
               .setActiveClip(project.clips.first.id);
+          unawaited(saveActiveEditorSession(ref));
           messenger.showSnackBar(
             const SnackBar(content: Text('Kembali ke clip pertama.')),
           );
@@ -415,6 +421,7 @@ class _EditorScreenState extends ConsumerState<EditorScreen> {
     ref.read(editorProjectProvider.notifier).state = currentProject.copyWith(
       title: trimmed,
     );
+    unawaited(saveActiveEditorSession(ref));
   }
 }
 

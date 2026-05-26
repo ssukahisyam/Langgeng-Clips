@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 
 import 'selected_video.dart';
 import 'selected_video_controller.dart';
+import '../editor/editor_project_store.dart';
 
 Future<void> showImportSheet(BuildContext context) {
   return showModalBottomSheet<void>(
@@ -93,8 +94,10 @@ class ImportSheet extends ConsumerWidget {
     }
 
     final file = result.files.single;
-    ref.read(selectedVideoProvider.notifier).state =
-        SelectedVideo.fromPlatformFile(file);
+    final selectedVideo = SelectedVideo.fromPlatformFile(file);
+    ref.read(selectedVideoProvider.notifier).state = selectedVideo;
+    final store = await ref.read(editorProjectStoreProvider.future);
+    await store.clearActiveSession();
 
     navigator.pop();
     if (!context.mounted) {

@@ -17,6 +17,14 @@ class SelectedVideo {
     );
   }
 
+  factory SelectedVideo.fromJson(Map<String, dynamic> json) {
+    return SelectedVideo(
+      name: json['name'] as String,
+      path: json['path'] as String,
+      sizeBytes: json['sizeBytes'] as int,
+    );
+  }
+
   final String name;
   final String path;
   final int sizeBytes;
@@ -50,5 +58,9 @@ class SelectedVideo {
     }
 
     return File(path).existsSync();
+  }
+
+  Map<String, dynamic> toJson() {
+    return {'name': name, 'path': path, 'sizeBytes': sizeBytes};
   }
 }

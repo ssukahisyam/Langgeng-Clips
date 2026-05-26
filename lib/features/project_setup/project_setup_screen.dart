@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../editor/editor_project.dart';
 import '../editor/editor_project_controller.dart';
+import '../editor/editor_project_store.dart';
 import '../import/selected_video_controller.dart';
 import 'video_metadata.dart';
 import 'video_metadata_probe.dart';
@@ -122,10 +123,8 @@ class _ProjectSetupScreenState extends ConsumerState<ProjectSetupScreen> {
                   ),
                   const SizedBox(height: 32),
                   FilledButton(
-                    onPressed: () {
-                      ref
-                          .read(editorProjectProvider.notifier)
-                          .state = EditorProject.initial(
+                    onPressed: () async {
+                      final project = EditorProject.initial(
                         title: video.name,
                         mode: _mode,
                         template: _template,
@@ -134,6 +133,16 @@ class _ProjectSetupScreenState extends ConsumerState<ProjectSetupScreen> {
                         durationMillis:
                             metadata?.valueOrNull?.durationMillis ?? 60000,
                       );
+                      ref.read(editorProjectProvider.notifier).state = project;
+                      final store = await ref.read(
+                        editorProjectStoreProvider.future,
+                      );
+                      await store.saveActiveSession(
+                        EditorSession(video: video, project: project),
+                      );
+                      if (!context.mounted) {
+                        return;
+                      }
                       context.go('/editor');
                     },
                     child: Text(

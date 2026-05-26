@@ -69,4 +69,26 @@ void main() {
 
     expect(project.applyTemplate('Gaming').template, 'Gaming');
   });
+
+  test('serializes project with clips and active clip', () {
+    final project =
+        EditorProject.initial(
+              title: 'episode.mp4',
+              template: 'Podcast',
+              clipCount: 'Auto',
+              targetDuration: '30s',
+              durationMillis: 60000,
+            )
+            .updateActiveClipRange(startMillis: 5000, endMillis: 15000)
+            .addClipFromActiveRange();
+
+    final restored = EditorProject.fromJson(project.toJson());
+
+    expect(restored.title, project.title);
+    expect(restored.template, project.template);
+    expect(restored.clips, hasLength(2));
+    expect(restored.activeClipId, 'clip-2');
+    expect(restored.activeClip.startMillis, 5000);
+    expect(restored.activeClip.endMillis, 15000);
+  });
 }
